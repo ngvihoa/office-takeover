@@ -1,6 +1,15 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "types": ["vite/client"] },
+  "compilerOptions": {
+    "types": ["vite/client"]
+  },
   "include": ["src", "vite.config.ts"],
-  "references": [{ "path": "../../packages/design" }]
+  "references": [
+    {
+      "path": "../../packages/design"
+    },
+    {
+      "path": "../../packages/sim"
+    }
+  ]
 }

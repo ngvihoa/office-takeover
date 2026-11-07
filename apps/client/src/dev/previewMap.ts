@@ -1,22 +1,36 @@
 import type { RoomView, TeamId } from '@ot/design';
+import { buildWorld, MAPS, type MapDef } from '@ot/sim';
 
-// Preview layout of office-01 (matches research/map-style-sketches.html, direction 1). Real map data will live in
-// packages/sim/maps once the sim exists; this copy only feeds /dev/ui.
-export const PREVIEW_ROOMS: RoomView[] = [
-  { name: 'TEAM DEV', rect: [16, 28, 120, 86], doors: 'b', team: 'p1', troops: 22, dept: 'dev', level: 2 },
-  { name: 'KẾ TOÁN', rect: [150, 28, 100, 86], doors: 'b', team: 'neutral', troops: 5, dept: 'acc' },
-  { name: 'PANTRY', rect: [264, 28, 112, 86], doors: 'b', team: 'p2', troops: 18, dept: 'pantry' },
-  { name: 'MARKETING', rect: [390, 28, 100, 86], doors: 'b', team: 'p2', troops: 7, dept: 'mkt' },
-  { name: 'TEAM DESIGN', rect: [504, 28, 120, 86], doors: 'b', team: 'p2', troops: 12, dept: 'design', level: 2 },
-  { name: 'HỌP A', rect: [60, 142, 116, 78], doors: 'lr', team: 'p1', troops: 14, dept: 'meet' },
-  { name: 'PHÒNG SẾP', rect: [248, 136, 144, 90], doors: 'tb', team: 'neutral', troops: 40, dept: 'boss' },
-  { name: 'HỌP B', rect: [464, 142, 116, 78], doors: 'lr', team: 'p3', troops: 8, dept: 'meet' },
-  { name: 'TEAM SALES', rect: [16, 248, 120, 86], doors: 't', team: 'p3', troops: 11, dept: 'sales' },
-  { name: 'HR', rect: [150, 248, 100, 86], doors: 't', team: 'p1', troops: 6, dept: 'hr' },
-  { name: 'SERVER', rect: [264, 248, 112, 86], doors: 't', team: 'neutral', troops: 10, dept: 'server' },
-  { name: 'QA', rect: [390, 248, 100, 86], doors: 't', team: 'neutral', troops: 5, dept: 'qa' },
-  { name: 'TEAM DATA', rect: [504, 248, 120, 86], doors: 't', team: 'p4', troops: 3, dept: 'data' },
+// /dev/ui preview built from the real office-01 map, with a hand-picked mid-game situation.
+const world = buildWorld(MAPS['office-01'] as MapDef);
+
+const OWNER: TeamId[] = [
+  'p1',
+  'neutral',
+  'p2',
+  'p2',
+  'p2',
+  'p1',
+  'neutral',
+  'p3',
+  'p3',
+  'p1',
+  'neutral',
+  'neutral',
+  'p4',
 ];
+const TROOPS = [22, 5, 18, 7, 12, 14, 40, 8, 11, 6, 12, 5, 3];
+const LEVEL = [2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1];
+
+export const PREVIEW_ROOMS: RoomView[] = world.map.towers.map((t) => ({
+  name: t.name,
+  rect: t.rect,
+  doors: t.doors.map((d) => d.side).join(''),
+  team: OWNER[t.id] ?? 'neutral',
+  troops: TROOPS[t.id] ?? 0,
+  dept: t.dept as RoomView['dept'],
+  level: LEVEL[t.id],
+}));
 
 export interface PreviewSquad {
   path: [number, number][];
@@ -25,57 +39,27 @@ export interface PreviewSquad {
   n: number;
 }
 
+const route = (from: number, to: number) => world.paths[from]?.[to]?.points ?? [];
+
 export const PREVIEW_SQUADS: PreviewSquad[] = [
-  {
-    path: [
-      [76, 116],
-      [76, 125],
-      [320, 125],
-      [320, 116],
-    ],
-    t: 0.62,
-    team: 'p1',
-    n: 11,
-  },
-  {
-    path: [
-      [564, 116],
-      [564, 125],
-      [320, 125],
-      [320, 134],
-    ],
-    t: 0.55,
-    team: 'p2',
-    n: 9,
-  },
-  {
-    path: [
-      [582, 181],
-      [600, 181],
-      [600, 237],
-      [564, 237],
-      [564, 246],
-    ],
-    t: 0.45,
-    team: 'p3',
-    n: 6,
-  },
+  { path: route(0, 2), t: 0.62, team: 'p1', n: 11 },
+  { path: route(4, 6), t: 0.55, team: 'p2', n: 9 },
+  { path: route(7, 12), t: 0.45, team: 'p3', n: 6 },
 ];
 
 export const PREVIEW_PLANTS: [number, number][] = [
-  [200, 192],
-  [430, 192],
-  [26, 124],
-  [604, 124],
+  [196, 168],
+  [432, 168],
+  [22, 150],
+  [608, 150],
 ];
 
 /** Point at fraction t along an axis-aligned polyline. */
 export function along(path: [number, number][], t: number): [number, number] {
-  const lens = path
-    .slice(1)
-    .map(
-      (p, i) => Math.abs(p[0] - (path[i] as [number, number])[0]) + Math.abs(p[1] - (path[i] as [number, number])[1]),
-    );
+  const lens = path.slice(1).map((p, i) => {
+    const prev = path[i] as [number, number];
+    return Math.abs(p[0] - prev[0]) + Math.abs(p[1] - prev[1]);
+  });
   let rest = lens.reduce((a, b) => a + b, 0) * t;
   for (let i = 0; i < lens.length; i++) {
     const len = lens[i] as number;
@@ -87,5 +71,5 @@ export function along(path: [number, number][], t: number): [number, number] {
     }
     rest -= len;
   }
-  return path[path.length - 1] as [number, number];
+  return (path[path.length - 1] ?? [0, 0]) as [number, number];
 }
