@@ -16,7 +16,9 @@ Phạm vi:
 Tiêu chí hoàn thành:
 - [ ] Chơi trọn một trận 1 người + 3 bot, đến khi có người thắng hoặc hết 6 phút.
 - [ ] Mọi thao tác MVP trong UX spec hoạt động bằng chuột. Phím `1`–`4`, `Q`, `W`, `E`, `Space`, `Esc` hoạt động.
-- [ ] Test tất định qua. 1000 trận bot-vs-bot không lỗi. Tỉ lệ thắng theo ghế trong khoảng 20–30%.
+- [x] Test tất định qua. 1000 trận bot-vs-bot không lỗi. Tỉ lệ thắng theo ghế trong khoảng 20–30% (đo được 22.6–26.4%).
+  - Ghi nhận: trận bot Thường × 4 kết thúc nhanh (trung vị khoảng 60 giây, p90 khoảng 80 giây), ngắn hơn nhiều so với mục tiêu 4–6 phút.
+    Cần xem lại khi playtest với người (bot đang chơi kiểu dồn ép). Chỉnh trong `packages/sim/src/config.ts`.
 - [ ] Mọi asset qua `validate.ts`. Có contact sheet.
 - [ ] `/dev/ui` hiển thị đủ component MVP ở S=1, 2, 3. Không có màu ngoài token.
 - [ ] 60fps trên một laptop văn phòng phổ biến.

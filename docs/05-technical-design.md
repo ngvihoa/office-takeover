@@ -23,12 +23,14 @@
 │  ├─ design/              ← token và helper của design system (dùng chung DOM + Phaser)
 │  └─ sim/                 ← LÕI GAME: TypeScript thuần, tất định, không DOM/Phaser/Cloudflare
 │     ├─ src/config.ts     ← mọi con số của GDD
-│     ├─ src/state.ts      ← kiểu dữ liệu GameState
-│     ├─ src/tick.ts       ← step(state, commands) → state mới + events
-│     ├─ src/commands.ts   ← validate + apply lệnh
-│     ├─ src/bot/          ← bot AI
+│     ├─ src/types.ts      ← MapDef, World, GameState, Command, GameEvent
+│     ├─ src/world.ts      ← buildWorld(): kiểm tra map, tính sẵn đường hành lang (Dijkstra)
+│     ├─ src/rules.ts      ← createMatch, validate, step (luật MVP), xếp hạng
+│     ├─ src/bot/bot.ts    ← bot Dễ / Thường
+│     ├─ src/simulate.ts   ← LocalMatch (host offline: người + bot), runBotMatch
 │     ├─ src/rng.ts        ← PRNG mulberry32 có seed
 │     ├─ src/hash.ts       ← băm state để kiểm tra đồng bộ
+│     ├─ src/maps.ts       ← MAPS (map đóng gói sẵn)
 │     └─ maps/office-01.json
 ├─ apps/
 │  ├─ client/              ← Phaser 4 + Preact + Vite
@@ -62,12 +64,16 @@ type Command =
   | { t: 'skill';   player: PlayerId; skill: SkillId; target?: number }
   | { t: 'route';   player: PlayerId; from: number; to: number | null };   // [V2]
 
-createMatch(map: MapDef, seats: SeatDef[], seed: number, config?: Partial<Config>): GameState
-step(state: GameState, commands: Command[]): { state: GameState; events: GameEvent[] }   // tiến đúng 1 tick
-validate(state: GameState, cmd: Command): boolean
+buildWorld(map: MapDef, config?: Config): World                    // phần tĩnh: map + config + bảng đường đi
+createMatch(world: World, seats: SeatKind[], seed: number): GameState
+step(world: World, state: GameState, commands: Command[]): GameEvent[] // tiến đúng 1 tick, SỬA state tại chỗ
+validate(world: World, state: GameState, cmd: Command): boolean
+cloneState(state: GameState): GameState                              // khi cần giữ bản cũ (dự đoán, replay)
 hashState(state: GameState): number
-botDecide(state: GameState, player: PlayerId, level: BotLevel, rng: Rng): Command[]
+createBot(player, level, matchSeed): Bot;  botThink(world, state, bot): Command[]
+new LocalMatch(world, seats, seed)  // .submit(cmd), .tick(): GameEvent[], .state, .ended
 ```
+- `step` sửa state tại chỗ (không tạo bản mới mỗi tick) để nhanh: 1000 trận bot chạy khoảng 1 giây.
 `GameEvent` (ví dụ `captured`, `squadSpawned`, `skillUsed`, `eliminated`, `matchEnded`) **chỉ phục vụ hiển thị và âm thanh**, không ảnh hưởng logic.
 
 ### Map format
@@ -78,9 +84,9 @@ botDecide(state: GameState, player: PlayerId, level: BotLevel, rng: Rng): Comman
   "building": { "x": 6, "y": 20, "w": 628, "h": 320 },
   "towers": [
     { "id": 0, "name": "TEAM DEV", "kind": "team", "dept": "dev", "rect": [16, 28, 120, 86],
-      "doors": [{ "side": "b", "node": "d0" }], "owner": 0, "troops": 10, "level": 1 },
+      "doors": [{ "side": "b", "node": "n76_118" }], "seat": 0, "troops": 10, "level": 1 },
     { "id": 2, "name": "PANTRY", "kind": "pantry", "dept": "pantry", "rect": [264, 28, 112, 86],
-      "doors": [{ "side": "b", "node": "d2" }], "owner": null, "troops": 12, "level": 1 }
+      "doors": [{ "side": "b", "node": "n320_118" }], "seat": null, "troops": 12, "level": 1 }
   ],
   "corridor": {
     "nodes": { "d0": [76, 114], "d2": [320, 114], "c0": [76, 125], "c2": [320, 125] },

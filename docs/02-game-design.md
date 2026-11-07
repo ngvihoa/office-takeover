@@ -26,8 +26,10 @@ trong một file config của package `sim` và sẽ chỉnh sau playtest.
   |---|---|
   | Trên | Team Dev (ghế 1) · Kế toán · **Pantry** · Marketing · Team Design (ghế 2) |
   | Giữa | Phòng họp A · **Phòng sếp** · Phòng họp B |
-  | Dưới | Team Sales (ghế 3) · HR · **Server** · QA · Team Data (ghế 4) |
-  Ở MVP chỉ Pantry có cơ chế riêng. Phòng họp, Phòng sếp, Server hoạt động như **phòng thường trung lập** (cơ chế riêng có từ V2).
+  | Dưới | Team Sales (ghế 3) · HR · **Căng tin** (pantry thứ 2) · QA · Team Data (ghế 4) |
+  Có **2 phòng pantry** (Pantry trên, Căng tin dưới) để bản đồ đối xứng 4 phía: mỗi pantry ở giữa 2 phòng team.
+  Ở MVP chỉ pantry có cơ chế riêng. Phòng họp và Phòng sếp hoạt động như **phòng thường trung lập** (cơ chế riêng có từ V2).
+  Server room dành cho map khác (V2).
 
 ### 2.2 Bố cục ngẫu nhiên
 Bố cục luôn sinh **tất định từ `seed` của trận**, nên online vẫn đồng bộ và replay vẫn tái tạo được.
@@ -55,7 +57,7 @@ Mọi biến thể phải giữ **đối xứng 4 phía** cho chế độ Đấu
 |---|---|---|
 | Tick | 100ms (10 tick/giây) | MVP |
 | Lính khởi đầu ở phòng team của người chơi | 10 | MVP |
-| Lính phòng trung lập | Kế toán, Marketing, HR, QA: 5 · phòng họp 8 · pantry 12 · server 10 · phòng sếp 40 | MVP |
+| Lính phòng trung lập | Kế toán, Marketing, HR, QA: 5 · phòng họp 8 · pantry/căng tin 12 · phòng sếp 40 | MVP |
 | Sinh lính cấp 1 / 2 / 3 | +1 mỗi 10 / 8 / 6 tick | MVP |
 | Sức chứa cấp 1 / 2 / 3 | 30 / 50 / 80. Đã đầy thì ngừng sinh. Lính gửi đến vẫn cộng được, vượt sức chứa | MVP |
 | Nâng cấp | cấp 2 tốn 10 lính, cấp 3 tốn 20 lính (trừ từ chính tháp đó) | MVP |
