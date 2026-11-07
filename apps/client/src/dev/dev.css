@@ -1,0 +1,232 @@
+/* Shell styles for /dev/ui only. Not part of the design system. */
+.dev {
+  background: var(--c-sand);
+  min-height: 100vh;
+  padding: calc(var(--n) * 16);
+}
+.dev-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: calc(var(--n) * 12);
+  max-width: calc(var(--n) * 660);
+  margin: 0 auto;
+}
+.dev-controls {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--n) * 8);
+}
+.dev-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--n) * 4) calc(var(--n) * 10);
+  max-width: calc(var(--n) * 660);
+  margin: calc(var(--n) * 10) auto 0;
+}
+.dev-nav a {
+  color: var(--info);
+}
+.dev-section {
+  max-width: calc(var(--n) * 660);
+  margin: calc(var(--n) * 20) auto 0;
+  padding-top: calc(var(--n) * 10);
+  border-top: var(--n) dashed var(--c-tan);
+}
+.dev-section h2 {
+  margin: 0 0 calc(var(--n) * 4);
+  font-weight: 400;
+}
+.dev-section h3 {
+  margin: calc(var(--n) * 10) 0 calc(var(--n) * 6);
+  font-weight: 400;
+}
+.dev-note {
+  margin: 0 0 calc(var(--n) * 8);
+  max-width: calc(var(--n) * 520);
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--n) * 12);
+  align-items: flex-start;
+}
+.row.tight {
+  gap: calc(var(--n) * 4);
+  align-items: center;
+}
+.spec {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--n) * 4);
+}
+.spec-demo {
+  min-height: calc(var(--n) * 14);
+  display: flex;
+  align-items: center;
+}
+.frame {
+  width: fit-content;
+  border: var(--n) solid var(--c-ink);
+  line-height: 0;
+}
+.frame.home {
+  position: relative;
+}
+.home-overlay {
+  position: absolute;
+  inset: 0;
+  line-height: normal;
+}
+.home-user {
+  position: absolute;
+  right: calc(var(--n) * 8);
+  top: calc(var(--n) * 8);
+}
+.home-title {
+  position: absolute;
+  left: calc(var(--n) * 160);
+  top: calc(var(--n) * 40);
+  width: calc(var(--n) * 320);
+}
+.home-actions {
+  position: absolute;
+  left: calc(var(--n) * 220);
+  top: calc(var(--n) * 150);
+  width: calc(var(--n) * 200);
+  display: grid;
+  gap: calc(var(--n) * 10);
+}
+.home-foot {
+  position: absolute;
+  left: calc(var(--n) * 8);
+  right: calc(var(--n) * 8);
+  bottom: calc(var(--n) * 8);
+  display: flex;
+  gap: calc(var(--n) * 8);
+  align-items: center;
+}
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--n) * 6);
+}
+.swatch {
+  width: calc(var(--n) * 58);
+}
+.swatch-chip {
+  height: calc(var(--n) * 20);
+  border: var(--n) solid var(--c-ink);
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--n) * 11);
+}
+.swatch .t-caption {
+  overflow-wrap: anywhere;
+}
+.mini {
+  display: inline-block;
+  width: calc(var(--n) * 8);
+  height: calc(var(--n) * 8);
+  border: var(--n) solid var(--c-ink);
+  vertical-align: middle;
+}
+.flag-wrap {
+  display: inline-block;
+  vertical-align: middle;
+}
+.dev-table {
+  border-collapse: collapse;
+  background: var(--c-white);
+}
+.dev-table th,
+.dev-table td {
+  border: var(--n) solid var(--c-gray100);
+  padding: calc(var(--n) * 4) calc(var(--n) * 6);
+  text-align: left;
+  font-weight: 400;
+  vertical-align: middle;
+}
+.dev-table th {
+  color: var(--text-muted);
+}
+.state-table td {
+  padding: calc(var(--n) * 6);
+}
+.pairs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--n) * 200), 1fr));
+  gap: calc(var(--n) * 4);
+}
+.pair {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: calc(var(--n) * 6);
+  padding: calc(var(--n) * 4) calc(var(--n) * 6);
+  border: var(--n) solid var(--c-ink);
+}
+.type-row {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--n) * 10);
+  margin: calc(var(--n) * 4) 0;
+}
+.type-meta {
+  width: calc(var(--n) * 110);
+  flex: none;
+}
+.space-bar {
+  display: block;
+  height: calc(var(--n) * 8);
+  background: var(--accent);
+  min-width: 1px;
+}
+.elev-box {
+  width: calc(var(--n) * 40);
+  height: calc(var(--n) * 24);
+  background: var(--c-white);
+  border: var(--n) solid var(--c-ink);
+}
+.icon-tile {
+  display: inline-grid;
+  place-items: center;
+  width: calc(var(--n) * 22);
+  height: calc(var(--n) * 22);
+  background: var(--c-white);
+  border: var(--n) solid var(--c-gray100);
+}
+.motion-track {
+  position: relative;
+  width: calc(var(--n) * 80);
+  height: calc(var(--n) * 10);
+  background: var(--c-gray100);
+  border: var(--n) solid var(--c-ink);
+}
+.motion-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--n) * 8);
+  height: calc(var(--n) * 8);
+  background: var(--accent);
+  animation: slide steps(6) forwards;
+}
+@keyframes slide {
+  to {
+    left: calc(var(--n) * 70);
+  }
+}
+.pulse-box {
+  display: inline-block;
+  width: calc(var(--n) * 30);
+  height: calc(var(--n) * 14);
+  border: var(--n) solid var(--accent);
+  animation: pulse 600ms steps(1) infinite;
+}
+@keyframes pulse {
+  50% {
+    border-color: transparent;
+  }
+}
