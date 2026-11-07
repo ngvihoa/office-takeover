@@ -26,6 +26,9 @@ importers:
       '@ot/design':
         specifier: workspace:*
         version: link:../../packages/design
+      '@ot/sim':
+        specifier: workspace:*
+        version: link:../../packages/sim
       preact:
         specifier: 11.2.0
         version: 11.2.0
@@ -41,6 +44,8 @@ importers:
         version: 8.3.6
 
   packages/design: {}
+
+  packages/sim: {}
 
 packages:
 
