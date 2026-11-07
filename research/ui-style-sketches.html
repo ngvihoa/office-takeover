@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI Style Sketches</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f1ea; --surface:#fffdf8; --ink:#181425; --muted:#5a6988; --line:#d9d4c7;
+  /* ENDESGA 32 subset */
+  --p1:#0099db; --p2:#e43b44; --p3:#63c74d; --p4:#feae34; --neu:#8b9bb4;
+  --white:#ffffff; --g1:#c0cbdc; --g2:#8b9bb4; --g3:#5a6988; --g4:#3a4466;
+  --sand:#ead4aa; --tan:#e4a672; --brown:#b86f50; --cork:#c28569; --yellow:#fee761;
+  --pink:#f6757a; --mag:#b55088; --navy:#124e89; --green-d:#3e8948; --orange:#f77622;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Be Vietnam Pro",system-ui,sans-serif}
+main{max-width:1200px;margin:0 auto;padding:32px 16px 80px}
+h1,h2{font-family:"VT323",monospace;font-weight:400;line-height:1.1}
+h1{font-size:54px;margin:0 0 6px}
+h2{font-size:40px;margin:56px 0 4px;padding-top:14px;border-top:2px dashed var(--line)}
+.lead{color:var(--muted);max-width:760px}
+.row{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));margin-top:14px}
+.cap{font-weight:600;font-size:14px;margin:6px 0 0;color:var(--muted)}
+.wrap{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:6px;box-shadow:0 0 0 2px var(--line)}
+.frame{position:absolute;left:0;top:0;width:640px;height:360px;transform-origin:0 0;font-family:"VT323",monospace;font-size:16px;line-height:1.1;image-rendering:pixelated;-webkit-font-smoothing:none}
+.pc{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));margin-top:14px;font-size:14px}
+.pc div{background:var(--surface);border:2px solid var(--line);border-radius:6px;padding:10px 12px}
+.pc b{display:block;margin-bottom:2px}
+.cmp{width:100%;border-collapse:collapse;font-size:14px;background:var(--surface);margin-top:12px}
+.cmp th,.cmp td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+.cmp th{color:var(--muted)}
+.strip{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:14px;margin-top:14px;border-radius:6px;font-family:"VT323",monospace;font-size:20px}
+.strip small{font-family:"Be Vietnam Pro";font-size:12px;color:var(--muted);display:block;text-align:center;margin-top:4px}
+
+/* ============ A. RETRO OFFICE OS ============ */
+.A{background:var(--g2)}
+.A .win{position:absolute;background:var(--g1);box-shadow:inset -1px -1px 0 var(--ink),inset 1px 1px 0 var(--white),inset -2px -2px 0 var(--g3),inset 2px 2px 0 #e8edf5}
+.A .title{background:var(--navy);color:var(--white);padding:2px 4px 2px 6px;margin:3px;display:flex;align-items:center;gap:6px;height:18px}
+.A .title .x{margin-left:auto;display:flex;gap:2px}
+.A .title .x span{width:14px;height:12px;background:var(--g1);color:var(--ink);font-size:12px;line-height:12px;text-align:center;box-shadow:inset -1px -1px 0 var(--ink),inset 1px 1px 0 var(--white)}
+.A .btn{display:inline-block;background:var(--g1);padding:3px 12px;box-shadow:inset -1px -1px 0 var(--ink),inset 1px 1px 0 var(--white),inset -2px -2px 0 var(--g3);color:var(--ink);text-align:center}
+.A .btn.def{outline:1px solid var(--ink);outline-offset:-1px;box-shadow:inset -2px -2px 0 var(--ink),inset 1px 1px 0 var(--white),inset -3px -3px 0 var(--g3)}
+.A .btn.press{box-shadow:inset 1px 1px 0 var(--ink),inset -1px -1px 0 var(--white),inset 2px 2px 0 var(--g3);padding:4px 11px 2px 13px}
+.A .btn.dis{color:var(--g3);text-shadow:1px 1px 0 var(--white)}
+.A .sunk{background:var(--white);box-shadow:inset 1px 1px 0 var(--g3),inset -1px -1px 0 var(--white),inset 2px 2px 0 var(--ink)}
+.A .taskbar{position:absolute;left:0;right:0;bottom:0;height:24px;background:var(--g1);box-shadow:inset 0 1px 0 var(--white);display:flex;align-items:center;gap:4px;padding:0 3px}
+.A .tray{margin-left:auto;padding:1px 8px;box-shadow:inset 1px 1px 0 var(--g3),inset -1px -1px 0 var(--white)}
+.A .icon{position:absolute;width:76px;text-align:center;color:var(--white);font-size:15px}
+.A .icon .im{width:32px;height:32px;margin:0 auto 3px;background:var(--g1);box-shadow:inset -1px -1px 0 var(--ink),inset 1px 1px 0 var(--white);display:grid;place-items:center;font-size:20px}
+.A .icon .lb{background:var(--navy);padding:0 2px}
+.A .menu{display:flex;gap:12px;padding:1px 8px;margin:0 3px}
+.A .chk{display:inline-block;width:11px;height:11px;background:var(--white);box-shadow:inset 1px 1px 0 var(--g3),inset 2px 2px 0 var(--ink);vertical-align:-1px;margin-right:4px;font-size:11px;line-height:11px;text-align:center}
+.A .sw{display:inline-block;width:10px;height:10px;border:1px solid var(--ink);vertical-align:-1px;margin-right:4px}
+.A table{border-collapse:collapse;width:100%}
+.A td,.A th{padding:2px 6px;text-align:left;font-weight:400}
+.A th{background:var(--g1);box-shadow:inset -1px -1px 0 var(--g3),inset 1px 1px 0 var(--white)}
+.A .bar{height:14px;display:flex;gap:2px;padding:2px}
+.A .bar i{display:block;width:16px;background:var(--navy)}
+.A .cd{position:relative;overflow:hidden}
+.A .cd::after{content:"";position:absolute;left:0;top:0;bottom:0;width:60%;background:repeating-linear-gradient(45deg,rgba(24,20,37,.25) 0 2px,transparent 2px 4px)}
+
+/* ============ B. PIXEL GAME ============ */
+.B{background:var(--sand);background-image:linear-gradient(var(--tan) 1px,transparent 1px),linear-gradient(90deg,var(--tan) 1px,transparent 1px);background-size:32px 32px}
+.B .panel{position:absolute;background:var(--white);border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink),inset 0 -3px 0 var(--g1);border-radius:6px;padding:8px}
+.B .btn{display:block;text-align:center;font-size:20px;padding:6px 10px 8px;border:3px solid var(--ink);border-radius:6px;color:var(--white);background:var(--mag);box-shadow:0 4px 0 var(--ink),inset 0 -4px 0 rgba(0,0,0,.22),inset 0 3px 0 rgba(255,255,255,.3);text-shadow:0 2px 0 rgba(0,0,0,.3)}
+.B .btn.sec{background:var(--white);color:var(--ink);text-shadow:none;box-shadow:0 4px 0 var(--ink),inset 0 -4px 0 var(--g1)}
+.B .btn.press{transform:translateY(3px);box-shadow:0 1px 0 var(--ink),inset 0 -2px 0 rgba(0,0,0,.22)}
+.B .btn.dis{background:var(--g1);color:var(--g3);text-shadow:none}
+.B .chip{display:inline-flex;align-items:center;gap:4px;background:var(--white);border:2px solid var(--ink);border-radius:99px;padding:0 8px 0 3px;box-shadow:0 2px 0 var(--ink)}
+.B .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink)}
+.B .seat{position:absolute;top:96px;width:132px;height:170px;background:var(--white);border:3px solid var(--ink);border-radius:6px;box-shadow:0 3px 0 var(--ink);text-align:center;padding-top:0;overflow:hidden}
+.B .seat .hd{height:24px}
+.B .ava{width:48px;height:48px;margin:12px auto 6px;border:3px solid var(--ink);border-radius:6px;background:var(--sand);display:grid;place-items:center;font-size:30px}
+.B .badge{display:inline-block;font-size:14px;padding:0 6px;border-radius:4px;background:var(--g1)}
+.B .skill{position:absolute;width:44px;height:44px;border:3px solid var(--ink);border-radius:6px;background:var(--white);box-shadow:0 3px 0 var(--ink);display:grid;place-items:center;font-size:22px;overflow:hidden}
+.B .skill .k{position:absolute;left:2px;top:-1px;font-size:13px}
+.B .skill.cd::after{content:"";position:absolute;left:0;right:0;bottom:0;height:60%;background:rgba(24,20,37,.45)}
+.B .skill.cd .t{position:absolute;z-index:1;color:var(--white);font-size:18px;text-shadow:0 1px 0 var(--ink)}
+
+/* ============ C. STATIONERY ============ */
+.C{background-color:var(--cork);background-image:radial-gradient(#a8704f 1px,transparent 1.5px),radial-gradient(#d9a07a 1px,transparent 1.5px);background-size:9px 9px,13px 13px;background-position:0 0,4px 6px}
+.C .note{position:absolute;background:var(--yellow);padding:10px 8px;box-shadow:2px 3px 0 rgba(24,20,37,.35);text-align:center;font-size:20px}
+.C .note.pk{background:var(--pink)}.C .note.bl{background:#bfe7f7}.C .note.gr{background:#c7ecb8}
+.C .pin{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--p2);border:2px solid var(--ink);left:50%;top:-4px;margin-left:-5px}
+.C .paper{position:absolute;background:var(--white);box-shadow:2px 3px 0 rgba(24,20,37,.35);background-image:repeating-linear-gradient(transparent 0 15px,#d6e6f5 15px 16px)}
+.C .tape{position:absolute;width:44px;height:12px;background:rgba(255,255,255,.6);border:1px solid rgba(24,20,37,.15)}
+.C .wb{position:absolute;background:var(--white);border:6px solid var(--g1);box-shadow:inset 0 0 0 1px var(--g3),2px 3px 0 rgba(24,20,37,.35)}
+.C .marker{color:var(--navy)}
+.C .stamp{position:absolute;border:3px solid var(--p2);color:var(--p2);font-size:24px;padding:2px 12px;transform:rotate(-4deg);background:rgba(255,255,255,.4)}
+.C .mag{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--ink);vertical-align:-1px}
+
+/* shared map svg */
+.map{position:absolute}
+</style>
+</head>
+<body>
+<main>
+<h1>Ba hướng phong cách UI</h1>
+<p class="lead">Cùng một nội dung (Trang chủ, Lobby 4 ghế, HUD trong trận) vẽ theo 3 phong cách, tông sáng, palette ENDESGA 32. Bản đồ trong trận giữ nguyên ở cả 3, chỉ khác lớp giao diện bọc ngoài. Mỗi khung là màn hình logic 640×360 phóng to.</p>
+
+<!-- ======================= A ======================= -->
+<h2>A. Retro Office OS</h2>
+<p class="lead">Game giả làm một phần mềm văn phòng đời cũ: cửa sổ có thanh tiêu đề, nút nổi khối, thanh taskbar. Trang chủ là "màn hình desktop".</p>
+<div class="row">
+<div><div class="wrap"><div class="frame A">
+  <div class="icon" style="left:14px;top:14px"><div class="im">🤖</div><span class="lb">Chơi với bot</span></div>
+  <div class="icon" style="left:14px;top:76px"><div class="im">➕</div><span class="lb">Tạo phòng</span></div>
+  <div class="icon" style="left:14px;top:138px"><div class="im">🔑</div><span class="lb">Vào bằng mã</span></div>
+  <div class="icon" style="left:14px;top:200px"><div class="im">📖</div><span class="lb">Hướng dẫn</span></div>
+  <div class="icon" style="left:14px;top:262px"><div class="im">⚙️</div><span class="lb">Cài đặt</span></div>
+  <div class="win" style="left:150px;top:50px;width:380px;height:220px">
+    <div class="title">🏢 Chào mừng đến Office Takeover<div class="x"><span>_</span><span>□</span><span>×</span></div></div>
+    <div style="padding:10px 14px">
+      <div style="font-size:34px;color:var(--navy)">OFFICE TAKEOVER</div>
+      <div style="color:var(--g3);margin-bottom:10px">v0.1 · Chiếm văn phòng, một bàn mỗi lúc.</div>
+      <div class="sunk" style="padding:6px 8px;margin-bottom:12px">💡 Mẹo: kéo chuột từ bàn của bạn sang bàn khác để gửi lính.</div>
+      <span class="btn def">Chơi với bot</span> <span class="btn">Tạo phòng</span> <span class="btn">Vào bằng mã…</span>
+    </div>
+  </div>
+  <div class="taskbar"><span class="btn" style="padding:1px 8px">🏢 <b>Start</b></span><span class="btn press" style="padding:1px 10px;min-width:160px;text-align:left">🏢 Chào mừng…</span><span class="tray">🔊 Hoà · 12:05</span></div>
+</div></div><p class="cap">Trang chủ: màn hình desktop</p></div>
+
+<div><div class="wrap"><div class="frame A">
+  <div class="win" style="left:40px;top:20px;width:560px;height:300px">
+    <div class="title">👥 Phòng K7QM: Lobby<div class="x"><span>_</span><span>□</span><span>×</span></div></div>
+    <div class="menu"><span>Phòng</span><span>Mời</span><span>Trợ giúp</span></div>
+    <div style="padding:4px 10px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">Mã phòng: <span class="sunk" style="padding:1px 8px">K7QM</span><span class="btn">📋 Copy link</span><span style="margin-left:auto;color:var(--g3)">Chế độ: Đấu tự do · office-01</span></div>
+      <div class="sunk" style="padding:2px">
+      <table>
+        <tr><th>Ghế</th><th>Người chơi</th><th>Loại</th><th>Sẵn sàng</th></tr>
+        <tr><td><span class="sw" style="background:var(--p1)"></span>1</td><td>Hoà (chủ phòng)</td><td>Người</td><td><span class="chk">✓</span></td></tr>
+        <tr style="background:var(--navy);color:var(--white)"><td><span class="sw" style="background:var(--p2)"></span>2</td><td>Minh</td><td>Người</td><td><span class="chk" style="color:var(--ink)"></span></td></tr>
+        <tr><td><span class="sw" style="background:var(--p3)"></span>3</td><td>Bot A</td><td><span class="sunk" style="padding:0 4px">Bot · Thường ▾</span></td><td><span class="chk">✓</span></td></tr>
+        <tr><td><span class="sw" style="background:var(--p4)"></span>4</td><td style="color:var(--g3)">(trống)</td><td><span class="sunk" style="padding:0 4px">Bot · Dễ ▾</span></td><td><span class="chk">✓</span></td></tr>
+      </table></div>
+      <div style="margin:8px 0 4px">Kỹ năng: <span class="chk">✓</span>⏰ Deadline &nbsp; <span class="chk">✓</span>☕ Coffee Break</div>
+      <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px"><span class="btn">Rời phòng</span><span class="btn">Sẵn sàng</span><span class="btn def dis">Bắt đầu (chờ Minh)</span></div>
+    </div>
+  </div>
+  <div class="taskbar"><span class="btn" style="padding:1px 8px">🏢 <b>Start</b></span><span class="btn press" style="padding:1px 10px;min-width:160px;text-align:left">👥 Phòng K7QM</span><span class="tray">🔊 12:06</span></div>
+</div></div><p class="cap">Lobby: cửa sổ "Properties" với bảng 4 ghế</p></div>
+
+<div><div class="wrap"><div class="frame A" style="background:var(--g1)">
+  <div class="title" style="margin:0;height:20px">🗺️ office-01.map: Office Takeover<div class="x"><span>_</span><span>□</span><span>×</span></div></div>
+  <div class="menu" style="background:var(--g1);height:18px;box-shadow:inset 0 -1px 0 var(--g3)"><span><span class="sw" style="background:var(--p1)"></span>Bạn 5</span><span><span class="sw" style="background:var(--p2)"></span>Minh 3</span><span><span class="sw" style="background:var(--p3)"></span>Bot A 2</span><span style="text-decoration:line-through;color:var(--g3)"><span class="sw" style="background:var(--p4)"></span>Bot B 0</span><span style="margin-left:auto">⏱ 04:12</span></div>
+  <div data-map="A" class="map" style="left:0;top:38px"></div>
+  <div class="taskbar" style="height:28px"><span class="btn" style="padding:2px 8px">Q ⏰ Deadline</span><span class="btn cd" style="padding:2px 8px">W ☕ Coffee 18s</span><span style="margin-left:10px">Gửi:</span><span class="sunk bar"><i></i><i></i><i style="background:transparent"></i><i style="background:transparent"></i></span><span>50%</span><span class="tray">😀 👍 😱 🎉 │ 12:09</span></div>
+</div></div><p class="cap">HUD: thanh tiêu đề + menu bar làm bảng điểm, taskbar làm thanh kỹ năng</p></div>
+</div>
+<div class="strip A" style="background:var(--g1)">
+  <div><span class="btn">Bình thường</span><small>normal</small></div>
+  <div><span class="btn def">Mặc định</span><small>focus/default</small></div>
+  <div><span class="btn press">Đang nhấn</span><small>pressed</small></div>
+  <div><span class="btn dis">Vô hiệu</span><small>disabled</small></div>
+  <div><span class="sunk" style="padding:2px 8px;display:inline-block;min-width:110px">K7QM</span><small>ô nhập</small></div>
+  <div><span class="chk">✓</span>Bật âm thanh<small>checkbox</small></div>
+  <div><span class="btn cd">☕ 18s</span><small>hồi chiêu</small></div>
+</div>
+<div class="pc">
+  <div><b>👍 Ưu điểm</b>Hợp chủ đề văn phòng nhất, có chất hài ("game giả làm phần mềm"). Rất dễ làm: viền nổi chỉ là CSS box-shadow, gần như không cần asset UI. Khi nhúng vào virtual office trông như "một cái máy tính trong văn phòng".</div>
+  <div><b>👎 Nhược điểm</b>Dễ trông "cũ" và rối nếu nhồi nhiều cửa sổ. Màu xám chiếm nhiều diện tích nên HUD hơi nặng, che map. Cần tiết chế: chỉ menu và lobby là "cửa sổ", HUD tối giản.</div>
+</div>
+
+<!-- ======================= B ======================= -->
+<h2>B. Pixel game hiện đại</h2>
+<p class="lead">Kiểu game indie: panel trắng viền đen dày bo góc, nút màu nổi có bóng, mọi thứ "nảy". Trung tính, ít chất văn phòng hơn.</p>
+<div class="row">
+<div><div class="wrap"><div class="frame B">
+  <div class="panel" style="left:170px;top:30px;width:300px;text-align:center;padding:10px">
+    <div style="font-size:40px;line-height:1">OFFICE</div><div style="font-size:40px;line-height:1;color:var(--mag)">TAKEOVER</div>
+  </div>
+  <div style="position:absolute;left:220px;top:150px;width:200px;display:grid;gap:12px">
+    <span class="btn">▶ CHƠI VỚI BOT</span><span class="btn sec">TẠO PHÒNG</span><span class="btn sec">VÀO BẰNG MÃ</span>
+  </div>
+  <div style="position:absolute;left:14px;bottom:12px;display:flex;gap:8px"><span class="chip">📖 Hướng dẫn</span><span class="chip">⚙️ Cài đặt</span></div>
+  <div style="position:absolute;right:14px;top:12px" class="chip"><span class="dot" style="background:var(--p1)"></span>Hoà</div>
+</div></div><p class="cap">Trang chủ: logo + nút lớn xếp dọc</p></div>
+
+<div><div class="wrap"><div class="frame B">
+  <div class="panel" style="left:20px;top:14px;width:600px;height:64px;display:flex;align-items:center;gap:12px;padding:8px 14px">
+    <div><div style="font-size:14px;color:var(--g3)">PHÒNG</div><div style="font-size:30px;line-height:1">K7QM</div></div>
+    <span class="chip">📋 Copy link</span><span style="margin-left:auto;font-size:15px;color:var(--g3)">Đấu tự do · office-01</span>
+  </div>
+  <div class="seat" style="left:20px"><div class="hd" style="background:var(--p1)"></div><div class="ava">🙂</div>Hoà<br><span class="badge">Chủ phòng</span><div style="color:var(--green-d);margin-top:6px">✓ Sẵn sàng</div></div>
+  <div class="seat" style="left:176px"><div class="hd" style="background:var(--p2)"></div><div class="ava">😎</div>Minh<br><span class="badge">Người</span><div style="color:var(--g3);margin-top:6px">… chưa sẵn sàng</div></div>
+  <div class="seat" style="left:332px"><div class="hd" style="background:var(--p3)"></div><div class="ava">🤖</div>Bot A<br><span class="badge">Thường ▾</span><div style="color:var(--green-d);margin-top:6px">✓</div></div>
+  <div class="seat" style="left:488px;border-style:dashed"><div class="hd" style="background:var(--p4)"></div><div class="ava" style="background:var(--g1)">🤖</div>Bot B<br><span class="badge">Dễ ▾</span><div style="color:var(--green-d);margin-top:6px">✓</div></div>
+  <div style="position:absolute;left:20px;bottom:16px;display:flex;gap:8px"><span class="chip">⏰ Deadline</span><span class="chip">☕ Coffee</span></div>
+  <div style="position:absolute;right:20px;bottom:12px;width:160px"><span class="btn dis">BẮT ĐẦU</span></div>
+</div></div><p class="cap">Lobby: 4 thẻ ghế ngang, avatar to</p></div>
+
+<div><div class="wrap"><div class="frame B">
+  <div data-map="B" class="map" style="left:0;top:0"></div>
+  <div style="position:absolute;left:8px;top:8px;display:flex;gap:6px">
+    <span class="chip"><span class="dot" style="background:var(--p1)"></span>Bạn 5</span><span class="chip"><span class="dot" style="background:var(--p2)"></span>Minh 3</span><span class="chip"><span class="dot" style="background:var(--p3)"></span>Bot A 2</span><span class="chip" style="opacity:.5"><span class="dot" style="background:var(--p4)"></span>Bot B ✕</span>
+  </div>
+  <div class="chip" style="position:absolute;right:8px;top:8px;font-size:20px;padding:0 10px">⏱ 04:12</div>
+  <div class="skill" style="left:240px;bottom:10px"><span class="k">Q</span>⏰</div>
+  <div class="skill cd" style="left:292px;bottom:10px"><span class="k">W</span><span class="t">18</span>☕</div>
+  <div class="chip" style="position:absolute;left:346px;bottom:22px;gap:2px;padding:2px 8px">Gửi <span style="display:inline-flex;gap:2px;margin-left:4px"><i style="width:10px;height:10px;background:var(--mag);border:1px solid var(--ink)"></i><i style="width:10px;height:10px;background:var(--mag);border:1px solid var(--ink)"></i><i style="width:10px;height:10px;background:var(--white);border:1px solid var(--ink)"></i><i style="width:10px;height:10px;background:var(--white);border:1px solid var(--ink)"></i></span> 50%</div>
+  <div class="chip" style="position:absolute;right:8px;bottom:12px;font-size:18px">😀</div>
+</div></div><p class="cap">HUD: các "viên" nổi trên map, map chiếm toàn màn hình</p></div>
+</div>
+<div class="strip B" style="border:2px solid var(--line)">
+  <div style="width:130px"><span class="btn">Chính</span><small>primary</small></div>
+  <div style="width:130px"><span class="btn sec">Phụ</span><small>secondary</small></div>
+  <div style="width:130px"><span class="btn press">Đang nhấn</span><small>pressed</small></div>
+  <div style="width:130px"><span class="btn dis">Vô hiệu</span><small>disabled</small></div>
+  <div><span class="chip">📋 Chip</span><small>chip</small></div>
+  <div style="position:relative;width:44px;height:50px"><div class="skill cd" style="left:0;top:0"><span class="k">W</span><span class="t">18</span>☕</div></div>
+</div>
+<div class="pc">
+  <div><b>👍 Ưu điểm</b>Rõ ràng, hiện đại, quen với người chơi game. HUD nhẹ và nổi trên map nên thấy được nhiều map nhất. Dễ mở rộng cho cộng đồng sau này (không phụ thuộc chủ đề văn phòng).</div>
+  <div><b>👎 Nhược điểm</b>Ít cá tính. Chất "văn phòng" chỉ còn ở bản đồ. Cần vẽ khung 9-slice pixel để đẹp thật (CSS bo góc thì không còn pixel), nên tốn asset hơn A.</div>
+</div>
+
+<!-- ======================= C ======================= -->
+<h2>C. Văn phòng phẩm</h2>
+<p class="lead">Giấy note, bảng ghim, bảng trắng, con dấu. Trang chủ là bảng ghim, lobby là bảng trắng, nút là note dán.</p>
+<div class="row">
+<div><div class="wrap"><div class="frame C">
+  <div class="paper" style="left:180px;top:20px;width:280px;height:70px;transform:rotate(-1deg);text-align:center;padding-top:8px"><div class="tape" style="left:118px;top:-6px"></div><div style="font-size:38px">OFFICE TAKEOVER</div></div>
+  <div class="note" style="left:110px;top:130px;width:120px;height:90px;transform:rotate(-3deg)"><span class="pin"></span><br>CHƠI VỚI<br>BOT</div>
+  <div class="note pk" style="left:260px;top:120px;width:120px;height:90px;transform:rotate(2deg)"><span class="pin"></span><br>TẠO<br>PHÒNG</div>
+  <div class="note bl" style="left:410px;top:132px;width:120px;height:90px;transform:rotate(-1deg)"><span class="pin"></span><br>VÀO BẰNG MÃ<br><span style="font-size:16px">_ _ _ _</span></div>
+  <div class="note gr" style="left:30px;top:280px;width:96px;height:56px;transform:rotate(2deg);font-size:16px"><span class="pin"></span>📖 Hướng dẫn</div>
+  <div class="note" style="left:520px;top:280px;width:96px;height:56px;transform:rotate(-2deg);font-size:16px"><span class="pin"></span>⚙️ Cài đặt</div>
+</div></div><p class="cap">Trang chủ: bảng ghim với note dán</p></div>
+
+<div><div class="wrap"><div class="frame C">
+  <div class="wb" style="left:24px;top:14px;width:592px;height:280px;padding:8px 14px">
+    <div class="marker" style="font-size:26px">Phòng K7QM <span style="font-size:16px;color:var(--g3)">· Đấu tự do · office-01</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px">
+      <div style="border-left:4px solid var(--p1);padding-left:8px"><div style="font-size:22px">Hoà</div><div style="color:var(--g3)">chủ phòng</div><div style="margin-top:20px"><span class="mag" style="background:var(--p3)"></span> sẵn sàng</div></div>
+      <div style="border-left:4px solid var(--p2);padding-left:8px"><div style="font-size:22px">Minh</div><div style="color:var(--g3)">người</div><div style="margin-top:20px"><span class="mag" style="background:var(--g1)"></span> chưa</div></div>
+      <div style="border-left:4px solid var(--p3);padding-left:8px"><div style="font-size:22px">Bot A</div><div style="color:var(--g3)">thường ▾</div><div style="margin-top:20px"><span class="mag" style="background:var(--p3)"></span> sẵn sàng</div></div>
+      <div style="border-left:4px dashed var(--p4);padding-left:8px"><div style="font-size:22px">Bot B</div><div style="color:var(--g3)">dễ ▾</div><div style="margin-top:20px"><span class="mag" style="background:var(--p3)"></span> sẵn sàng</div></div>
+    </div>
+    <div class="marker" style="margin-top:28px">Mã: <b style="font-size:24px">K7QM</b> (copy link)</div>
+  </div>
+  <div class="paper" style="left:40px;top:300px;width:110px;height:48px;transform:rotate(-2deg);padding:6px;text-align:center">⏰ Deadline</div>
+  <div class="paper" style="left:160px;top:302px;width:110px;height:48px;transform:rotate(1deg);padding:6px;text-align:center">☕ Coffee</div>
+  <div class="stamp" style="left:470px;top:306px;opacity:.45">BẮT ĐẦU</div>
+</div></div><p class="cap">Lobby: bảng trắng viết bút dạ, nam châm báo sẵn sàng</p></div>
+
+<div><div class="wrap"><div class="frame C">
+  <div data-map="C" class="map" style="left:0;top:0"></div>
+  <div class="note" style="left:8px;top:4px;width:auto;height:auto;padding:3px 8px;font-size:16px;transform:rotate(-1deg)">■ Bạn 5 · ■ Minh 3 · ■ Bot A 2</div>
+  <div class="note pk" style="right:8px;top:4px;padding:3px 10px;font-size:20px;transform:rotate(2deg)">⏱ 04:12</div>
+  <div class="note" style="left:230px;bottom:6px;width:56px;height:44px;padding:2px;font-size:22px;transform:rotate(-3deg)">⏰<div style="font-size:12px">Q</div></div>
+  <div class="note bl" style="left:294px;bottom:6px;width:56px;height:44px;padding:2px;font-size:22px;transform:rotate(2deg);opacity:.7">☕<div style="font-size:12px">W · 18s</div></div>
+  <div class="note gr" style="left:360px;bottom:10px;padding:3px 8px;font-size:16px;transform:rotate(-1deg)">Gửi 50%</div>
+</div></div><p class="cap">HUD: note dán quanh mép màn hình</p></div>
+</div>
+<div class="strip C">
+  <div style="position:relative;width:100px;height:60px"><div class="note" style="left:0;top:0;width:100px;height:56px;transform:rotate(-2deg)"><span class="pin"></span>Nút</div></div>
+  <div style="position:relative;width:100px;height:60px"><div class="note" style="left:0;top:3px;width:100px;height:56px;box-shadow:1px 1px 0 rgba(24,20,37,.35)"><span class="pin"></span>Nhấn</div></div>
+  <div style="position:relative;width:120px;height:60px"><div class="stamp" style="left:0;top:10px">ĐẠT</div></div>
+  <div style="color:#fff">← xoay nghiêng làm vỡ pixel art</div>
+</div>
+<div class="pc">
+  <div><b>👍 Ưu điểm</b>Ấm áp, thủ công, rất "văn phòng Việt" (note vàng, bảng trắng). Màn kết quả dạng "báo cáo có đóng dấu" rất vui.</div>
+  <div><b>👎 Nhược điểm</b>Tốn công nhất: cần nhiều texture (giấy, gỗ, băng dính). Các phần tử xoay nghiêng <b>làm mờ pixel art</b> (pixel không còn thẳng hàng) nên trái với art bible. Nền gỗ nhiều chi tiết cạnh tranh với map. Khó đọc khi trận căng.</div>
+</div>
+
+<h2>So sánh</h2>
+<table class="cmp">
+<tr><th></th><th>A. Retro Office OS</th><th>B. Pixel game</th><th>C. Văn phòng phẩm</th></tr>
+<tr><td>Hợp chủ đề văn phòng</td><td>★★★</td><td>★</td><td>★★★</td></tr>
+<tr><td>Dễ đọc trong trận</td><td>★★ (HUD phải tiết chế)</td><td>★★★</td><td>★</td></tr>
+<tr><td>Công làm (MVP, chỉ dùng đồ free)</td><td>Thấp: chủ yếu CSS</td><td>Trung bình: cần khung 9-slice</td><td>Cao: nhiều texture, xoay phá pixel</td></tr>
+<tr><td>Đồng bộ menu DOM ↔ HUD canvas</td><td>Dễ (hình khối chữ nhật, viền 1px)</td><td>Trung bình</td><td>Khó</td></tr>
+<tr><td>Hợp khi nhúng virtual office</td><td>★★★ ("máy tính trong văn phòng")</td><td>★★</td><td>★★</td></tr>
+<tr><td>Hợp khi mở cộng đồng</td><td>★★</td><td>★★★</td><td>★★</td></tr>
+</table>
+<p class="lead" style="margin-top:12px"><b>Gợi ý:</b> có thể lai: dùng <b>A cho menu và lobby</b> (cửa sổ, taskbar), còn <b>HUD trong trận theo kiểu B tối giản</b> (các viên nổi, ít viền xám) để không che map. Màn kết quả có thể mượn con dấu "ĐẠT" của C cho vui.</p>
+</main>
+
+<script>
+// mini office map shared by all three HUD mocks (640 x 322 area)
+const ink='#181425', T={p1:'#0099db',p2:'#e43b44',p3:'#63c74d',p4:'#feae34',n:'#8b9bb4'};
+const ICON={pc:['########','#wwwwww#','#wooooo#','#wwwwww#','########','...##...','..####..'],
+ cup:['.o.o.o..','..o.o...','######..','#wwww###','#wwww#.#','#wwww###','######..'],
+ meet:['........','.#.##.#.','########','#oooooo#','########','.#.##.#.'],
+ boss:['#..##..#','##.##.##','########','#oooooo#','#o#oo#o#','########'],
+ server:['########','#wo#ww.#','########','#w.o.ww#','########','#wwo.w.#','########']};
+function ic(n,x,y,c){let s='';ICON[n].forEach((r,j)=>[...r].forEach((ch,i)=>{if(ch==='.')return;s+=`<rect x="${x+i*2}" y="${y+j*2}" width="2" height="2" fill="${ch==='#'?ink:ch==='w'?'#fff':c}"/>`}));return s}
+function tower(x,y,t,n,k='pc'){const c=T[t];return `<rect x="${x-17}" y="${y-17}" width="34" height="34" fill="${ink}"/><rect x="${x-15}" y="${y-15}" width="30" height="30" fill="#fffaf0"/><rect x="${x-15}" y="${y-15}" width="30" height="7" fill="${c}"/>`+ic(k,x-8,y-6,c)+`<rect x="${x-12}" y="${y-33}" width="24" height="14" fill="${ink}"/><text x="${x}" y="${y-22}" fill="#fff" font-family="VT323" font-size="15" text-anchor="middle">${n}</text>`}
+function squad(x1,y1,x2,y2,t,c,n){const x=x1+(x2-x1)*t,y=y1+(y2-y1)*t;let s=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${T[c]}" stroke-width="2" stroke-dasharray="4 4" opacity=".45"/>`;[[0,0],[-5,-4],[-5,4],[5,-4],[5,4]].forEach(([a,b])=>s+=`<rect x="${x+a-2}" y="${y+b-2}" width="5" height="5" fill="${T[c]}" stroke="${ink}"/>`);return s+`<text x="${x}" y="${y-9}" fill="${T[c]}" font-family="VT323" font-size="14" text-anchor="middle" font-weight="700">${n}</text>`}
+function room(x,y,w,h){return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#b86f50" stroke-width="2" stroke-dasharray="8 4" opacity=".6"/>`}
+function map(h, floor=true){
+  const W=640, oy=(h-322)/2; let s='';
+  if(floor){s+=`<rect width="${W}" height="${h}" fill="#ead4aa"/>`;for(let x=32;x<W;x+=32)s+=`<rect x="${x}" y="0" width="1" height="${h}" fill="#e4a672" opacity=".6"/>`;for(let y=32;y<h;y+=32)s+=`<rect x="0" y="${y}" width="${W}" height="1" fill="#e4a672" opacity=".6"/>`}
+  const g=`<g transform="translate(0 ${oy})">`+room(270,22,100,84)+room(100,128,100,90)+room(440,128,100,90)+room(262,124,116,98)+room(270,238,100,80)+
+   tower(90,70,'p1',22)+tower(200,70,'p1',9)+tower(320,72,'p2',18,'cup')+tower(440,70,'p2',7)+tower(550,70,'p2',12)+
+   tower(150,180,'p1',14,'meet')+tower(320,180,'n',40,'boss')+tower(490,180,'p3',8,'meet')+
+   tower(90,285,'p3',11)+tower(200,285,'p1',6)+tower(320,288,'n',10,'server')+tower(440,285,'n',5)+tower(550,285,'p4',0)+
+   squad(200,70,320,72,.55,'p1',11)+squad(490,180,440,285,.5,'p3',6)+'</g>';
+  return `<svg width="${W}" height="${h}" viewBox="0 0 ${W} ${h}" shape-rendering="crispEdges">${s}${g}</svg>`;
+}
+document.querySelectorAll('[data-map]').forEach(el=>{
+  const k=el.dataset.map; el.innerHTML = k==='A'? map(294,true) : map(360, k!=='C');
+  if(k==='C'){ el.querySelector('svg').insertAdjacentHTML('afterbegin',''); el.style.inset='22px 22px 22px 22px'; el.style.left='22px'; el.style.top='22px';
+    el.innerHTML = `<div style="position:absolute;left:0;top:0;width:596px;height:316px;overflow:hidden;box-shadow:2px 3px 0 rgba(24,20,37,.35);border:6px solid #fff">${map(316,true)}</div>`; }
+});
+// scale 640x360 frames to their wrapper
+function fit(){document.querySelectorAll('.wrap').forEach(w=>{const f=w.firstElementChild;f.style.transform=`scale(${w.clientWidth/640})`;})}
+addEventListener('resize',fit); fit(); document.fonts && document.fonts.ready.then(fit);
+</script>
+</body>
+</html>

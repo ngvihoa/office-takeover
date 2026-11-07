@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Office Takeover Sketchbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f1ea; --surface:#fffdf8; --ink:#23222b; --muted:#6b6875; --line:#d9d4c7;
+  --floor:#e8e2d4; --floor-line:#ddd6c5; --wall:#b9b1a0; --body:#f7f3ea;
+  --accent:#4a7bd1; --note:#fff4cc; --note-line:#e7d48a;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16151b; --surface:#201f27; --ink:#ece9f2; --muted:#a29fae; --line:#34323e;
+    --floor:#2a2833; --floor-line:#312f3b; --wall:#4a4757; --body:#3a3846;
+    --accent:#7aa2ea; --note:#3a3420; --note-line:#6b5d2a;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16151b; --surface:#201f27; --ink:#ece9f2; --muted:#a29fae; --line:#34323e;
+  --floor:#2a2833; --floor-line:#312f3b; --wall:#4a4757; --body:#3a3846;
+  --accent:#7aa2ea; --note:#3a3420; --note-line:#6b5d2a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Be Vietnam Pro",system-ui,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:32px 16px 80px}
+h1,h2,h3{font-family:"VT323",monospace;font-weight:400;letter-spacing:.5px;line-height:1.1}
+h1{font-size:56px;margin:0 0 4px}
+h2{font-size:38px;margin:56px 0 8px;padding-top:12px;border-top:2px dashed var(--line)}
+h3{font-size:26px;margin:0 0 6px}
+p{margin:6px 0}
+.lead{color:var(--muted);max-width:720px}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 0;padding:0;list-style:none}
+.toc a{display:block;padding:4px 12px;border:2px solid var(--line);border-radius:4px;color:var(--ink);text-decoration:none;font-family:"VT323",monospace;font-size:20px}
+.toc a:hover{border-color:var(--accent)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr))}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:6px;padding:14px}
+.card svg{display:block;width:100%;height:auto;border-radius:4px;margin-bottom:10px;image-rendering:pixelated}
+.big svg{border-radius:6px}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:99px;background:var(--line);color:var(--ink);margin-right:4px}
+.kv{font-size:14px;margin:4px 0}
+.kv b{display:inline-block;min-width:92px;color:var(--muted);font-weight:600}
+.note{background:var(--note);border:2px solid var(--note-line);border-radius:6px;padding:12px 14px;margin:16px 0}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0}
+.flow .step{background:var(--surface);border:2px solid var(--line);border-radius:6px;padding:8px 12px;font-weight:600;font-size:14px}
+.flow .arr{font-family:"VT323",monospace;font-size:26px;color:var(--muted)}
+.seats{display:flex;gap:6px;margin:8px 0}
+.seat{flex:1;text-align:center;font-size:12px;font-weight:600;padding:6px 2px;border-radius:4px;color:#fff}
+.seat.bot{opacity:.75;background-image:repeating-linear-gradient(45deg,transparent 0 4px,rgba(0,0,0,.18) 4px 8px)}
+table{width:100%;border-collapse:collapse;font-size:14px;background:var(--surface)}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--muted)}
+kbd{font-family:"VT323",monospace;font-size:17px;border:2px solid var(--line);border-bottom-width:3px;border-radius:4px;padding:0 6px;background:var(--surface)}
+.tl{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(460px,100%),1fr))}
+.tl .time{font-family:"VT323",monospace;font-size:28px;color:var(--accent)}
+.overflow{overflow-x:auto}
+</style>
+</head>
+<body>
+<main>
+<h1>Office Takeover: sketchbook</h1>
+<p class="lead">Phác thảo để hình dung bối cảnh, thao tác desktop, các loại tháp, kỹ năng, sự kiện ngẫu nhiên và chế độ chơi. Đây là sketch ý tưởng, chưa phải art thật. Mỗi trận tối đa 4 ghế, ghế trống do bot ngồi.</p>
+<ul class="toc">
+  <li><a href="#basics">0. Luật cơ bản</a></li>
+  <li><a href="#map">1. Bối cảnh</a></li>
+  <li><a href="#controls">2. Điều khiển desktop</a></li>
+  <li><a href="#towers">3. Tháp</a></li>
+  <li><a href="#skills">4. Kỹ năng</a></li>
+  <li><a href="#events">5. Sự kiện</a></li>
+  <li><a href="#modes">6. Chế độ chơi</a></li>
+  <li><a href="#timeline">7. Một trận mẫu</a></li>
+</ul>
+
+<h2 id="basics">0. Luật cơ bản trong 3 khung hình</h2>
+<div class="grid g3">
+  <div class="card"><div data-scene="b1"></div><h3>① Tháp tự sinh lính</h3><p>Mỗi tháp của bạn cứ +1 lính mỗi giây, đến khi đầy (giới hạn theo cấp tháp). Tháp trung lập (xám) không sinh lính.</p></div>
+  <div class="card"><div data-scene="b2"></div><h3>② Kéo để gửi lính</h3><p>Kéo chuột từ tháp mình sang tháp khác. Một nửa số lính chạy dọc theo đường thẳng, ai cũng nhìn thấy.</p></div>
+  <div class="card"><div data-scene="b3"></div><h3>③ Hết thủ thì đổi chủ</h3><p>Lính đến nơi trừ lính thủ 1:1. Tháp về 0 thì đổi sang màu bạn, số lính dư ở lại giữ tháp.</p></div>
+</div>
+
+<h2 id="map">1. Bối cảnh: tầng văn phòng</h2>
+<p class="lead">Mỗi trận là một tầng văn phòng nhìn từ trên xuống. 4 góc là bàn làm việc của 4 người chơi. Ở giữa là các phòng đặc biệt để tranh nhau.</p>
+<div class="card big"><div data-scene="map"></div>
+<div class="grid g3" style="font-size:14px">
+  <div><b>Bàn làm việc</b>: tháp thường, điểm xuất phát của mỗi người.</div>
+  <div><b>Pantry ☕</b>: sinh lính gấp đôi. Mục tiêu đầu trận ai cũng thèm.</div>
+  <div><b>Phòng họp</b>: lính đi qua bị "kẹt họp", chậm lại. Dùng làm lá chắn.</div>
+  <div><b>Server room</b>: tự bắn bug vào lính địch đi gần.</div>
+  <div><b>Phòng sếp 👑</b>: rất khó chiếm. Chiếm được thì cả đội được buff.</div>
+  <div><b>Bàn trống</b>: tháp trung lập nhỏ, chiếm để mở rộng.</div>
+</div></div>
+
+<h2 id="controls">2. Điều khiển desktop-first</h2>
+<p class="lead">Chỉ cần chuột là chơi được. Bàn phím giúp người chơi giỏi thao tác nhanh hơn.</p>
+<div class="grid g2">
+  <div class="card"><div data-scene="c1"></div><h3>Kéo chuột trái: gửi lính</h3><p>Nhấn giữ trên tháp mình rồi thả trên tháp đích. Có thể kéo trúng nhiều tháp mình liên tiếp (vẽ một nét đi qua) để gom quân từ tất cả.</p></div>
+  <div class="card"><div data-scene="c2"></div><h3>Quét chọn rồi click phải</h3><p>Kéo khung chọn nhiều tháp (kiểu RTS), sau đó <b>click phải</b> vào đích để tất cả cùng gửi. <kbd>Space</kbd> chọn mọi tháp của mình.</p></div>
+  <div class="card"><div data-scene="c3"></div><h3>Cuộn chuột: chỉnh % lính</h3><p>Trong lúc kéo, cuộn chuột để đổi tỉ lệ 25 / 50 / 75 / 100%. Hoặc bấm <kbd>1</kbd>–<kbd>4</kbd> trước khi kéo.</p></div>
+  <div class="card"><div data-scene="c4"></div><h3>Shift + kéo: tuyến tiếp tế</h3><p>Tạo đường tiếp tế cố định. Tháp hậu phương tự động chuyển lính mới sinh ra lên tiền tuyến. Click phải lên đường để huỷ.</p></div>
+</div>
+<div class="card" style="margin-top:16px">
+<h3>Bảng phím tắt</h3>
+<div class="overflow"><table>
+<tr><th>Thao tác</th><th>Chuột</th><th>Phím</th></tr>
+<tr><td>Gửi lính</td><td>Kéo trái từ tháp mình → đích</td><td>Chọn tháp, rồi click phải đích</td></tr>
+<tr><td>Chọn nhiều tháp</td><td>Kéo khung trên nền / Ctrl+click</td><td><kbd>Space</kbd> chọn tất cả</td></tr>
+<tr><td>Tỉ lệ lính</td><td>Cuộn chuột khi đang kéo</td><td><kbd>1</kbd> 25% · <kbd>2</kbd> 50% · <kbd>3</kbd> 75% · <kbd>4</kbd> 100%</td></tr>
+<tr><td>Tuyến tiếp tế</td><td><kbd>Shift</kbd> + kéo</td><td>Click phải lên đường để huỷ</td></tr>
+<tr><td>Kỹ năng</td><td>Click icon dưới màn hình rồi click mục tiêu</td><td><kbd>Q</kbd> / <kbd>W</kbd></td></tr>
+<tr><td>Xem thông tin tháp</td><td>Rê chuột lên tháp (tooltip)</td><td>Giữ <kbd>Alt</kbd> để hiện thông số mọi tháp</td></tr>
+<tr><td>Chat nhanh / emote</td><td>Icon góc màn hình</td><td><kbd>T</kbd> rồi <kbd>1</kbd>–<kbd>6</kbd> (emote soạn sẵn, không cho chat tự do)</td></tr>
+</table></div>
+</div>
+
+<h2 id="towers">3. Các loại tháp</h2>
+<div class="grid g2">
+  <div class="card"><div data-scene="t1"></div><h3>☕ Pantry</h3>
+    <p class="kv"><b>Cách chạy</b>Sinh +2 lính/giây thay vì +1.</p>
+    <p class="kv"><b>Tình huống</b>Đầu trận cả 4 người cùng nhắm vào. Ai chiếm sớm sẽ lời to, nhưng nằm giữa map nên dễ bị đánh.</p>
+    <p class="kv"><b>Khắc chế</b>Chờ hai người khác đánh nhau ở pantry rồi mới vào nhặt.</p></div>
+  <div class="card"><div data-scene="t2"></div><h3>📅 Phòng họp</h3>
+    <p class="kv"><b>Cách chạy</b>Lính <i>địch</i> gửi tới phòng họp bị đứng yên 3 giây ở cửa ("đang họp") rồi mới đánh.</p>
+    <p class="kv"><b>Tình huống</b>Chủ phòng họp có 3 giây để gửi viện binh vào thủ.</p>
+    <p class="kv"><b>Khắc chế</b>Đánh từ hai hướng cùng lúc, hoặc dùng kỹ năng Deadline.</p></div>
+  <div class="card"><div data-scene="t3"></div><h3>🖥️ Server room</h3>
+    <p class="kv"><b>Cách chạy</b>Mỗi giây bắn 1 "bug" vào đoàn lính địch trong bán kính, giết 1 lính.</p>
+    <p class="kv"><b>Tình huống</b>Đoàn lính 10 con đi ngang server room địch thì đến nơi chỉ còn 7.</p>
+    <p class="kv"><b>Khắc chế</b>Đi đường vòng, hoặc gửi một đoàn lớn đè thẳng vào server.</p></div>
+  <div class="card"><div data-scene="t4"></div><h3>📋 Bàn HR</h3>
+    <p class="kv"><b>Cách chạy</b>Mỗi 5 giây "tuyển" 1 lính từ mỗi tháp trung lập gần đó về mình.</p>
+    <p class="kv"><b>Tình huống</b>Tháp trung lập xung quanh mỏng dần, dễ chiếm hơn cho chủ HR.</p>
+    <p class="kv"><b>Khắc chế</b>Chiếm các bàn trống trước khi HR hút cạn.</p></div>
+  <div class="card"><div data-scene="t5"></div><h3>👑 Phòng sếp</h3>
+    <p class="kv"><b>Cách chạy</b>Bắt đầu với 40 lính trung lập. Ai giữ được thì toàn bộ lính của người đó chạy nhanh hơn 20%.</p>
+    <p class="kv"><b>Tình huống</b>Giữa trận, người đang dẫn đầu thường nhắm vào đây để kết thúc sớm.</p>
+    <p class="kv"><b>Khắc chế</b>Tốn rất nhiều lính để chiếm. Kẻ thứ ba có thể đánh úp nhà bạn lúc bạn dồn quân.</p></div>
+  <div class="card"><div data-scene="t6"></div><h3>⬆️ Nâng cấp tháp (mọi loại)</h3>
+    <p class="kv"><b>Cách chạy</b>Double-click tháp mình để tiêu 10 lính, tăng cấp: sức chứa lớn hơn, sinh lính nhanh hơn.</p>
+    <p class="kv"><b>Tình huống</b>Đánh đổi giữa "mạnh lên về sau" và "có quân ngay bây giờ".</p>
+    <p class="kv"><b>Khắc chế</b>Đánh ngay lúc đối thủ vừa tiêu lính nâng cấp.</p></div>
+</div>
+
+<h2 id="skills">4. Kỹ năng (chọn 2 trước trận, có hồi chiêu)</h2>
+<div class="grid g2">
+  <div class="card"><div data-scene="k1"></div><h3>⏰ Deadline <span class="tag">Q</span><span class="tag">hồi 40s</span></h3><p>Mọi lính của bạn đang chạy và sắp gửi đi trong 5 giây tới sẽ chạy nhanh gấp đôi. Dùng để đánh úp trước khi địch kịp tiếp viện.</p></div>
+  <div class="card"><div data-scene="k2"></div><h3>☕ Coffee Break <span class="tag">hồi 60s</span></h3><p>Một tháp của bạn nhận ngay +15 lính. Dùng để cứu tháp sắp mất, hoặc tạo bất ngờ khi bị tấn công.</p></div>
+  <div class="card"><div data-scene="k3"></div><h3>📅 Họp đột xuất <span class="tag">hồi 45s</span></h3><p>Một tháp địch bị "kéo đi họp" 6 giây: không sinh lính và không gửi lính được. Đúng lúc đó thì đánh vào.</p></div>
+  <div class="card"><div data-scene="k4"></div><h3>📧 Reply All <span class="tag">hồi 50s</span></h3><p>Mọi đoàn lính địch đang chạy bị chậm 50% trong 4 giây vì mải đọc email.</p></div>
+  <div class="card"><div data-scene="k5"></div><h3>🏠 Work From Home <span class="tag">hồi 60s</span></h3><p>Một tháp của bạn biến thành "?" với địch trong 10 giây: họ không thấy số lính và không biết bạn mạnh hay yếu.</p></div>
+  <div class="card"><div data-scene="k6"></div><h3>🧑‍💻 Thực tập sinh <span class="tag">hồi 30s</span></h3><p>Thả một tháp nhỏ 5 lính ở chỗ trống bất kỳ trên map, tối đa 1 cái. Tạo tiền đồn ngay sát nhà địch.</p></div>
+</div>
+
+<h2 id="events">5. Sự kiện ngẫu nhiên (khoảng mỗi 90 giây)</h2>
+<p class="lead">Có thông báo trước 3 giây để mọi người kịp phản ứng. Sự kiện tác động lên <b>tất cả</b> người chơi như nhau, mục đích là xáo trộn thế trận chứ không thiên vị ai.</p>
+<div class="grid g3">
+  <div class="card"><div data-scene="e1"></div><h3>👔 Sếp đi ngang qua!</h3><p>Sếp đi một vòng qua map. Mọi tháp sếp đi qua ngừng sinh lính 5 giây, vì ai cũng giả vờ đang làm việc. Có thể đoán trước đường đi để tránh.</p></div>
+  <div class="card"><div data-scene="e2"></div><h3>🔌 Mất điện</h3><p>10 giây sương mù: chỉ thấy số lính ở tháp của mình và ngay cạnh. Lúc này đánh úp rất hiệu quả.</p></div>
+  <div class="card"><div data-scene="e3"></div><h3>🎂 Bánh sinh nhật ở pantry</h3><p>Mỗi tháp trung lập gửi 3 lính về pantry. Ai đang giữ pantry được cộng thêm quân. Pantry thành mục tiêu số 1 trong 15 giây.</p></div>
+  <div class="card"><div data-scene="e4"></div><h3>🧹 Dọn dẹp cuối tuần</h3><p>Mọi tháp có hơn 50 lính bị cắt còn 50. Phạt người đang ôm quân, giúp người đang bị dẫn trước lật kèo.</p></div>
+  <div class="card"><div data-scene="e5"></div><h3>📶 Wifi chập chờn</h3><p>Tuyến tiếp tế bị ngắt hết, phải kéo lại. Thử thách người hay dựa vào tự động.</p></div>
+  <div class="card"><div data-scene="e6"></div><h3>🍕 Đặt pizza chung</h3><p>Một bàn trống ngẫu nhiên xuất hiện hộp pizza 20 lính. Ai đến trước thì lấy. Cuộc đua giữa các phe.</p></div>
+</div>
+
+<h2 id="modes">6. Chế độ chơi (đã gọn lại)</h2>
+<div class="note"><b>Cách hiểu cho khỏi rối:</b> <i>Chế độ chơi</i> là luật của <b>một trận</b>: ai đấu với ai, thắng thế nào. Mọi chế độ đều dùng chung một lobby <b>4 ghế</b>, ghế nào không có người thì bot ngồi. Những thứ như "bảng xếp hạng tuần" hay "giải phòng ban" <b>không phải</b> chế độ chơi. Chúng chỉ là cách cộng điểm từ các trận đã chơi (lớp meta, làm sau).</div>
+<div class="flow">
+  <span class="step">Màn hình chính</span><span class="arr">→</span>
+  <span class="step">Chọn chế độ</span><span class="arr">→</span>
+  <span class="step">Lobby 4 ghế (mời đồng nghiệp / thêm bot)</span><span class="arr">→</span>
+  <span class="step">Chọn 2 kỹ năng</span><span class="arr">→</span>
+  <span class="step">Trận đấu 4–6 phút</span><span class="arr">→</span>
+  <span class="step">Kết quả + replay</span>
+</div>
+<div class="grid g2">
+  <div class="card"><div data-scene="m1"></div><h3>A. Đấu tự do (Free-for-all) <span class="tag">MVP</span></h3>
+    <div class="seats"><div class="seat" style="background:#4a7bd1">Bạn</div><div class="seat" style="background:#d9534f">Đồng nghiệp</div><div class="seat bot" style="background:#4caf50">Bot</div><div class="seat bot" style="background:#e0b23a">Bot</div></div>
+    <p class="kv"><b>Ai đấu ai</b>Mỗi người một mình, 4 phe.</p>
+    <p class="kv"><b>Thắng khi</b>Là người cuối cùng còn tháp, hoặc nhiều tháp nhất lúc hết 6 phút.</p>
+    <p class="kv"><b>Dùng khi</b>Giờ nghỉ trưa, 2–4 người rảnh. Chế độ chính, làm đầu tiên.</p></div>
+  <div class="card"><div data-scene="m2"></div><h3>B. Đồng đội 2 vs 2 <span class="tag">backlog</span></h3>
+    <div class="seats"><div class="seat" style="background:#4a7bd1">Bạn</div><div class="seat bot" style="background:#4a7bd1">Bot / ĐN</div><div class="seat" style="background:#d9534f">Đồng nghiệp</div><div class="seat" style="background:#d9534f">Đồng nghiệp</div></div>
+    <p class="kv"><b>Ai đấu ai</b>Hai đội, mỗi đội 2 người, cùng màu.</p>
+    <p class="kv"><b>Thắng khi</b>Đội kia hết tháp, hoặc đội nhiều tháp hơn lúc hết giờ.</p>
+    <p class="kv"><b>Điểm riêng</b>Được gửi lính vào tháp đồng đội để tiếp viện. Có ping "Giúp tôi!".</p></div>
+  <div class="card"><div data-scene="m3"></div><h3>C. Đánh Boss (co-op) <span class="tag">backlog</span></h3>
+    <div class="seats"><div class="seat" style="background:#4a7bd1">Bạn</div><div class="seat" style="background:#4a7bd1">Đồng nghiệp</div><div class="seat" style="background:#4a7bd1">(trống)</div><div class="seat bot" style="background:#7a3fa0">BOSS</div></div>
+    <p class="kv"><b>Ai đấu ai</b>1–3 người cùng phe đấu với một Boss AI chiếm sẵn 60% map.</p>
+    <p class="kv"><b>Thắng khi</b>Chiếm được Phòng sếp trong 8 phút. Boss có tên vui như "Deadline Quý 4" hay "Đợt Audit", mỗi boss một đòn đặc biệt.</p>
+    <p class="kv"><b>Dùng khi</b>Người mới, hoặc ai không thích đấu với nhau. Áp lực thấp, chơi vui.</p></div>
+  <div class="card"><div data-scene="m4"></div><h3>D. Thử thách ngày (puzzle 1 người) <span class="tag">tuỳ chọn</span></h3>
+    <div class="seats"><div class="seat" style="background:#4a7bd1">Bạn</div><div class="seat bot" style="background:#9aa0a6">—</div><div class="seat bot" style="background:#9aa0a6">—</div><div class="seat bot" style="background:#9aa0a6">—</div></div>
+    <p class="kv"><b>Ai đấu ai</b>Một mình giải map. Cả công ty cùng chơi một map trong ngày.</p>
+    <p class="kv"><b>Thắng khi</b>Chiếm hết tháp với số lần gửi lính ít nhất / nhanh nhất. Có bảng xếp hạng trong ngày.</p>
+    <p class="kv"><b>Dùng khi</b>Không ai online cùng lúc, chơi 2 phút lúc uống cà phê.</p></div>
+</div>
+<div class="card" style="margin-top:16px">
+<h3>So sánh nhanh</h3>
+<div class="overflow"><table>
+<tr><th></th><th>A. Đấu tự do</th><th>B. 2 vs 2</th><th>C. Đánh Boss</th><th>D. Thử thách ngày</th></tr>
+<tr><td>Số người thật</td><td>1–4</td><td>2–4</td><td>1–3</td><td>1</td></tr>
+<tr><td>Cần online cùng lúc</td><td>Có (hoặc chơi với bot)</td><td>Có</td><td>Có (hoặc solo)</td><td>Không</td></tr>
+<tr><td>Thời lượng</td><td>4–6 phút</td><td>5–7 phút</td><td>6–8 phút</td><td>1–3 phút</td></tr>
+<tr><td>Tốn server</td><td>Có (trừ khi toàn bot: chạy trên máy)</td><td>Có</td><td>Có (trừ khi solo)</td><td>Không (chỉ gửi điểm)</td></tr>
+<tr><td>Kế hoạch</td><td>MVP</td><td>Backlog</td><td>Backlog</td><td>Tuỳ chọn sau MVP</td></tr>
+</table></div>
+</div>
+<div class="note"><b>Lớp meta (không phải chế độ, làm sau):</b> điểm Elo cá nhân từ chế độ A/B · bảng xếp hạng Thử thách ngày · "Mùa giải" theo tháng (reset hạng, phát skin) · bảng tổng theo phòng ban (cộng điểm của thành viên). Toàn bộ chỉ đọc từ lịch sử trận đấu, không cần thêm luật chơi mới.</div>
+
+<h2 id="timeline">7. Kịch bản một trận Đấu tự do mẫu</h2>
+<div class="tl">
+  <div class="card"><div data-scene="s1"></div><div class="time">0:00</div><p>Bốn người ở bốn góc, mỗi người một bàn 10 lính. Bạn (xanh) chơi với Minh (đỏ) và 2 bot.</p></div>
+  <div class="card"><div data-scene="s2"></div><div class="time">0:40</div><p>Mọi người chiếm bàn trống gần nhà. Bạn chiếm thêm Phòng họp A làm lá chắn. Đỏ lao thẳng vào pantry.</p></div>
+  <div class="card"><div data-scene="s3"></div><div class="time">1:30</div><p>🎂 <b>Sự kiện bánh sinh nhật!</b> Lính trung lập đổ về pantry của Đỏ. Bạn bật <b>Họp đột xuất</b> lên pantry rồi gửi 75% quân vào đánh.</p></div>
+  <div class="card"><div data-scene="s4"></div><div class="time">2:45</div><p>Bạn giữ pantry. Bot vàng đánh Đỏ từ phía sau. Bạn kéo tuyến tiếp tế từ bàn nhà lên pantry.</p></div>
+  <div class="card"><div data-scene="s5"></div><div class="time">4:00</div><p>Bạn gom quân từ 3 tháp, bật <b>Deadline</b> rồi lao vào Phòng sếp. Chiếm được: toàn bộ lính của bạn nhanh hơn 20%.</p></div>
+  <div class="card"><div data-scene="s6"></div><div class="time">5:20</div><p>Bot vàng và xanh lá đã bị loại. Đỏ còn 1 tháp, bạn dọn nốt. 🏆 Kết quả: bạn thắng, replay highlight pha chiếm Phòng sếp.</p></div>
+</div>
+
+</main>
+
+<script>
+// ---------- palette ----------
+const C = {p1:'#4a7bd1', p2:'#d9534f', p3:'#4caf50', p4:'#e0b23a', n:'#9aa0a6', boss:'#7a3fa0', ink:'#23222b', white:'#fffdf8'};
+const col = t => C[t] || t;
+
+// ---------- 8x8 pixel icons ('#'=ink, 'o'=team color, 'w'=white) ----------
+const ICONS = {
+  pc:     ['########','#wwwwww#','#wooooo#','#wwwwww#','########','...##...','..####..','........'],
+  cup:    ['.o.o.o..','..o.o...','######..','#wwww###','#wwww#.#','#wwww###','######..','.####...'],
+  meeting:['........','.#.##.#.','########','#oooooo#','########','.#.##.#.','........','........'],
+  server: ['########','#wo#ww.#','########','#w.o.ww#','########','#wwo.w.#','########','.#....#.'],
+  boss:   ['#..##..#','##.##.##','########','#oooooo#','#o#oo#o#','########','........','........'],
+  hr:     ['..####..','##oooo##','#wwwwww#','#w####w#','#wwwwww#','#w###ww#','#wwwwww#','########'],
+  cake:   ['..o.o.o.','..#.#.#.','########','#oooooo#','#wwwwww#','#oooooo#','########','........'],
+  pizza:  ['########','#oowoow#','#woowoo#','#owoowo#','#oowoow#','########','........','........'],
+  intern: ['..####..','.#wwww#.','.#w##w#.','.#wwww#.','..####..','.#oooo#.','#oooooo#','#oooooo#'],
+  ghost:  ['..####..','.#wwww#.','#w#ww#w#','#wwwwww#','#wwwwww#','#wwwwww#','#w#ww#w#','#.#..#.#'],
+  cursor: ['#.......','##......','#w#.....','#ww#....','#www#...','#wwww#..','#ww###..','#.##....'],
+  snow:   ['...#....','.#.#.#..','..###...','#######.','..###...','.#.#.#..','...#....','........'],
+  bug:    ['.#...#..','..#.#...','.#####..','#ooooo#.','.#ooo#..','#ooooo#.','.#####..','........'],
+  mail:   ['########','##wwww##','#w#ww#w#','#ww##ww#','#wwwwww#','########','........','........'],
+  clock:  ['..####..','.#wwww#.','#www#ww#','#www#ww#','#www###.','#wwwwww#','.#wwww#.','..####..'],
+  wheel:  ['.####...','#ww#w#..','#ww#w#..','######..','#wwww#..','#wwww#..','.####...','........'],
+};
+function icon(name, x, y, team, s=1){
+  const rows = ICONS[name]; let out = '';
+  for (let r=0;r<rows.length;r++) for (let c=0;c<rows[r].length;c++){
+    const ch = rows[r][c]; if (ch==='.') continue;
+    const f = ch==='#'?C.ink: ch==='w'?C.white: col(team);
+    out += `<rect x="${x+c*s}" y="${y+r*s}" width="${s}" height="${s}" fill="${f}"/>`;
+  }
+  return out;
+}
+
+// ---------- primitives ----------
+const T = (x,y,txt,{size=9,fill='var(--ink)',anchor='middle',weight=400}={}) =>
+  `<text x="${x}" y="${y}" font-family="VT323,monospace" font-size="${size}" fill="${fill}" text-anchor="${anchor}" font-weight="${weight}">${txt}</text>`;
+
+function floor(w,h){
+  let g = `<rect width="${w}" height="${h}" fill="var(--floor)"/>`;
+  for (let x=16;x<w;x+=16) g += `<rect x="${x}" y="0" width="1" height="${h}" fill="var(--floor-line)"/>`;
+  for (let y=16;y<h;y+=16) g += `<rect x="0" y="${y}" width="${w}" height="1" fill="var(--floor-line)"/>`;
+  return g;
+}
+function room(x,y,w,h,label){
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="var(--wall)" stroke-width="2" stroke-dasharray="6 3"/>`+
+    (label?T(x+4,y+9,label,{size:8,fill:'var(--muted)',anchor:'start'}):'');
+}
+// tower: centered at x,y
+function tower(x,y,{team='n',n=null,kind='pc',sel=false,label=null,lvl=1,hide=false,frozen=false,dim=false}={}){
+  let g = `<g${dim?' opacity=".35"':''}>`;
+  g += `<rect x="${x-10}" y="${y+9}" width="20" height="3" fill="#000" opacity=".15"/>`;
+  g += `<rect x="${x-11}" y="${y-12}" width="22" height="22" fill="${C.ink}"/>`;
+  g += `<rect x="${x-10}" y="${y-11}" width="20" height="20" fill="var(--body)"/>`;
+  g += `<rect x="${x-10}" y="${y-11}" width="20" height="5" fill="${col(team)}"/>`;
+  for (let i=1;i<lvl;i++) g += `<rect x="${x+6-i*4}" y="${y-10}" width="2" height="2" fill="${C.white}"/>`;
+  g += icon(kind, x-4, y-5, team);
+  if (sel) g += `<rect x="${x-14}" y="${y-16}" width="28" height="30" fill="none" stroke="${C.white}" stroke-width="1.5" stroke-dasharray="3 2"/><rect x="${x-14}" y="${y-16}" width="28" height="30" fill="none" stroke="${col(team)}" stroke-width="1" stroke-dasharray="3 2" stroke-dashoffset="2"/>`;
+  if (n!==null){
+    const txt = hide?'?':String(n), w = Math.max(14, txt.length*5+6);
+    g += `<rect x="${x-w/2}" y="${y-24}" width="${w}" height="10" fill="${C.ink}"/>`;
+    g += T(x, y-16.5, txt, {size:10, fill:C.white});
+  }
+  if (frozen){ g += `<rect x="${x-11}" y="${y-12}" width="22" height="22" fill="#9fd3ff" opacity=".45"/>` + icon('snow', x+6, y-4, 'n'); }
+  if (label) g += T(x, y+20, label, {size:8, fill:'var(--muted)'});
+  return g + '</g>';
+}
+const lerp = (a,b,t)=>a+(b-a)*t;
+function route(x1,y1,x2,y2,team,{dash='3 3',w=1.5,op=.6}={}){
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col(team)}" stroke-width="${w}" stroke-dasharray="${dash}" opacity="${op}"/>`;
+}
+function squad(x1,y1,x2,y2,t,team,n,{trail=false,slow=false}={}){
+  const x = lerp(x1,x2,t), y = lerp(y1,y2,t);
+  const dx = x2-x1, dy=y2-y1, L=Math.hypot(dx,dy)||1, ux=dx/L, uy=dy/L;
+  let g = route(x1,y1,x2,y2,team,{op:.35});
+  if (trail) for (let i=1;i<=3;i++) g += `<rect x="${x-ux*i*5-3}" y="${y-uy*i*5-.5}" width="6" height="1" fill="${col(team)}" opacity="${.6-i*.15}"/>`;
+  const pts = [[0,0],[-3,-3],[-3,3],[-6,0],[3,-3],[3,3]];
+  for (const [ox,oy] of pts) g += `<rect x="${x+ox-1.5}" y="${y+oy-1.5}" width="3" height="3" fill="${col(team)}" stroke="${C.ink}" stroke-width=".5"/>`;
+  if (n!==null && n!==undefined) g += T(x, y-7, n, {size:8, fill:col(team), weight:700});
+  if (slow) g += T(x+10, y+3, 'zz', {size:8, fill:'var(--muted)', anchor:'start'});
+  return g;
+}
+function cursor(x,y){ return icon('cursor', x, y, 'n', 1.2); }
+function dragLine(x1,y1,x2,y2){ return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="2 2"/>` + `<circle cx="${x2}" cy="${y2}" r="3" fill="none" stroke="var(--ink)"/>`; }
+function burst(x,y,team){
+  let g=''; for (let a=0;a<8;a++){ const r=a*Math.PI/4; g+=`<rect x="${x+Math.cos(r)*17-1.5}" y="${y+Math.sin(r)*17-1.5}" width="3" height="3" fill="${col(team)}"/>`; }
+  return g;
+}
+function banner(w,txt,bg='#23222b'){ return `<rect x="0" y="0" width="${w}" height="13" fill="${bg}"/>`+T(w/2,10,txt,{size:10,fill:'#fffdf8'}); }
+function arrowR(x,y){ return T(x,y,'→',{size:16,fill:'var(--muted)'}); }
+function svg(w,h,inner){ return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">${floor(w,h)}${inner}</svg>`; }
+
+// ---------- office map ----------
+const NODES = {
+  d1:{x:40,y:40,kind:'pc',label:'Bàn P1'},   d2:{x:280,y:40,kind:'pc',label:'Bàn P2'},
+  d3:{x:40,y:170,kind:'pc',label:'Bàn P3'},  d4:{x:280,y:170,kind:'pc',label:'Bàn P4'},
+  n1:{x:100,y:40,kind:'pc'}, n2:{x:220,y:40,kind:'pc'}, n3:{x:100,y:170,kind:'pc'}, n4:{x:220,y:170,kind:'pc'},
+  pantry:{x:160,y:36,kind:'cup',label:'Pantry'},
+  mA:{x:76,y:105,kind:'meeting',label:'Họp A'}, mB:{x:244,y:105,kind:'meeting',label:'Họp B'},
+  boss:{x:160,y:105,kind:'boss',label:'Phòng sếp'},
+  server:{x:160,y:172,kind:'server',label:'Server'},
+};
+const BASE = {d1:['p1',10],d2:['p2',10],d3:['p3',10],d4:['p4',10],n1:['n',5],n2:['n',5],n3:['n',5],n4:['n',5],
+  pantry:['n',12],mA:['n',8],mB:['n',8],boss:['n',40],server:['n',10]};
+function officeMap(state={}, {labels=true, extra='', rooms=true, fog=null}={}){
+  const W=320,H=200; let g='';
+  if (rooms){ g += room(130,8,60,50,'') + room(50,78,52,54,'') + room(218,78,52,54,'') + room(126,74,68,60,'') + room(130,148,60,46,''); }
+  const s = Object.assign({}, BASE, state);
+  for (const id in NODES){
+    const nd = NODES[id]; if (!s[id]) continue;
+    const [team,n,opts={}] = s[id];
+    const hidden = fog && !fog.includes(id);
+    g += tower(nd.x, nd.y, {team, n: hidden?'?':n, kind:nd.kind, label: labels?nd.label:null, hide:hidden, ...opts});
+  }
+  g += extra;
+  return svg(W,H,g);
+}
+const N = id => NODES[id];
+const sq = (a,b,t,team,n,o) => squad(N(a).x,N(a).y,N(b).x,N(b).y,t,team,n,o);
+
+// ---------- scenes ----------
+const S = {};
+S.b1 = svg(200,110, tower(100,62,{team:'p1',n:12,label:'Bàn của bạn'}) + T(140,52,'+1/giây',{size:11,fill:C.p1,anchor:'start'}) + T(140,64,'↑',{size:14,fill:C.p1,anchor:'start'}));
+S.b2 = svg(200,110, tower(40,62,{team:'p1',n:10,sel:true}) + tower(160,62,{team:'n',n:8}) + squad(40,62,160,62,.5,'p1',10) + dragLine(52,80,150,80) + cursor(150,78) + T(100,100,'kéo thả',{size:10,fill:'var(--muted)'}));
+S.b3 = svg(200,110, tower(40,62,{team:'p1',n:10}) + tower(160,62,{team:'p1',n:2}) + burst(160,58,'p1') + T(160,100,'10 − 8 = 2 → của bạn!',{size:10,fill:C.p1}));
+
+S.map = officeMap({}, {});
+
+S.c1 = svg(240,130, tower(40,40,{team:'p1',n:14,sel:true}) + tower(40,95,{team:'p1',n:9,sel:true}) + tower(190,66,{team:'p2',n:12}) +
+  `<path d="M40 40 L40 95 L180 66" fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="2 2"/>` + cursor(180,64) +
+  T(120,124,'1 nét vẽ đi qua 2 tháp → gom quân cả hai',{size:9,fill:'var(--muted)'}));
+S.c2 = svg(240,130, `<rect x="16" y="14" width="90" height="98" fill="${C.p1}" opacity=".08" stroke="${C.p1}" stroke-dasharray="4 2"/>` +
+  tower(40,40,{team:'p1',n:14,sel:true}) + tower(80,66,{team:'p1',n:9,sel:true}) + tower(40,95,{team:'p1',n:11,sel:true}) + tower(200,66,{team:'p3',n:20}) +
+  squad(40,40,200,66,.6,'p1',7) + squad(80,66,200,66,.5,'p1',5) + squad(40,95,200,66,.55,'p1',6) + cursor(204,72) + T(214,92,'click phải',{size:9,fill:'var(--muted)'}));
+S.c3 = svg(240,130, tower(70,66,{team:'p1',n:20,sel:true}) + tower(190,66,{team:'n',n:12}) + dragLine(80,66,180,66) + cursor(180,64) +
+  [25,50,75,100].map((p,i)=>`<rect x="${40+i*16}" y="96" width="14" height="8" fill="${i<3?C.p1:'var(--floor-line)'}" stroke="${C.ink}" stroke-width=".5"/>`).join('') +
+  T(70,118,'75% = 15 lính',{size:10,fill:C.p1}) + icon('wheel',156,96,'n',1.5) + T(180,118,'cuộn chuột',{size:9,fill:'var(--muted)',anchor:'start'}));
+S.c4 = svg(240,130, tower(36,90,{team:'p1',n:18,label:'hậu phương'}) + tower(200,40,{team:'p1',n:26,label:'tiền tuyến'}) +
+  route(36,90,200,40,'p1',{dash:'6 2',w:3,op:.8}) + [.25,.5,.75].map(t=>`<rect x="${lerp(36,200,t)-2}" y="${lerp(90,40,t)-2}" width="4" height="4" fill="${C.p1}" stroke="${C.ink}" stroke-width=".5"/>`).join('') +
+  T(130,110,'Shift + kéo → tự chuyển lính liên tục',{size:9,fill:'var(--muted)'}));
+
+S.t1 = svg(240,110, tower(70,60,{team:'p1',n:12,kind:'pc',label:'Bàn thường'}) + T(70,96,'+1/giây',{size:10,fill:C.p1}) + tower(170,60,{team:'p1',n:24,kind:'cup',label:'Pantry'}) + T(170,96,'+2/giây',{size:10,fill:C.p1,weight:700}));
+S.t2 = svg(240,110, tower(190,55,{team:'p1',n:9,kind:'meeting',label:'Phòng họp (của bạn)'}) + squad(30,55,165,55,1,'p2',12,{slow:true}) + icon('clock',150,64,'n',1.4) + T(160,88,'đứng 3s',{size:9,fill:C.p2}) +
+  squad(60,100,190,55,.6,'p1',6) + tower(60,100,{team:'p1',n:8}) );
+S.t3 = svg(240,110, tower(120,82,{team:'p1',n:15,kind:'server',label:'Server (của bạn)'}) + `<circle cx="120" cy="82" r="44" fill="${C.p1}" opacity=".07" stroke="${C.p1}" stroke-dasharray="2 3"/>` +
+  squad(10,40,230,40,.55,'p2','10→7') + icon('bug',112,48,'p2') + `<line x1="120" y1="70" x2="125" y2="45" stroke="${C.p2}" stroke-width="1" stroke-dasharray="1 1"/>`);
+S.t4 = svg(240,110, tower(120,60,{team:'p1',n:11,kind:'hr',label:'Bàn HR (của bạn)'}) + tower(40,30,{team:'n',n:'5→4'}) + tower(200,30,{team:'n',n:'5→4'}) + tower(40,95,{team:'n',n:'3→2'}) +
+  squad(40,30,120,60,.5,'n',1) + squad(200,30,120,60,.5,'n',1) + squad(40,95,120,60,.5,'n',1));
+S.t5 = svg(240,110, `<circle cx="120" cy="55" r="34" fill="${C.p4}" opacity=".12"/>` + tower(120,58,{team:'p1',n:6,kind:'boss',label:'Phòng sếp'}) +
+  squad(10,100,60,100,.8,'p1',8,{trail:true}) + squad(180,100,235,100,.5,'p1',4,{trail:true}) + T(120,18,'Toàn đội: lính +20% tốc độ',{size:10,fill:C.p1}));
+S.t6 = svg(240,110, tower(60,60,{team:'p1',n:25,lvl:1,label:'Cấp 1 · tối đa 30'}) + arrowR(120,64) + T(120,80,'−10 lính',{size:9,fill:'var(--muted)'}) + tower(180,60,{team:'p1',n:15,lvl:3,label:'Cấp 2 · tối đa 50'}));
+
+S.k1 = svg(240,100, tower(30,50,{team:'p1',n:5}) + tower(210,50,{team:'p2',n:10}) + squad(30,50,210,50,.7,'p1',14,{trail:true}) + T(120,24,'×2 tốc độ trong 5 giây',{size:10,fill:C.p1}) + icon('clock',112,70,'p1',2));
+S.k2 = svg(240,100, tower(60,55,{team:'p1',n:3}) + squad(140,30,70,52,.3,'p2',10) + arrowR(120,90) + tower(190,55,{team:'p1',n:18}) + icon('cup',184,74,'p1') + T(190,24,'+15 tức thì',{size:10,fill:C.p1}));
+S.k3 = svg(240,100, tower(60,55,{team:'p2',n:20}) + arrowR(120,60) + tower(180,55,{team:'p2',n:20,frozen:true}) + T(180,90,'6 giây không sinh, không gửi',{size:9,fill:'var(--muted)'}));
+S.k4 = svg(240,100, squad(10,35,230,35,.45,'p2',12,{slow:true}) + squad(10,70,230,70,.6,'p3',8,{slow:true}) + icon('mail',96,46,'p2',1.5) + icon('mail',150,80,'p3',1.5) + T(120,96,'mọi đoàn lính địch −50% tốc độ',{size:9,fill:'var(--muted)'}));
+S.k5 = svg(240,100, tower(60,55,{team:'p1',n:32,label:'bạn thấy'}) + arrowR(120,60) + tower(180,55,{team:'p1',n:'?',hide:true,label:'địch thấy'}) + icon('ghost',198,30,'n'));
+S.k6 = svg(240,100, tower(40,55,{team:'p1',n:20}) + tower(200,55,{team:'p2',n:14}) + tower(150,40,{team:'p1',n:5,kind:'intern',label:'thực tập sinh'}) + `<rect x="139" y="27" width="22" height="22" fill="none" stroke="${C.p1}" stroke-dasharray="2 2"/>`);
+
+S.e1 = svg(240,110, banner(240,'👔 SẾP ĐI NGANG QUA!') + tower(50,60,{team:'p1',n:12}) + tower(120,60,{team:'p2',n:9}) + tower(190,60,{team:'p3',n:14}) +
+  `<path d="M10 90 L230 90" stroke="var(--ink)" stroke-dasharray="4 3"/>` + icon('boss',112,82,'boss',2) + T(50,40,'zz',{size:10,fill:'var(--muted)'}) + T(120,40,'zz',{size:10,fill:'var(--muted)'}));
+S.e2 = svg(240,110, `<rect width="240" height="110" fill="#000" opacity=".6"/>` + banner(240,'🔌 MẤT ĐIỆN 10 GIÂY') + `<circle cx="60" cy="65" r="38" fill="var(--floor)"/>` +
+  tower(60,65,{team:'p1',n:18}) + tower(150,55,{team:'p2',n:'?',hide:true,dim:true}) + tower(205,85,{team:'p3',n:'?',hide:true,dim:true}));
+S.e3 = svg(240,110, banner(240,'🎂 BÁNH SINH NHẬT Ở PANTRY') + tower(120,62,{team:'p2',n:'14+9',kind:'cup'}) + icon('cake',137,66,'p4') +
+  tower(30,40,{team:'n',n:2}) + tower(210,40,{team:'n',n:2}) + tower(40,100,{team:'n',n:2}) + squad(30,40,120,62,.6,'n',3) + squad(210,40,120,62,.6,'n',3) + squad(40,100,120,62,.6,'n',3));
+S.e4 = svg(240,110, banner(240,'🧹 DỌN DẸP: TỐI ĐA 50 LÍNH') + tower(70,65,{team:'p1',n:'82→50'}) + tower(170,65,{team:'p2',n:'31'}));
+S.e5 = svg(240,110, banner(240,'📶 WIFI CHẬP CHỜN: MẤT TUYẾN TIẾP TẾ') + tower(40,70,{team:'p1',n:18}) + tower(200,70,{team:'p1',n:20}) +
+  route(40,70,110,70,'p1',{dash:'6 2',w:3,op:.8}) + route(130,70,200,70,'p1',{dash:'6 2',w:3,op:.8}) + T(120,74,'✂',{size:14,fill:C.p2}));
+S.e6 = svg(240,110, banner(240,'🍕 PIZZA XUẤT HIỆN!') + tower(120,65,{team:'n',n:20,kind:'pizza'}) + tower(25,90,{team:'p1',n:15}) + tower(215,90,{team:'p2',n:15}) +
+  squad(25,90,120,65,.55,'p1',10,{trail:true}) + squad(215,90,120,65,.5,'p2',10,{trail:true}));
+
+// modes
+S.m1 = officeMap({}, {labels:false});
+S.m2 = officeMap({d1:['p1',10],d2:['p1',10],d3:['p2',10],d4:['p2',10]}, {labels:false, extra: T(160,66,'đội Xanh ↑  ·  đội Đỏ ↓',{size:10})});
+S.m3 = officeMap({d1:['p1',15],d3:['p1',15],n1:['n',5],n3:['n',5],mA:['n',8],
+  pantry:['boss',30],mB:['boss',25],boss:['boss',80],server:['boss',20],n2:['boss',15],n4:['boss',15],d2:['boss',25],d4:['boss',25]}, {labels:false, extra: T(240,18,'BOSS: DEADLINE Q4',{size:10,fill:C.boss})});
+S.m4 = svg(320,200, T(160,20,'Thử thách 07/11 · tối đa 4 lần gửi',{size:11}) +
+  tower(50,110,{team:'p1',n:30}) + tower(130,60,{team:'n',n:12}) + tower(130,160,{team:'n',n:9}) + tower(210,110,{team:'n',n:20,kind:'server'}) + tower(280,60,{team:'n',n:6}) +
+  T(290,190,'Lượt: 0 / 4',{size:10,fill:'var(--muted)',anchor:'end'}));
+
+// timeline
+S.s1 = officeMap({}, {labels:false});
+S.s2 = officeMap({n1:['p1',3],mA:['p1',4],n2:['p2',2],n3:['p3',3],n4:['p4',2],d1:['p1',8]},
+  {labels:false, extra: sq('d2','pantry',.7,'p2',14)});
+S.s3 = officeMap({n1:['p1',9],mA:['p1',10],d1:['p1',16],n2:['p2',6],pantry:['p2',22,{frozen:true}],n3:['p3',8],n4:['p4',6],d2:['p2',8]},
+  {labels:false, extra: banner(320,'🎂 BÁNH SINH NHẬT Ở PANTRY') + sq('n1','pantry',.6,'p1',12) + sq('d1','pantry',.4,'p1',10)});
+S.s4 = officeMap({n1:['p1',12],mA:['p1',14],d1:['p1',12],pantry:['p1',18],n2:['p2',4],d2:['p2',6],n3:['p3',12],n4:['p4',15],d4:['p4',18],mB:['p4',10]},
+  {labels:false, extra: route(40,40,160,36,'p1',{dash:'6 2',w:3,op:.8}) + sq('mB','d2',.5,'p4',12)});
+S.s5 = officeMap({n1:['p1',6],mA:['p1',5],d1:['p1',9],pantry:['p1',8],boss:['p1',11],n2:['p2',5],d2:['p2',3],n3:['p3',4],d3:['p3',2],n4:['p4',3],d4:['p4',4],mB:['p2',7]},
+  {labels:false, extra: burst(160,101,'p1') + sq('pantry','boss',.9,'p1',null,{trail:true}) + sq('mA','boss',.9,'p1',null,{trail:true})});
+S.s6 = officeMap({n1:['p1',18],mA:['p1',20],d1:['p1',22],pantry:['p1',30],boss:['p1',28],n2:['p1',12],d2:['p2',3],n3:['p1',10],d3:['p1',9],n4:['p1',8],d4:['p1',11],mB:['p1',15],server:['p1',12]},
+  {labels:false, extra: sq('n2','d2',.7,'p1',12) + T(160,196,'🏆 Bạn thắng!',{size:12,fill:C.p1})});
+
+document.querySelectorAll('[data-scene]').forEach(el => { el.innerHTML = S[el.dataset.scene] || ''; });
+</script>
+</body>
+</html>

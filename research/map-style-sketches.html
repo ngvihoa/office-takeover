@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Map Style Sketches</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f1ea;--surface:#fffdf8;--ink:#181425;--muted:#5a6988;--line:#d9d4c7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Be Vietnam Pro",system-ui,sans-serif}
+main{max-width:1200px;margin:0 auto;padding:32px 16px 80px}
+h1,h2,h3{font-family:"VT323",monospace;font-weight:400;line-height:1.1}
+h1{font-size:54px;margin:0 0 6px}
+h2{font-size:40px;margin:56px 0 4px;padding-top:14px;border-top:2px dashed var(--line)}
+h3{font-size:26px;margin:18px 0 6px}
+.lead{color:var(--muted);max-width:800px}
+.shot{width:100%;height:auto;display:block;border-radius:6px;box-shadow:0 0 0 2px var(--line);image-rendering:pixelated}
+.cap{font-weight:600;font-size:14px;margin:6px 0 0;color:var(--muted)}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));margin-top:14px}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:6px;padding:12px;font-size:14px}
+.card b{display:block;margin-bottom:2px}
+table{width:100%;border-collapse:collapse;font-size:14px;background:var(--surface);margin-top:12px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{color:var(--muted)}
+.map-tbl td:first-child{white-space:nowrap;font-weight:600}
+.note{background:#fff4cc;border:2px solid #e7d48a;border-radius:6px;padding:12px 14px;margin:16px 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Bản đồ: tháp = phòng ban</h1>
+<p class="lead">Thay hộp-có-icon bằng <b>các phòng ban thật</b> trên mặt bằng một tầng văn phòng. Mỗi phòng có tường, cửa, bàn ghế đúng chức năng. Số lính là <b>số nhân viên</b> trong phòng. Gửi lính là <b>điều nhân viên</b> đi qua hành lang sang phòng khác. Chiếm phòng là <b>"thâu tóm phòng ban"</b>.</p>
+
+<div class="grid">
+  <div class="card"><b>Nhận biết chủ phòng (4 dấu hiệu cùng lúc)</b>Thảm sàn nhuốm màu đội · ghế ngồi màu đội · biển số nhân viên viền màu đội · thảm chùi chân ở cửa màu đội.</div>
+  <div class="card"><b>Số nhân viên</b>Biển to ở góc trên phải mỗi phòng, cùng vị trí ở mọi phòng nên mắt quét nhanh.</div>
+  <div class="card"><b>Tên phòng</b>Viết trên mặt tường phía trên (góc nhìn 3/4). Tên phòng có thể đặt theo phòng ban thật của công ty trong file map.</div>
+  <div class="card"><b>Lính → nhân viên</b>Nhóm người tí hon mặc áo màu đội, đi theo hành lang và qua cửa, không xuyên tường.</div>
+</div>
+
+<h2>Hướng 1: Mặt bằng 3/4 (pixel ấm)</h2>
+<p class="lead">Nhìn từ trên xuống, hơi nghiêng để thấy mặt tường phía trên (như Stardew Valley hay Pokémon). Nội thất pixel chi tiết, tông sáng ấm.</p>
+<div data-svg="warm-full"></div>
+<p class="cap">Màn hình trận đầy đủ (640×360): 13 phòng, hành lang, 3 nhóm nhân viên đang di chuyển, HUD tối giản</p>
+<div class="grid">
+  <div><div data-svg="warm-dev"></div><p class="cap">Phóng to: Team Dev (của bạn, xanh)</p></div>
+  <div><div data-svg="warm-pantry"></div><p class="cap">Pantry (đỏ đang giữ)</p></div>
+  <div><div data-svg="warm-boss"></div><p class="cap">Phòng sếp (trung lập, 40 người)</p></div>
+  <div><div data-svg="warm-server"></div><p class="cap">Server room (trung lập)</p></div>
+</div>
+
+<h2>Hướng 2: Bản vẽ kỹ thuật (Blueprint)</h2>
+<p class="lead">Cả game là một bản vẽ mặt bằng kiến trúc: nền xanh, nét trắng, cửa có cung mở. Phòng bị chiếm được tô gạch chéo màu đội. Khung UI là "khung tên" bản vẽ.</p>
+<div data-svg="bp-full"></div>
+<p class="cap">Màn hình trận: phòng của các đội tô gạch chéo, nhân viên là chấm tròn, HUD là khung tên bản vẽ</p>
+<div class="grid">
+  <div><div data-svg="bp-dev"></div><p class="cap">Phóng to: Team Dev</p></div>
+  <div><div data-svg="bp-home"></div><p class="cap">Trang chủ theo phong cách bản vẽ</p></div>
+</div>
+
+<h2>Hướng 3: Isometric (chỉ mô tả)</h2>
+<p class="lead">Góc nhìn chéo 3D giả (Habbo Hotel, Game Dev Story, Two Point). Đẹp và "văn phòng" nhất, nhưng <b>không khuyến nghị</b> cho dự án 1 người + đồ free:</p>
+<div class="grid">
+  <div class="card"><b>Vẽ</b>Mỗi đồ nội thất phải vẽ đúng góc 2:1. Sinh bằng code khó hơn rất nhiều, agent dễ vẽ lệch.</div>
+  <div class="card"><b>Code</b>Phải sắp xếp độ sâu (thứ tự vẽ), chọn phòng bằng chuột theo hình thoi, nhân viên bị đồ đạc che.</div>
+  <div class="card"><b>Đọc</b>Tường che bớt bên trong phòng. Kéo chuột giữa các phòng xa khó ước lượng hơn top-down.</div>
+</div>
+
+<h2>So sánh</h2>
+<table>
+<tr><th></th><th>1. Mặt bằng 3/4</th><th>2. Blueprint</th><th>3. Isometric</th></tr>
+<tr><td>Chất "phòng ban văn phòng"</td><td>★★★</td><td>★★ (kiểu kiến trúc sư)</td><td>★★★</td></tr>
+<tr><td>Đọc nhanh khi trận căng</td><td>★★</td><td>★★★ (rất ít nhiễu)</td><td>★</td></tr>
+<tr><td>Công làm asset (free, sinh bằng code)</td><td>Trung bình: khoảng 15 món nội thất nhỏ</td><td>Thấp: chỉ nét viền</td><td>Cao</td></tr>
+<tr><td>Cá tính, dễ nhớ</td><td>★★</td><td>★★★</td><td>★★★</td></tr>
+<tr><td>Lưu ý màu</td><td>Giữ palette hiện tại</td><td>Màu đội xanh dương trên nền xanh sẽ chìm, phải đổi P1 sang cyan</td><td>—</td></tr>
+</table>
+
+<div class="note"><b>Ảnh hưởng tới luật chơi (cả 3 hướng):</b> nhân viên đi <b>theo hành lang</b> thay vì đường thẳng xuyên tường. File map cần thêm <i>đồ thị hành lang</i> (các điểm nút và cửa). Khoảng cách giữa hai phòng là độ dài đường đi ngắn nhất trên đồ thị, tính sẵn khi nạp map, nên sim vẫn tất định và đơn giản. Phải cập nhật GDD và technical design nếu chốt hướng này.</div>
+</main>
+
+<script>
+const INK='#181425', TEAM={p1:'#0099db',p2:'#e43b44',p3:'#63c74d',p4:'#feae34',n:'#8b9bb4'};
+let MODE='warm'; // 'warm' | 'bp'
+const BP={bg:'#124e89',line:'#ffffff',faint:'rgba(255,255,255,.35)'};
+const BPTEAM={p1:'#2ce8f5',p2:'#ff6b74',p3:'#7be36a',p4:'#fee761',n:'#c0cbdc'};
+const tc = t => MODE==='bp'? BPTEAM[t] : TEAM[t];
+const R=(x,y,w,h,f,extra='')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}" ${extra}/>`;
+const O=(x,y,w,h,c=BP.line,sw=1)=>`<rect x="${x+.5}" y="${y+.5}" width="${w-1}" height="${h-1}" fill="none" stroke="${c}" stroke-width="${sw}"/>`;
+const TX=(x,y,s,{size=9,fill=INK,anchor='start',w=400}={})=>`<text x="${x}" y="${y}" font-family="VT323,monospace" font-size="${size}" fill="${fill}" text-anchor="${anchor}" font-weight="${w}">${s}</text>`;
+
+// ---------------- furniture ----------------
+function desk(x,y,team,kind='pc'){
+  if(MODE==='bp') return O(x,y,18,9)+`<circle cx="${x+9}" cy="${y+13}" r="3" fill="none" stroke="${BP.line}"/>`+R(x+5,y+1,8,2,BP.faint);
+  let s=R(x-1,y-1,20,11,INK)+R(x,y,18,9,'#b86f50')+R(x,y,18,2,'#e4a672');
+  s+=R(x+5,y+1,8,3,'#3a4466')+R(x+6,y+2,6,1, kind==='chart'?'#63c74d':'#2ce8f5');
+  if(kind==='pc'||kind==='chart') s+=R(x+6,y+6,6,2,'#c0cbdc');
+  if(kind==='phone') s+=R(x+6,y+6,5,2,'#c0cbdc')+R(x+13,y+5,3,3,'#e43b44');
+  if(kind==='tablet') s+=R(x+3,y+5,8,3,'#5a6988')+R(x+12,y+5,3,1,'#b55088')+R(x+12,y+7,3,1,'#feae34');
+  if(kind==='paper') s+=R(x+4,y+5,5,3,'#ffffff')+R(x+11,y+5,4,3,'#ffffff');
+  s+=R(x+5,y+10,8,6,INK)+R(x+6,y+11,6,4,tc(team));
+  return s;
+}
+function cabinet(x,y){
+  if(MODE==='bp') return O(x,y,10,16)+`<line x1="${x}" y1="${y+8}" x2="${x+10}" y2="${y+8}" stroke="${BP.line}"/>`;
+  return R(x,y,10,16,INK)+R(x+1,y+1,8,14,'#8b9bb4')+R(x+1,y+1,8,2,'#c0cbdc')+R(x+1,y+6,8,1,INK)+R(x+1,y+11,8,1,INK)+R(x+4,y+4,2,1,'#c0cbdc')+R(x+4,y+8,2,1,'#c0cbdc')+R(x+4,y+13,2,1,'#c0cbdc');
+}
+function plant(x,y){
+  if(MODE==='bp') return `<circle cx="${x+5}" cy="${y+5}" r="5" fill="none" stroke="${BP.line}" stroke-dasharray="2 1"/>`;
+  return R(x+2,y+7,7,5,INK)+R(x+3,y+8,5,3,'#b86f50')+R(x+1,y,9,8,'#265c42')+R(x,y+1,11,6,'#265c42')+R(x+1,y+1,8,5,'#3e8948')+R(x+2,y+1,3,2,'#63c74d')+R(x+6,y+3,2,2,'#63c74d');
+}
+function rack(x,y){
+  if(MODE==='bp') return O(x,y,12,20)+`<path d="M${x} ${y}L${x+12} ${y+20}M${x+12} ${y}L${x} ${y+20}" stroke="${BP.faint}"/>`;
+  let s=R(x,y,12,20,INK)+R(x+1,y+1,10,18,'#3a4466');
+  for(let i=0;i<4;i++) s+=R(x+2,y+2+i*4,8,3,'#262b44')+R(x+8,y+3+i*4,1,1,i%2?'#63c74d':'#2ce8f5')+R(x+3,y+3+i*4,3,1,'#5a6988');
+  return s;
+}
+function table(x,y,w,h,team){
+  let s='';
+  const chairs=[];
+  for(let cx=x+4;cx<=x+w-8;cx+=10){chairs.push([cx,y-6]);chairs.push([cx,y+h+1]);}
+  if(MODE==='bp'){ s+=O(x,y,w,h); chairs.forEach(([a,b])=>s+=`<circle cx="${a+2.5}" cy="${b+2.5}" r="2.5" fill="none" stroke="${BP.line}"/>`); return s; }
+  chairs.forEach(([a,b])=>s+=R(a,b,6,5,INK)+R(a+1,b+1,4,3,tc(team)));
+  return s+R(x-1,y-1,w+2,h+2,INK)+R(x,y,w,h,'#b86f50')+R(x,y,w,2,'#e4a672')+R(x+4,y+4,6,3,'#ffffff')+R(x+w-12,y+4,6,3,'#ffffff');
+}
+function roundTable(x,y,team){
+  if(MODE==='bp') return `<circle cx="${x+6}" cy="${y+6}" r="6" fill="none" stroke="${BP.line}"/><circle cx="${x-3}" cy="${y+6}" r="2" fill="none" stroke="${BP.line}"/><circle cx="${x+15}" cy="${y+6}" r="2" fill="none" stroke="${BP.line}"/>`;
+  return R(x-6,y+3,5,5,INK)+R(x-5,y+4,3,3,tc(team))+R(x+13,y+3,5,5,INK)+R(x+14,y+4,3,3,tc(team))+R(x+1,y-1,10,14,INK)+R(x-1,y+1,14,10,INK)+R(x+2,y,8,12,'#e4a672')+R(x,y+2,12,8,'#e4a672')+R(x+3,y+3,3,2,'#ffffff');
+}
+function counter(x,y,w){
+  if(MODE==='bp') return O(x,y,w,9)+O(x+4,y+1,8,7)+O(x+w-13,y-2,11,12);
+  return R(x-1,y-1,w+2,11,INK)+R(x,y,w,9,'#c0cbdc')+R(x,y,w,2,'#ffffff')+
+    R(x+4,y-3,9,10,INK)+R(x+5,y-2,7,8,'#3a4466')+R(x+7,y+1,3,2,'#e43b44')+R(x+16,y+2,4,4,'#ffffff')+R(x+17,y+3,2,2,'#733e39')+
+    R(x+w-14,y-5,12,15,INK)+R(x+w-13,y-4,10,13,'#ffffff')+R(x+w-13,y+1,10,1,'#c0cbdc')+R(x+w-5,y-2,1,3,'#8b9bb4');
+}
+function rug(x,y,w,h,c){ return MODE==='bp'? `<rect x="${x+.5}" y="${y+.5}" width="${w-1}" height="${h-1}" fill="none" stroke="${BP.faint}" stroke-dasharray="3 2"/>` : R(x,y,w,h,c)+R(x+2,y+2,w-4,h-4,'none',`stroke="#fee761" stroke-width="1"`); }
+function sofa(x,y){
+  if(MODE==='bp') return O(x,y,24,9);
+  return R(x-1,y-1,26,11,INK)+R(x,y,24,9,'#68386c')+R(x,y,24,3,'#b55088')+R(x+2,y+4,9,4,'#b55088')+R(x+13,y+4,9,4,'#b55088');
+}
+function bossDesk(x,y,team){
+  if(MODE==='bp') return O(x,y,36,12)+O(x+28,y+12,8,14)+`<circle cx="${x+16}" cy="${y+18}" r="4" fill="none" stroke="${BP.line}"/>`;
+  return R(x-1,y-1,38,14,INK)+R(x,y,36,12,'#733e39')+R(x,y,36,2,'#b86f50')+R(x+27,y+11,10,16,INK)+R(x+28,y+12,8,14,'#733e39')+
+   R(x+5,y+2,10,4,'#3a4466')+R(x+6,y+3,8,2,'#2ce8f5')+R(x+19,y+3,5,6,'#ffffff')+R(x+30,y+3,3,3,'#feae34')+
+   R(x+11,y+14,11,9,INK)+R(x+12,y+15,9,7,tc(team))+R(x+12,y+15,9,2,'#ffffff');
+}
+function bugBoard(x,y){
+  if(MODE==='bp') return O(x,y,20,12);
+  return R(x-1,y-1,22,14,INK)+R(x,y,20,12,'#ffffff')+R(x+2,y+2,3,3,'#e43b44')+R(x+8,y+5,3,3,'#e43b44')+R(x+14,y+2,3,3,'#63c74d')+R(x+3,y+8,4,2,'#feae34');
+}
+function easel(x,y){
+  if(MODE==='bp') return O(x,y,14,12);
+  return R(x-1,y-1,16,14,INK)+R(x,y,14,12,'#ffffff')+R(x+2,y+2,4,4,'#b55088')+R(x+7,y+2,4,4,'#0099db')+R(x+2,y+7,4,3,'#feae34')+R(x+7,y+7,4,3,'#63c74d');
+}
+
+// ---------------- rooms ----------------
+const ROOMS=[
+ {name:'TEAM DEV',x:16,y:28,w:120,h:86,door:'b',own:'p1',n:22,dept:'dev',lvl:2},
+ {name:'KẾ TOÁN',x:150,y:28,w:100,h:86,door:'b',own:'n',n:5,dept:'acc'},
+ {name:'PANTRY',x:264,y:28,w:112,h:86,door:'b',own:'p2',n:18,dept:'pantry'},
+ {name:'MARKETING',x:390,y:28,w:100,h:86,door:'b',own:'p2',n:7,dept:'mkt'},
+ {name:'TEAM DESIGN',x:504,y:28,w:120,h:86,door:'b',own:'p2',n:12,dept:'design',lvl:2},
+ {name:'HỌP A',x:60,y:142,w:116,h:78,door:'lr',own:'p1',n:14,dept:'meet'},
+ {name:'PHÒNG SẾP',x:248,y:136,w:144,h:90,door:'tb',own:'n',n:40,dept:'boss'},
+ {name:'HỌP B',x:464,y:142,w:116,h:78,door:'lr',own:'p3',n:8,dept:'meet'},
+ {name:'TEAM SALES',x:16,y:248,w:120,h:86,door:'t',own:'p3',n:11,dept:'sales'},
+ {name:'HR',x:150,y:248,w:100,h:86,door:'t',own:'p1',n:6,dept:'hr'},
+ {name:'SERVER',x:264,y:248,w:112,h:86,door:'t',own:'n',n:10,dept:'server'},
+ {name:'QA',x:390,y:248,w:100,h:86,door:'t',own:'n',n:5,dept:'qa'},
+ {name:'TEAM DATA',x:504,y:248,w:120,h:86,door:'t',own:'p4',n:3,dept:'data'},
+];
+const FACE=12, DOOR=18;
+function furnish(r){
+  const t=r.own, ix=r.x+6, iy=r.y+FACE+6, iw=r.w-12;
+  let s='';
+  const grid=(kind,cols,rows,dx=36,dy=30)=>{for(let j=0;j<rows;j++)for(let i=0;i<cols;i++)s+=desk(ix+4+i*dx,iy+2+j*dy,t,kind);};
+  switch(r.dept){
+    case 'dev': grid('pc',3,2); break;
+    case 'sales': grid('phone',3,2); break;
+    case 'data': grid('chart',3,2); break;
+    case 'design': grid('tablet',2,2,40); s+=easel(ix+iw-18,iy+2)+plant(ix+iw-14,iy+38); break;
+    case 'acc': s+=cabinet(ix,iy)+cabinet(ix+12,iy)+cabinet(ix+24,iy); s+=desk(ix+44,iy+2,t,'paper')+desk(ix+66,iy+2,t,'paper')+desk(ix+44,iy+32,t,'paper')+plant(ix+2,iy+42); break;
+    case 'mkt': s+=roundTable(ix+38,iy+10,t)+desk(ix+4,iy+34,t,'tablet')+desk(ix+66,iy+34,t,'pc')+plant(ix+2,iy+2)+plant(ix+iw-12,iy+2); break;
+    case 'hr': s+=desk(ix+6,iy+2,t,'paper')+desk(ix+36,iy+2,t,'pc')+cabinet(ix+iw-12,iy)+sofa(ix+6,iy+40)+plant(ix+iw-12,iy+40); break;
+    case 'qa': grid('pc',2,2,40); s+=bugBoard(ix+iw-22,iy+2)+plant(ix+iw-12,iy+40); break;
+    case 'pantry': s+=counter(ix+2,iy,iw-4)+roundTable(ix+18,iy+26,t)+roundTable(ix+66,iy+26,t)+plant(ix+iw-12,iy+44); break;
+    case 'meet': s+=table(ix+14,iy+18,iw-28,16,t)+plant(ix,iy)+plant(ix+iw-11,iy); break;
+    case 'boss': s+=rug(ix+10,iy+2,iw-20,48,'#a22633')+bossDesk(ix+44,iy+8,t)+sofa(ix+16,iy+56)+sofa(ix+iw-40,iy+56)+plant(ix,iy)+plant(ix+iw-11,iy); break;
+    case 'server': for(let j=0;j<2;j++)for(let i=0;i<5;i++) s+=rack(ix+6+i*19,iy+2+j*28); break;
+  }
+  return s;
+}
+function roomSVG(r){
+  const {x,y,w,h}=r, c=tc(r.own), owned=r.own!=='n';
+  const cx=x+w/2, cy=y+(h+FACE)/2;
+  let s='';
+  if(MODE==='bp'){
+    if(owned) s+=R(x,y,w,h,`url(#hatch-${r.own})`);
+    // walls with gaps
+    const seg=(x1,y1,x2,y2)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${owned?c:BP.line}" stroke-width="2"/>`;
+    const top=r.door.includes('t'), bot=r.door.includes('b'), L=r.door.includes('l'), Rr=r.door.includes('r');
+    s+= top? seg(x,y,cx-DOOR/2,y)+seg(cx+DOOR/2,y,x+w,y) : seg(x,y,x+w,y);
+    s+= bot? seg(x,y+h,cx-DOOR/2,y+h)+seg(cx+DOOR/2,y+h,x+w,y+h) : seg(x,y+h,x+w,y+h);
+    s+= L? seg(x,y,x,cy-DOOR/2)+seg(x,cy+DOOR/2,x,y+h) : seg(x,y,x,y+h);
+    s+= Rr? seg(x+w,y,x+w,cy-DOOR/2)+seg(x+w,cy+DOOR/2,x+w,y+h) : seg(x+w,y,x+w,y+h);
+    const arc=(px,py,d)=>`<path d="${d}" fill="none" stroke="${BP.faint}"/>`;
+    if(bot) s+=arc(0,0,`M${cx-DOOR/2} ${y+h} A${DOOR} ${DOOR} 0 0 0 ${cx+DOOR/2} ${y+h-DOOR}`)+`<line x1="${cx+DOOR/2}" y1="${y+h}" x2="${cx+DOOR/2}" y2="${y+h-DOOR}" stroke="${BP.faint}"/>`;
+    if(top) s+=arc(0,0,`M${cx-DOOR/2} ${y} A${DOOR} ${DOOR} 0 0 1 ${cx+DOOR/2} ${y+DOOR}`)+`<line x1="${cx+DOOR/2}" y1="${y}" x2="${cx+DOOR/2}" y2="${y+DOOR}" stroke="${BP.faint}"/>`;
+    s+=furnish({...r});
+    s+=TX(x+5,y+11,r.name,{size:10,fill:BP.line});
+    // count tag
+    s+=`<circle cx="${x+w-14}" cy="${y+12}" r="10" fill="#ffffff" stroke="${c}" stroke-width="3"/>`+TX(x+w-14,y+16.5,r.n,{size:13,fill:BP.bg,anchor:'middle',w:700});
+    return s;
+  }
+  // warm 3/4
+  s+=R(x,y,w,h,'#ead4aa');
+  for(let yy=y+FACE;yy<y+h;yy+=8)for(let xx=x+((yy/8)%2?4:0);xx<x+w;xx+=8) s+=R(xx,yy,4,4,'#e4a672',`opacity=".35"`);
+  s+=R(x,y+FACE,w,h-FACE,c,`opacity="${owned?.28:.12}"`);
+  s+=furnish(r);
+  // walls
+  const wall='#3a4466', face='#c28569', faceL='#e8b796';
+  const top=r.door.includes('t'), bot=r.door.includes('b'), L=r.door.includes('l'), Rr=r.door.includes('r');
+  // top face
+  s+=R(x,y,w,FACE,face)+R(x,y,w,3,wall)+R(x,y+3,w,1,faceL)+R(x,y+FACE-1,w,1,'#733e39');
+  if(top){ s+=R(cx-DOOR/2,y,DOOR,FACE,'#c0cbdc')+R(cx-DOOR/2,y+FACE-3,DOOR,3,c); }
+  // side walls
+  const side=(sx,gap)=>{ if(gap) return R(sx,y,3,cy-DOOR/2-y,wall)+R(sx,cy+DOOR/2,3,y+h-cy-DOOR/2,wall)+R(sx,cy-DOOR/2,3,DOOR,c); return R(sx,y,3,h,wall); };
+  s+=side(x,L)+side(x+w-3,Rr);
+  // bottom wall
+  if(bot) s+=R(x,y+h-3,cx-DOOR/2-x,3,wall)+R(cx+DOOR/2,y+h-3,x+w-cx-DOOR/2,3,wall)+R(cx-DOOR/2,y+h-3,DOOR,3,c);
+  else s+=R(x,y+h-3,w,3,wall);
+  // name on wall face
+  s+=TX(x+6,y+11,r.name+(r.lvl?' ★'.repeat(r.lvl-1):''),{size:9,fill:'#181425'});
+  // count plate (top-right)
+  const pw=String(r.n).length>1?26:20;
+  s+=R(x+w-pw-4,y-5,pw,15,INK)+R(x+w-pw-3,y-4,pw-2,13,c)+R(x+w-pw-1,y-2,pw-6,9,INK)+TX(x+w-4-pw/2,y+6,r.n,{size:12,fill:'#ffffff',anchor:'middle'});
+  return s;
+}
+// corridor waypoints for squads
+function person(x,y,team){
+  if(MODE==='bp') return `<circle cx="${x+2.5}" cy="${y+3}" r="2.6" fill="${tc(team)}" stroke="#ffffff" stroke-width=".8"/>`;
+  return R(x,y,5,7,INK)+R(x+1,y+1,3,2,'#3e2731')+R(x+1,y+3,3,1,'#e8b796')+R(x+1,y+4,3,2,tc(team));
+}
+function squad(path,t,team,n){
+  const segs=[];let L=0;for(let i=1;i<path.length;i++){const d=Math.hypot(path[i][0]-path[i-1][0],path[i][1]-path[i-1][1]);segs.push(d);L+=d;}
+  let target=L*t,i=0;while(target>segs[i]){target-=segs[i];i++;}
+  const a=path[i],b=path[i+1],k=target/segs[i],x=a[0]+(b[0]-a[0])*k,y=a[1]+(b[1]-a[1])*k;
+  const pts=path.map(p=>p.join(',')).join(' ');
+  let s=`<polyline points="${pts}" fill="none" stroke="${MODE==='bp'?'#ffffff':tc(team)}" stroke-width="${MODE==='bp'?1:2}" stroke-dasharray="4 3" opacity="${MODE==='bp'?.7:.6}"/>`;
+  s+=`<circle cx="${path[path.length-1][0]}" cy="${path[path.length-1][1]}" r="3" fill="none" stroke="${MODE==='bp'?'#ffffff':tc(team)}"/>`;
+  [[-6,-4],[0,-5],[6,-4],[-3,2],[3,2]].forEach(([dx,dy])=>s+=person(x+dx-2,y+dy-3,team));
+  s+=R(x-9,y-20,18,10,MODE==='bp'?'#ffffff':INK)+TX(x,y-12,n,{size:10,fill:MODE==='bp'?BP.bg:'#ffffff',anchor:'middle'});
+  return s;
+}
+const SQUADS=[
+  [[[76,114],[76,125],[320,125],[320,114]],.62,'p1',11],
+  [[[564,114],[564,125],[320,125],[320,136]],.55,'p2',9],
+  [[[580,181],[600,181],[600,237],[564,237],[564,248]],.45,'p3',6],
+];
+function corridor(){
+  if(MODE==='bp'){
+    let s=R(0,0,640,360,BP.bg);
+    for(let x=0;x<640;x+=8) s+=R(x,0,1,360,'#ffffff',`opacity="${x%32?0.05:0.12}"`);
+    for(let y=0;y<360;y+=8) s+=R(0,y,640,1,'#ffffff',`opacity="${y%32?0.05:0.12}"`);
+    s+=O(6,20,628,320,'#ffffff',3);
+    return s;
+  }
+  let s=R(0,0,640,360,'#5a6988');
+  s+=R(6,20,628,320,'#c0cbdc');
+  for(let x=6;x<634;x+=16) s+=R(x,20,1,320,'#8b9bb4',`opacity=".5"`);
+  for(let y=20;y<340;y+=16) s+=R(6,y,628,1,'#8b9bb4',`opacity=".5"`);
+  s+=R(6,20,628,4,'#3a4466')+R(6,336,628,4,'#3a4466')+R(6,20,4,320,'#3a4466')+R(630,20,4,320,'#3a4466');
+  // corridor plants & water cooler
+  s+=plant(200,192)+plant(430,192)+plant(26,124)+plant(604,124);
+  return s;
+}
+function hudWarm(){
+  const chip=(x,w,c,txt,dim)=>R(x,3,w,14,INK)+R(x+1,4,w-2,12,'#ffffff')+R(x+4,7,6,6,c)+TX(x+13,14,txt,{size:11})+(dim?R(x,3,w,14,'#ffffff',`opacity=".5"`):'');
+  let s=chip(8,58,TEAM.p1,'Bạn 4')+chip(70,62,TEAM.p2,'Minh 4')+chip(136,64,TEAM.p3,'Bot A 2')+chip(204,64,TEAM.p4,'Bot B 1');
+  s+=R(572,3,60,14,INK)+R(573,4,58,12,'#ffffff')+TX(602,14,'⏱ 04:12',{size:11,anchor:'middle'});
+  s+=R(232,342,40,16,INK)+R(233,343,38,14,'#ffffff')+TX(252,354,'Q ⏰',{size:11,anchor:'middle'});
+  s+=R(276,342,40,16,INK)+R(277,343,38,14,'#c0cbdc')+TX(296,354,'W 18s',{size:11,anchor:'middle'});
+  s+=R(320,342,88,16,INK)+R(321,343,86,14,'#ffffff')+TX(326,354,'Gửi',{size:11});
+  for(let i=0;i<4;i++) s+=R(348+i*10,346,8,8,i<2?'#b55088':'#ffffff','stroke="#181425" stroke-width="1"');
+  s+=TX(392,354,'50%',{size:10});
+  return s;
+}
+function hudBP(){
+  let s='';
+  // title block strip along the bottom edge (outside the building)
+  s+=R(300,342,334,17,BP.bg)+O(300,342,334,17,'#ffffff',1.5)+`<line x1="430" y1="342" x2="430" y2="359" stroke="#fff"/><line x1="580" y1="342" x2="580" y2="359" stroke="#fff"/>`;
+  s+=TX(305,354,'BẢN VẼ: OFFICE-01 · 1:50',{size:10,fill:'#fff'})+TX(435,354,'Q ⏰ DEADLINE · W ☕ 18s',{size:10,fill:'#fff'})+TX(607,355,'04:12',{size:13,fill:'#fff',anchor:'middle'});
+  // legend top
+  const items=[['p1','Bạn 4'],['p2','Minh 4'],['p3','Bot A 2'],['p4','Bot B 1']];
+  items.forEach(([t,l],i)=>{ s+=R(10+i*70,4,8,8,`url(#hatch-${t})`)+O(10+i*70,4,8,8,BPTEAM[t])+TX(22+i*70,12,l,{size:11,fill:'#fff'}); });
+  s+=TX(630,13,'GỬI 50%',{size:11,fill:'#fff',anchor:'end'});
+  return s;
+}
+function defs(){
+  return '<defs>'+Object.keys(BPTEAM).map(t=>`<pattern id="hatch-${t}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${BPTEAM[t]}" opacity=".12"/><rect width="2" height="6" fill="${BPTEAM[t]}" opacity=".55"/></pattern>`).join('')+'</defs>';
+}
+function scene(mode,{hud=true}={}){
+  MODE=mode; let s=defs()+corridor();
+  ROOMS.forEach(r=>s+=roomSVG(r));
+  SQUADS.forEach(q=>s+=squad(...q));
+  if(hud) s+= mode==='bp'? hudBP() : hudWarm();
+  return s;
+}
+function svg(inner,vb='0 0 640 360'){ return `<svg class="shot" viewBox="${vb}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">${inner}</svg>`; }
+function bpHome(){
+  MODE='bp'; let s=defs()+corridor();
+  s+=TX(320,90,'OFFICE TAKEOVER',{size:44,fill:'#fff',anchor:'middle'})+TX(320,112,'Bản vẽ mặt bằng · phiên bản 0.1',{size:14,fill:'rgba(255,255,255,.7)',anchor:'middle'});
+  const btn=(y,txt,fill)=>R(230,y,180,30,fill?'#ffffff':'none')+O(230,y,180,30,'#fff',2)+TX(320,y+21,txt,{size:18,fill:fill?BP.bg:'#fff',anchor:'middle'});
+  s+=btn(140,'▶ CHƠI VỚI BOT',true)+btn(180,'TẠO PHÒNG')+btn(220,'VÀO BẰNG MÃ');
+  s+=R(452,290,170,40,BP.bg)+O(452,290,170,40,'#fff',2)+`<line x1="452" y1="304" x2="622" y2="304" stroke="#fff"/>`+TX(456,301,'NGƯỜI VẼ: HOÀ',{size:10,fill:'#fff'})+TX(456,321,'⚙ CÀI ĐẶT   📖 HƯỚNG DẪN',{size:12,fill:'#fff'});
+  // dimension line decoration
+  s+=`<line x1="230" y1="268" x2="410" y2="268" stroke="#fff" opacity=".6"/><line x1="230" y1="262" x2="230" y2="274" stroke="#fff" opacity=".6"/><line x1="410" y1="262" x2="410" y2="274" stroke="#fff" opacity=".6"/>`+TX(320,264,'180',{size:10,fill:'rgba(255,255,255,.7)',anchor:'middle'});
+  return s;
+}
+const OUT={
+  'warm-full': svg(scene('warm')),
+  'warm-dev': svg(scene('warm',{hud:false}),'10 20 132 100'),
+  'warm-pantry': svg(scene('warm',{hud:false}),'258 20 124 100'),
+  'warm-boss': svg(scene('warm',{hud:false}),'242 128 156 104'),
+  'warm-server': svg(scene('warm',{hud:false}),'258 240 124 100'),
+  'bp-full': svg(scene('bp')),
+  'bp-dev': svg(scene('bp',{hud:false}),'10 20 132 100'),
+  'bp-home': svg(bpHome()),
+};
+document.querySelectorAll('[data-svg]').forEach(el=>el.innerHTML=OUT[el.dataset.svg]);
+</script>
+</body>
+</html>
