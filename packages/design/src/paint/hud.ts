@@ -137,3 +137,43 @@ export function tooltip(g: Painter, cx: number, tipY: number, lines: string[], w
     g.text(x + 4, y + 13 + i * 12, line, { size: 11, color: p.white });
   });
 }
+
+/** A room marker stays anchored to the actual seeded home, never a fixed screen corner. */
+export function homeRoomMarker(
+  g: Painter,
+  rect: readonly [number, number, number, number],
+  intro: boolean,
+  elapsedMs: number,
+  reducedMotion: boolean,
+): void {
+  const [x, y, w, h] = rect;
+  if (!intro || reducedMotion || Math.floor(elapsedMs / 500) % 2 === 0)
+    outline(g, x - 2, y - 2, w + 4, h + 4, color.accent, intro ? 2 : 1);
+  if (!intro) return;
+  // Inside the room, where bot names sit, so it never covers a neighbouring room's count plate.
+  const cx = x + Math.floor(w / 2);
+  const labelY = y + h - 21;
+  notchedBox(g, cx - 54, labelY, 108, 17, color.surfacePanel);
+  g.text(cx, labelY + 13, 'PHÒNG CỦA BẠN', { size: 13, color: color.textPrimary, align: 'center' });
+  for (let i = 0; i < 4; i++) g.rect(cx - i, labelY - 5 + i, i * 2 + 1, 1, color.accent);
+}
+
+/** Temporary introduction only; the map remains visible without a scrim. */
+export function introCountdown(g: Painter, seconds: number): void {
+  notchedBox(g, 228, 153, 184, seconds > 0 ? 48 : 30, color.surfacePanel);
+  g.text(320, 176, seconds > 0 ? String(seconds) : 'Bắt đầu!', {
+    size: 24,
+    color: color.textPrimary,
+    align: 'center',
+  });
+  if (seconds > 0)
+    g.text(320, 193, 'Click / Space / Enter để bỏ qua', {
+      size: 11,
+      color: color.textPrimary,
+      align: 'center',
+    });
+}
+
+export function graceNotice(g: Painter, x: number, baseline: number, seconds: number): void {
+  if (seconds > 0) g.text(x, baseline, `Bot chưa tấn công bạn: ${seconds}s`, { size: 11, color: color.textPrimary });
+}

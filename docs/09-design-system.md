@@ -366,6 +366,20 @@ apps/client/src/render/map/      ← Room, CountPlate, Squad
 - Thêm token hay component mới thì cập nhật file này **trước**, rồi mới code.
 
 ## 13. Danh sách component theo giai đoạn
+
+### Giới thiệu trận và ân hạn (MVP)
+- Trước tick đầu: 3 giây bản đồ đứng yên, không scrim. Viền `accent` 2lpx quanh
+  phòng có seat 0; nhấp nháy mỗi 500ms, giảm chuyển động giữ tĩnh. Nhãn nền trắng,
+  chữ ink "PHÒNG CỦA BẠN" và mũi tên pixel nằm bên trong phòng, cạnh dưới (vị trí biển tên bot), để không che
+  biển số quân của phòng bên cạnh.
+- Bot đang hoạt động có biển tên nền trắng bên trong phòng xuất phát. Đếm ngược
+  3–2–1 ở bảng góc vát giữa màn hình, kèm "Click / Space / Enter để bỏ qua";
+  "Bắt đầu!" hiện ngắn khi bắt đầu, không giữ khóa lệnh. Sau đó viền accent mảnh
+  tĩnh quanh phòng xuất phát giữ trong 10 giây theo tick.
+- Thanh dưới thay lời nhắc kỹ năng bằng "Bot chưa tấn công bạn: Ns" trong ân hạn;
+  hết ân hạn trả lại lời nhắc. Không dùng màu đội cho các thông báo này.
+- `/dev/ui`: 3/2/1, bắt đầu, giảm chuyển động, viền 10 giây, ân hạn 45/1/0 giây.
+
 | Component | Giai đoạn |
 |---|---|
 | Button, Icon button, Panel, Count plate, Room, Squad, Player chip, Skill button, Send meter, Timer, Segmented, Toggle, Slider, Tooltip, Modal, Keycap, Result stamp | MVP |

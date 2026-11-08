@@ -5,8 +5,12 @@ import {
   countPlate,
   dither,
   elevation,
+  graceNotice,
+  homeRoomMarker,
+  introCountdown,
   map as mapTokens,
   motion,
+  notchedBox,
   type Painter,
   path,
   person,
@@ -14,6 +18,7 @@ import {
   playerChip,
   primitive,
   type RoomState,
+  type RoomView,
   room,
   sendMeter,
   skillButton,
@@ -31,7 +36,7 @@ import { type BotLevel, buildWorld, MAPS, type MapDef } from '@ot/sim';
 import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import { MatchFeedback } from '../game/feedback';
-import type { MatchReport } from '../game/session';
+import { type MatchReport, matchLayout, PLAYER_NAMES } from '../game/session';
 import { DEFAULT_SETTINGS } from '../game/settings';
 import { BenchmarkPanel } from '../ui/BenchmarkPanel';
 import { Modal, SeatCard } from '../ui/components/composite';
@@ -55,6 +60,7 @@ import './dev.css';
 
 const VN_TEST = 'ẮẰẲẴẶ ẤẦẨẪẬ Đ ƠƯ ỚỜỞỠỢ ỨỪỬỮỰ';
 const feedbackWorld = buildWorld(MAPS['office-01'] as MapDef);
+const openingLayout = matchLayout(7);
 const previewReport: MatchReport = {
   seed: 2026,
   seatOrder: [0, 1, 2, 3],
@@ -82,6 +88,36 @@ function drawFeedback(g: Painter, t: number, reducedMotion: boolean) {
     new Set(),
   );
   feedback.draw(g, reducedMotion ? 100 : t % 640, { ...DEFAULT_SETTINGS, reducedMotion });
+}
+
+function drawOpening(g: Painter, seconds: number | null, elapsed: number, reducedMotion: boolean) {
+  corridor(g, openingLayout.world.map.building);
+  for (const tower of openingLayout.world.map.towers) {
+    room(g, {
+      name: tower.name,
+      rect: tower.rect,
+      doors: tower.doors.map((door) => door.side).join(''),
+      team: tower.seat === null ? 'neutral' : (`p${tower.seat + 1}` as TeamId),
+      troops: tower.troops,
+      dept: tower.dept as RoomView['dept'],
+      level: tower.level,
+    });
+    if (seconds && tower.seat !== null && tower.seat !== 0) {
+      const [x, y, w, h] = tower.rect;
+      notchedBox(g, x + Math.floor(w / 2) - 36, y + h - 19, 72, 15, color.surfacePanel);
+      g.text(x + Math.floor(w / 2), y + h - 8, PLAYER_NAMES[tower.seat], {
+        size: 11,
+        color: color.textPrimary,
+        align: 'center',
+      });
+    }
+  }
+  homeRoomMarker(g, openingLayout.startRoom.rect, Boolean(seconds), elapsed, reducedMotion);
+  const home = openingLayout.startRoom;
+  countPlate(g, home.rect[0] + home.rect[2] - 4, home.rect[1] - 5, home.troops, 'p1');
+  if (seconds !== null) introCountdown(g, seconds);
+  g.rect(0, 340, 640, 20, primitive.gray100);
+  graceNotice(g, 68, 353, 45);
 }
 
 function Section({
@@ -397,6 +433,42 @@ export function DevUI() {
         <div class="screen-preview">
           <PauseMenu onResume={() => {}} onSettings={() => setSettingsOpen(true)} onHome={() => {}} />
         </div>
+      </Section>
+
+      <Section
+        id="match-intro"
+        title="Giới thiệu trận"
+        note="Bản đồ xáo theo seed 7; phòng xanh vẫn là của bạn. Giảm chuyển động giữ viền tĩnh."
+      >
+        {[3, 2, 1, 0, null].map((seconds) => (
+          <div key={String(seconds)}>
+            <h3 class="t-label">
+              {seconds === null ? 'Viền nhẹ trong 10 giây đầu' : seconds ? `Đếm ngược ${seconds}` : 'Bắt đầu!'}
+            </h3>
+            <div class="screen-preview">
+              <PixelCanvas
+                w={640}
+                h={360}
+                draw={(g, t) => drawOpening(g, seconds, t, reduce)}
+                animate={Boolean(seconds) && !reduce}
+                label={seconds === null ? 'Phòng xuất phát sau giới thiệu' : `Giới thiệu trận ${seconds}`}
+              />
+            </div>
+          </div>
+        ))}
+        <h3 class="t-label">Ân hạn: 45 giây · 1 giây · đã hết</h3>
+        <PixelCanvas
+          w={640}
+          h={60}
+          label="Ân hạn đầu trận"
+          draw={(g) => {
+            g.rect(0, 0, 640, 60, primitive.gray100);
+            graceNotice(g, 8, 13, 45);
+            graceNotice(g, 8, 33, 1);
+            graceNotice(g, 8, 53, 0);
+            g.text(8, 53, 'Q Deadline · W Coffee Break', { size: 11, color: color.textPrimary });
+          }}
+        />
       </Section>
 
       <Section id="benchmark" title="Đo hiệu năng có kiểm soát" note="Panel chỉ tải khi mở ?perf=1 hoặc /dev/perf.">

@@ -2,13 +2,14 @@ import { expect, type Page, test } from '@playwright/test';
 import { PNG } from 'pngjs';
 import { digits, digitsWidth } from '../packages/design/src';
 
-async function start(page: Page, scale: number) {
+async function start(page: Page, scale: number, keepIntro = false) {
   await page.setViewportSize({ width: 640 * scale, height: 360 * scale });
   await page.addInitScript(() => {
     localStorage.setItem('office-settings', JSON.stringify({ volume: 0, telemetry: false, reducedMotion: true }));
     Object.defineProperty(crypto, 'getRandomValues', {
       value: (array: Uint32Array) => {
-        array.fill(7);
+        // Seed 2's ordinary shuffled order happens to be [0,1,2,3]. No benchmark bypass.
+        array.fill(2);
         return array;
       },
     });
@@ -35,6 +36,10 @@ async function start(page: Page, scale: number) {
     await page.clock.runFor(16);
     await troops(page, scale, 10);
   }).toPass({ timeout: 10000, intervals: [50] });
+  if (!keepIntro) {
+    await page.keyboard.press('Enter');
+    await page.clock.runFor(32);
+  }
 }
 
 async function point(page: Page, scale: number, x: number, y: number) {
@@ -134,6 +139,59 @@ async function expectLabel(page: Page, scale: number, text: string, x: number, b
 
 for (const scale of [1, 2]) {
   test.describe(`gameplay S=${scale}`, () => {
+    test('intro freezes recruitment and ignores commands, then starts automatically', async ({ page }) => {
+      await start(page, scale, true);
+      const canvas = page.locator('.game-host canvas');
+      await expect(canvas).toHaveAttribute('aria-label', /Giới thiệu trận: 3\. Phòng của bạn: TEAM DEV/);
+      for (const key of ['4', 'e', 'q', 'w']) await page.keyboard.press(key);
+      const position = await point(page, scale, 76, 75);
+      await page.mouse.move(position.x, position.y);
+      await page.mouse.wheel(0, 200);
+      await page.clock.runFor(1100);
+      await expect(canvas).toHaveAttribute('aria-label', /Giới thiệu trận: 2\./);
+      await page.clock.runFor(1000);
+      await expect(canvas).toHaveAttribute('aria-label', /Giới thiệu trận: 1\./);
+      await troops(page, scale, 10);
+      await percentage(page, scale, 50);
+      await page.clock.runFor(1100);
+      await expect(canvas).toHaveAttribute('aria-label', /Trận đang chơi/);
+      await click(page, scale, 200, 75, 'right');
+      await troops(page, scale, 10); // Ignored input did not queue a selection/dispatch/upgrade.
+      await page.clock.runFor(1000);
+      await troops(page, scale, 11);
+    });
+
+    for (const skip of ['Space', 'Enter', 'click'] as const) {
+      test(`${skip} skips intro without selecting or dispatching`, async ({ page }) => {
+        await start(page, scale, true);
+        if (skip === 'click') await click(page, scale, 76, 75);
+        else await page.keyboard.press(skip);
+        await page.clock.runFor(32);
+        await expect(page.locator('.game-host canvas')).toHaveAttribute('aria-label', /Trận đang chơi/);
+        await click(page, scale, 200, 75, 'right');
+        await page.clock.runFor(200);
+        await troops(page, scale, 10);
+        await page.keyboard.press('Space');
+        await click(page, scale, 200, 75, 'right');
+        await page.clock.runFor(200);
+        await troops(page, scale, 5);
+      });
+    }
+
+    test('grace label counts game ticks, survives pause and disappears at 45 seconds', async ({ page }) => {
+      await start(page, scale);
+      await expectLabel(page, scale, 'Bot chưa tấn công bạn: 45s', 68, 353);
+      await page.keyboard.press('Escape');
+      await page.clock.runFor(10000);
+      await page.keyboard.press('Escape');
+      await page.clock.runFor(32);
+      await expectLabel(page, scale, 'Bot chưa tấn công bạn: 45s', 68, 353);
+      await page.clock.runFor(44000);
+      await expectLabel(page, scale, 'Bot chưa tấn công bạn: 1s', 68, 353);
+      await page.clock.runFor(1100);
+      await expectLabel(page, scale, 'Q Deadline · W Coffee Break', 68, 353);
+    });
+
     for (const [key, remaining] of [
       ['1', 8],
       ['2', 5],

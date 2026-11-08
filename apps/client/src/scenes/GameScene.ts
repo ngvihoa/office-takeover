@@ -4,6 +4,9 @@ import {
   countPlate,
   dashedOutline,
   flag,
+  graceNotice,
+  homeRoomMarker,
+  introCountdown,
   map as mapTokens,
   notchedBox,
   outline,
@@ -23,6 +26,7 @@ import {
 } from '@ot/design';
 import {
   type Command,
+  HUMAN_GRACE_TICKS,
   LocalMatch,
   SEND_PCTS,
   type SeatSetup,
@@ -51,6 +55,8 @@ export class GameScene extends Phaser.Scene {
   private aiming: SkillId | null = null;
   private paused = false;
   private elapsed = 0;
+  private introMs = 0;
+  private startFlashMs = 0;
   private dragging = false;
   private origin: [number, number] | null = null;
   private lastClick = { id: -1, time: -1000 };
@@ -113,6 +119,8 @@ export class GameScene extends Phaser.Scene {
     this.commands = 0;
     this.paused = false;
     this.elapsed = 0;
+    this.introMs = benchmark ? 0 : 3000;
+    this.startFlashMs = 0;
     this.aiming = null;
     this.origin = null;
     this.dragging = false;
@@ -154,7 +162,7 @@ export class GameScene extends Phaser.Scene {
       this.dragging = false;
     });
     this.input.on('wheel', (_pointer: unknown, _objects: unknown, _dx: number, dy: number) => {
-      if (!this.paused && !this.match.ended) this.pct = wheelRatio(this.pct, dy);
+      if (!this.introMs && !this.paused && !this.match.ended) this.pct = wheelRatio(this.pct, dy);
     });
     this.input.keyboard?.on('keydown', (event: KeyboardEvent) => this.key(event));
     const resume = () => {
@@ -192,7 +200,11 @@ export class GameScene extends Phaser.Scene {
     });
     this.registry.set('telemetry', this.telemetry);
     const sample = () =>
-      this.telemetry?.frame(performance.now(), !this.paused && !this.match.ended, this.match.state.squads.length);
+      this.telemetry?.frame(
+        performance.now(),
+        !this.introMs && !this.paused && !this.match.ended,
+        this.match.state.squads.length,
+      );
     this.game.events.on('prestep', sample);
     const stopTelemetry = () => {
       this.telemetry?.finish('left');
@@ -203,7 +215,19 @@ export class GameScene extends Phaser.Scene {
     };
     this.events.once('shutdown', stopTelemetry);
     this.events.once('destroy', stopTelemetry);
+    if (!benchmark) this.play('countdown');
     this.options.onReady?.();
+  }
+
+  private finishIntro() {
+    this.introMs = 0;
+    this.startFlashMs = 650;
+    this.elapsed = 0;
+    this.origin = null;
+    this.dragging = false;
+    this.selected.clear();
+    this.aiming = null;
+    this.play('countdown');
   }
 
   private pauseMatch() {
@@ -224,7 +248,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private submit(command: Command) {
-    if (this.options.benchmark) return;
+    if (this.options.benchmark || this.introMs) return;
     if (!validate(this.layout.world, this.match.state, command)) {
       this.status = 'Chưa thể thực hiện. Kiểm tra nhân viên hoặc thời gian hồi.';
       return;
@@ -267,6 +291,10 @@ export class GameScene extends Phaser.Scene {
 
   private down(pointer: Phaser.Input.Pointer) {
     if ((this.paused && this.options.onPause) || (this.match.ended && this.options.onEnd)) return;
+    if (this.introMs) {
+      this.finishIntro();
+      return;
+    }
     const { x, y } = this.point(pointer);
     if (y < 20 && x >= 466 && x < 536) {
       this.toggleSound();
@@ -353,6 +381,11 @@ export class GameScene extends Phaser.Scene {
 
   private key(event: KeyboardEvent) {
     if ((this.paused && this.options.onPause) || (this.match.ended && this.options.onEnd)) return;
+    if (this.introMs) {
+      event.preventDefault();
+      if (!event.repeat && ['Space', 'Enter'].includes(event.code)) this.finishIntro();
+      return;
+    }
     if (['Space', 'Escape', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'KeyQ', 'KeyW', 'KeyE'].includes(event.code))
       event.preventDefault();
     if (event.repeat) return;
@@ -383,7 +416,14 @@ export class GameScene extends Phaser.Scene {
   update(_time: number, delta: number) {
     if (!this.texture) return;
     const { world, startRoom, order } = this.layout;
-    if (!this.paused && !this.match.ended) {
+    const introducing = this.introMs > 0;
+    if (!this.paused && introducing) {
+      const previous = Math.ceil(this.introMs / 1000);
+      this.introMs = Math.max(0, this.introMs - delta);
+      if (!this.introMs) this.finishIntro();
+      else if (Math.ceil(this.introMs / 1000) !== previous) this.play('countdown');
+    } else if (!this.paused) this.startFlashMs = Math.max(0, this.startFlashMs - delta);
+    if (!introducing && !this.paused && !this.match.ended) {
       this.elapsed += Math.min(delta, 250);
       while (this.elapsed >= tickMs && !this.match.ended) {
         const owned = new Set(this.match.state.towers.filter((t) => t.owner === 0).map((t) => t.id));
@@ -420,7 +460,7 @@ export class GameScene extends Phaser.Scene {
     }
     const state = this.match.state;
     this.registry.set('squads', state.squads.length);
-    this.registry.set('matchActive', !this.paused && !this.match.ended);
+    this.registry.set('matchActive', !this.introMs && !this.paused && !this.match.ended);
     for (const id of this.selected) if (state.towers[id]?.owner !== 0) this.selected.delete(id);
     const key = state.towers.map((t) => `${t.owner}:${t.level}`).join(',');
     if (key !== this.roomCache) {
@@ -486,6 +526,8 @@ export class GameScene extends Phaser.Scene {
       if (!def) continue;
       const [x, y, w, h] = def.rect;
       const tid = t.owner === null ? 'neutral' : (TEAMS[t.owner] as TeamId);
+      if (t.id === startRoom.id && !this.options.benchmark && (this.introMs || state.tick < 10 * TICKS_PER_SECOND))
+        homeRoomMarker(g, startRoom.rect, this.introMs > 0, 3000 - this.introMs, this.settings.reducedMotion);
       if (this.selected.has(t.id))
         dashedOutline(
           g,
@@ -556,6 +598,19 @@ export class GameScene extends Phaser.Scene {
       );
     }
     this.feedback.draw(g, this.time.now, this.settings);
+    if (this.introMs) {
+      for (const def of world.map.towers) {
+        if (def.seat === null || def.seat === 0 || !state.players[def.seat]?.active) continue;
+        const [x, y, w, h] = def.rect;
+        notchedBox(g, x + Math.floor(w / 2) - 36, y + h - 19, 72, 15, color.surfacePanel);
+        g.text(x + Math.floor(w / 2), y + h - 8, NAMES[def.seat], {
+          size: 11,
+          color: color.textPrimary,
+          align: 'center',
+        });
+      }
+    }
+    if (this.introMs || this.startFlashMs) introCountdown(g, Math.ceil(this.introMs / 1000));
     g.rect(0, 0, 640, 20, p.gray100);
     g.rect(0, 340, 640, 20, p.gray100);
     state.players.forEach((player, i) => {
@@ -587,14 +642,26 @@ export class GameScene extends Phaser.Scene {
         { secs: Math.ceil(remaining / TICKS_PER_SECOND), cooldownFrac: remaining / world.config[skill].cooldownTicks },
       );
     }
-    g.text(68, 353, this.aiming ? 'Chọn phòng để uống cà phê' : 'Q Deadline · W Coffee Break', {
-      size: 11,
-      color: p.ink,
-    });
+    const graceSeconds = this.options.benchmark
+      ? 0
+      : Math.max(0, Math.ceil((HUMAN_GRACE_TICKS - state.tick) / TICKS_PER_SECOND));
+    if (graceSeconds) graceNotice(g, 68, 353, graceSeconds);
+    else
+      g.text(68, 353, this.aiming ? 'Chọn phòng để uống cà phê' : 'Q Deadline · W Coffee Break', {
+        size: 11,
+        color: p.ink,
+      });
     sendMeter(g, 288, 343, this.pct);
     g.text(466, 353, 'Mở rộng E', { size: 11, color: p.ink });
     g.text(548, 353, 'Chọn hết', { size: 11, color: p.ink });
     if ((this.paused && !this.options.onPause) || (state.result && !this.options.onEnd)) this.overlay();
+    this.game.canvas.setAttribute('role', 'img');
+    this.game.canvas.setAttribute(
+      'aria-label',
+      this.introMs
+        ? `Giới thiệu trận: ${Math.ceil(this.introMs / 1000)}. Phòng của bạn: ${startRoom.name}. Click hoặc Space/Enter để bỏ qua.`
+        : `Trận đang chơi. Phòng xuất phát: ${startRoom.name}.`,
+    );
     this.game.canvas.title = this.status;
     this.texture.refresh();
   }

@@ -67,6 +67,7 @@ for (const scale of [1, 2, 3]) {
         'benchmark',
         'employees',
         'match-feedback',
+        'match-intro',
         'color',
         'type',
         'shape',
@@ -99,7 +100,10 @@ for (const scale of [1, 2, 3]) {
         expect(dimensions.rendering).toBe('pixelated');
       }
       // Nine full-screen states in one S=3 image exhaust Chromium's screenshot memory.
-      const captures = id === 'app-screens' ? await section.locator('.screen-preview').all() : [section];
+      const captures =
+        id === 'app-screens' || id === 'match-intro'
+          ? await section.locator('.screen-preview, canvas[aria-label="Ân hạn đầu trận"]').all()
+          : [section];
       for (const [index, capture] of captures.entries()) {
         const name = `${id}${captures.length > 1 ? `-${index + 1}` : ''}`;
         const path = info.outputPath(`dev-ui-s${scale}-${name}.png`);
