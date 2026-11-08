@@ -101,7 +101,7 @@ export function skillButton(
 
 /** 4-step send ratio meter (25/50/75/100%). */
 export function sendMeter(g: Painter, x: number, y: number, pct: 25 | 50 | 75 | 100): void {
-  const w = 84;
+  const w = 106;
   notchedBox(g, x, y, w, 14, color.surfacePanel);
   shadow(g, x, y, w, 14, 1);
   g.text(x + 4, y + 11, 'Gửi', { size: 11, color: color.textPrimary });
