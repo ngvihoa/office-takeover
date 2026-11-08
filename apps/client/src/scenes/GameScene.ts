@@ -28,6 +28,7 @@ import {
   MAPS,
   type MapDef,
   SEND_PCTS,
+  type SeatSetup,
   type SendPct,
   type SkillId,
   TICKS_PER_SECOND,
@@ -37,10 +38,11 @@ import Phaser from 'phaser';
 import { logicalPoint, newMatchSeed, wheelRatio } from '../game/controls';
 import { MatchFeedback } from '../game/feedback';
 import { canvasPainter } from '../game/painter';
+import { DEFAULT_BOTS, type OfflineOptions, PLAYER_NAMES } from '../game/session';
 import { readSettings, type Settings, saveSettings } from '../game/settings';
 
 const TEAMS: TeamId[] = ['p1', 'p2', 'p3', 'p4'];
-const NAMES = ['Bạn', 'Bot An', 'Bot Bình', 'Bot Chi'];
+const NAMES = PLAYER_NAMES;
 const world = buildWorld(MAPS['office-01'] as MapDef);
 const tickMs = 1000 / TICKS_PER_SECOND;
 
@@ -64,8 +66,10 @@ export class GameScene extends Phaser.Scene {
   private feedback!: MatchFeedback;
   private lastSound = new Map<string, number>();
   private cursors: Record<string, string> = {};
+  private sent = [0, 0, 0, 0];
+  private captured = [0, 0, 0, 0];
 
-  constructor() {
+  constructor(private options: OfflineOptions = {}) {
     super('Game');
   }
 
@@ -74,6 +78,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   preload() {
+    this.load.once('loaderror', () => this.options.onLoadError?.());
     if (!this.textures.exists('office')) this.load.atlas('office', '/art/atlas.png', '/art/atlas.json');
     if (!this.cache.audio.exists('sfx'))
       this.load.audioSprite('sfx', '/art/sfx.json', ['/art/sfx.ogg', '/art/sfx.m4a']);
@@ -100,13 +105,15 @@ export class GameScene extends Phaser.Scene {
       world,
       [
         benchmark ? { kind: 'bot', level: 'normal' } : { kind: 'human' },
-        { kind: 'bot', level: 'easy' },
-        { kind: 'bot', level: 'normal' },
-        { kind: 'bot', level: 'easy' },
+        ...(benchmark ? DEFAULT_BOTS : (this.options.bots ?? DEFAULT_BOTS)).map(
+          (level): SeatSetup => (level ? { kind: 'bot', level } : { kind: 'empty' }),
+        ),
       ],
       benchmark ? 7 : newMatchSeed(this.match?.state.seed),
     );
     this.selected.clear();
+    this.sent.fill(0);
+    this.captured.fill(0);
     this.paused = false;
     this.elapsed = 0;
     this.aiming = null;
@@ -153,18 +160,39 @@ export class GameScene extends Phaser.Scene {
       if (!this.paused && !this.match.ended) this.pct = wheelRatio(this.pct, dy);
     });
     this.input.keyboard?.on('keydown', (event: KeyboardEvent) => this.key(event));
-    const blur = () => {
-      if (!this.match.ended) {
-        this.paused = true;
-        this.elapsed = 0;
-        this.origin = null;
-      }
+    const resume = () => {
+      this.paused = false;
+      this.elapsed = 0;
     };
+    const changeSettings = (settings: Settings) => {
+      this.settings = { ...settings };
+      this.sound.volume = settings.volume / 100;
+      if (settings.volume === 0) this.sound.removeByKey('sfx');
+      if (settings.reducedMotion || !settings.screenShake) this.cameras.main.shakeEffect.reset();
+      this.roomCache = '';
+    };
+    this.game.events.on('resume-match', resume);
+    this.game.events.on('settings-change', changeSettings);
+    const blur = () => this.pauseMatch();
     window.addEventListener('blur', blur);
     this.events.once('shutdown', () => {
       window.removeEventListener('blur', blur);
+      this.game.events.off('resume-match', resume);
+      this.game.events.off('settings-change', changeSettings);
+      this.sound.removeByKey('sfx');
       this.textures.remove('match');
     });
+    this.options.onReady?.();
+  }
+
+  private pauseMatch() {
+    if (this.paused || this.match.ended) return;
+    this.paused = true;
+    this.elapsed = 0;
+    this.origin = null;
+    this.dragging = false;
+    this.aiming = null;
+    this.options.onPause?.();
   }
 
   private hit(x: number, y: number) {
@@ -199,6 +227,7 @@ export class GameScene extends Phaser.Scene {
     this.sound.volume = this.settings.volume / 100;
     if (!this.settings.volume) this.sound.removeByKey('sfx');
     saveSettings(this.settings);
+    this.options.onSettings?.({ ...this.settings });
     this.play('click');
   }
 
@@ -213,6 +242,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private down(pointer: Phaser.Input.Pointer) {
+    if ((this.paused && this.options.onPause) || (this.match.ended && this.options.onEnd)) return;
     const { x, y } = this.point(pointer);
     if (y < 20 && x >= 466 && x < 536) {
       this.toggleSound();
@@ -234,7 +264,7 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (y < 20 && x > 540 && x < 580) {
-      this.paused = true;
+      this.pauseMatch();
       return;
     }
     if (y >= 340) {
@@ -298,6 +328,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private key(event: KeyboardEvent) {
+    if ((this.paused && this.options.onPause) || (this.match.ended && this.options.onEnd)) return;
     if (['Space', 'Escape', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'KeyQ', 'KeyW', 'KeyE'].includes(event.code))
       event.preventDefault();
     if (event.repeat) return;
@@ -308,8 +339,10 @@ export class GameScene extends Phaser.Scene {
         this.dragging = false;
       } else if (this.selected.size) this.selected.clear();
       else {
-        this.paused = !this.paused;
-        this.elapsed = 0;
+        if (this.paused) {
+          this.paused = false;
+          this.elapsed = 0;
+        } else this.pauseMatch();
       }
       return;
     }
@@ -331,6 +364,23 @@ export class GameScene extends Phaser.Scene {
         const owned = new Set(this.match.state.towers.filter((t) => t.owner === 0).map((t) => t.id));
         const events = this.match.tick();
         this.feedback.consume(events, this.time.now, this.settings, owned);
+        for (const event of events) {
+          if (event.t === 'squadSpawned') this.sent[event.owner] = (this.sent[event.owner] ?? 0) + event.count;
+          if (event.t === 'captured') this.captured[event.to] = (this.captured[event.to] ?? 0) + 1;
+          if (event.t === 'matchEnded')
+            this.options.onEnd?.({
+              seed: this.match.state.seed,
+              bots: [...(this.options.bots ?? DEFAULT_BOTS)],
+              result: event.result,
+              players: event.result.ranking.map((id) => ({
+                id,
+                name: NAMES[id],
+                rooms: this.match.state.towers.filter((t) => t.owner === id).length,
+                sent: this.sent[id] ?? 0,
+                captured: this.captured[id] ?? 0,
+              })),
+            });
+        }
         const remaining = world.config.matchTicks - this.match.state.tick;
         if (remaining > 0 && remaining <= 100 && remaining % TICKS_PER_SECOND === 0) this.play('countdown');
         this.elapsed -= tickMs;
@@ -359,7 +409,8 @@ export class GameScene extends Phaser.Scene {
           dept: def.dept as RoomView['dept'],
           level: tower.level,
         });
-        flag(g, tower.owner === null ? 'neutral' : (TEAMS[tower.owner] as TeamId), def.rect[0] + 5, def.rect[1] + 15);
+        if (this.settings.symbols)
+          flag(g, tower.owner === null ? 'neutral' : (TEAMS[tower.owner] as TeamId), def.rect[0] + 5, def.rect[1] + 15);
       }
       this.roomCache = key;
     }
@@ -478,6 +529,7 @@ export class GameScene extends Phaser.Scene {
     g.rect(0, 0, 640, 20, p.gray100);
     g.rect(0, 340, 640, 20, p.gray100);
     state.players.forEach((player, i) => {
+      if (!player.active) return;
       playerChip(
         g,
         6 + i * 112,
@@ -512,7 +564,7 @@ export class GameScene extends Phaser.Scene {
     sendMeter(g, 288, 343, this.pct);
     g.text(466, 353, 'Mở rộng E', { size: 11, color: p.ink });
     g.text(548, 353, 'Chọn hết', { size: 11, color: p.ink });
-    if (this.paused || state.result) this.overlay();
+    if ((this.paused && !this.options.onPause) || (state.result && !this.options.onEnd)) this.overlay();
     this.game.canvas.title = this.status;
     this.texture.refresh();
   }

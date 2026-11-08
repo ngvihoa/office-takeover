@@ -1,0 +1,113 @@
+.screen-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  line-height: normal;
+}
+.screen-panel {
+  width: calc(var(--n) * 400);
+  max-width: 100%;
+}
+.screen-stack {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--n) * 8);
+}
+.screen-panel h1,
+.screen-panel p,
+.settings-content p {
+  margin: 0;
+  font-weight: 400;
+}
+.screen-row,
+.screen-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--n) * 8);
+}
+.screen-actions {
+  margin-top: calc(var(--n) * 4);
+}
+.screen-player {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--n) * 4);
+}
+.home-content {
+  text-align: center;
+  align-items: center;
+  gap: calc(var(--n) * 16);
+  padding: calc(var(--n) * 12) 0;
+}
+.home-buttons {
+  width: calc(var(--n) * 200);
+}
+.bot-row {
+  min-height: calc(var(--n) * 28);
+  font-size: calc(var(--n) * 13);
+}
+.bot-row > :first-child {
+  width: calc(var(--n) * 100);
+}
+.screen-map {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--n) * 4);
+  padding: calc(var(--n) * 8);
+  border: var(--n) solid var(--border);
+  background: var(--surface-sunken);
+}
+.settings-content .field + .field {
+  margin-top: 0;
+}
+.app-shell .scrim:not(.inline) {
+  position: absolute;
+}
+.result-screen {
+  width: calc(var(--n) * 420);
+}
+.result-heading {
+  padding: calc(var(--n) * 8) calc(var(--n) * 4);
+  text-align: center;
+  font-size: calc(var(--n) * 24);
+  line-height: 1;
+}
+.result-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.result-table caption {
+  text-align: left;
+  padding-bottom: calc(var(--n) * 4);
+  color: var(--text-muted);
+}
+.result-table th,
+.result-table td {
+  padding: calc(var(--n) * 6) calc(var(--n) * 4);
+  border-bottom: var(--n) solid var(--surface-sunken);
+  text-align: right;
+  font-weight: 400;
+}
+.result-table th:first-child {
+  text-align: left;
+}
+.pause-screen {
+  width: calc(var(--n) * 220);
+}
+.pause-layer {
+  background: rgb(from var(--c-ink) r g b / 60%);
+}
+/* Previews inherit the active S; each is the same logical surface as the app. */
+.screen-preview {
+  position: relative;
+  width: calc(var(--n) * 640);
+  height: calc(var(--n) * 360);
+  background: var(--map-outside);
+  margin-top: calc(var(--n) * 8);
+}
+.screen-preview > .scrim.inline {
+  height: 100%;
+}

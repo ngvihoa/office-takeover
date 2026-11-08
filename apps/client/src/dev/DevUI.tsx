@@ -27,10 +27,11 @@ import {
   tooltip,
   type as typeScale,
 } from '@ot/design';
-import { buildWorld, MAPS, type MapDef } from '@ot/sim';
+import { type BotLevel, buildWorld, MAPS, type MapDef } from '@ot/sim';
 import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import { MatchFeedback } from '../game/feedback';
+import type { MatchReport } from '../game/session';
 import { DEFAULT_SETTINGS } from '../game/settings';
 import { Modal, SeatCard } from '../ui/components/composite';
 import { Checkbox, RoomCodeInput, Segmented, Slider, Toggle } from '../ui/components/controls';
@@ -47,11 +48,23 @@ import {
   Toast,
   Tooltip,
 } from '../ui/components/primitives';
+import { HomeScreen, OfflineSetup, PauseMenu, ResultScreen, SettingsDialog } from '../ui/screens';
 import { along, PREVIEW_PLANTS, PREVIEW_ROOMS, PREVIEW_SQUADS } from './previewMap';
 import './dev.css';
 
 const VN_TEST = 'ẮẰẲẴẶ ẤẦẨẪẬ Đ ƠƯ ỚỜỞỠỢ ỨỪỬỮỰ';
 const feedbackWorld = buildWorld(MAPS['office-01'] as MapDef);
+const previewReport: MatchReport = {
+  seed: 2026,
+  bots: ['easy', 'normal', 'easy'],
+  result: { ranking: [0, 2, 1, 3], winner: 0, reason: 'last-standing', endTick: 1250 },
+  players: [
+    { id: 0, name: 'Bạn', rooms: 12, sent: 824, captured: 18 },
+    { id: 1, name: 'Bot An', rooms: 0, sent: 245, captured: 4 },
+    { id: 2, name: 'Bot Bình', rooms: 0, sent: 490, captured: 9 },
+    { id: 3, name: 'Bot Chi', rooms: 0, sent: 132, captured: 2 },
+  ],
+};
 
 function drawFeedback(g: Painter, t: number, reducedMotion: boolean) {
   drawMapScene(g, reducedMotion ? 0 : t);
@@ -228,6 +241,11 @@ export function DevUI() {
   const [vol, setVol] = useState(40);
   const [modal, setModal] = useState(false);
   const [motionKey, setMotionKey] = useState(0);
+  const [setupBots, setSetupBots] = useState<(BotLevel | null)[]>(['easy', 'normal', 'easy']);
+  const [oneBot, setOneBot] = useState<(BotLevel | null)[]>(['easy', null, null]);
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [quietSettings, setQuietSettings] = useState({ ...DEFAULT_SETTINGS, volume: 0, reducedMotion: true });
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <div class={`ot-root dev ${reduce ? 'reduce-motion' : ''}`} data-scale={scale}>
@@ -254,6 +272,7 @@ export function DevUI() {
       <nav class="dev-nav t-body">
         {[
           ['screen', 'Màn hình mẫu'],
+          ['app-screens', 'Menu offline'],
           ['color', 'Màu'],
           ['type', 'Chữ'],
           ['shape', 'Spacing & nổi'],
@@ -293,37 +312,67 @@ export function DevUI() {
             }}
             label="Nền trang chủ"
           />
-          <div class="home-overlay">
-            <div class="home-user">
-              <PlayerChip t="p1" name="Hoà" rooms={0} you />
-            </div>
-            <Panel class="home-title" compact>
-              <div class="t-hero" style={{ textAlign: 'center' }}>
-                OFFICE TAKEOVER
-              </div>
-              <div class="t-body muted" style={{ textAlign: 'center' }}>
-                Thâu tóm văn phòng, từng phòng một
-              </div>
-            </Panel>
-            <div class="home-actions">
-              <Button variant="primary" size="L" icon="play" block>
-                Chơi với bot
-              </Button>
-              <Button size="L" icon="plus" block>
-                Tạo phòng
-              </Button>
-              <Button size="L" icon="key" block>
-                Vào bằng mã
-              </Button>
-            </div>
-            <div class="home-foot">
-              <Button icon="book">Hướng dẫn</Button>
-              <Button icon="gear">Cài đặt</Button>
-              <span class="t-caption" style={{ marginLeft: 'auto', color: 'var(--c-white)' }}>
-                v0.1
-              </span>
-            </div>
-          </div>
+          <HomeScreen
+            onPlay={() => document.getElementById('app-screens')?.scrollIntoView()}
+            onSettings={() => setSettingsOpen(true)}
+          />
+        </div>
+      </Section>
+
+      <Section
+        id="app-screens"
+        title="Menu offline"
+        note="Màn hình thật ở tỉ lệ S đang chọn. Các thiết lập bên dưới có thể tương tác."
+      >
+        <h3 class="t-label">Phòng tập · 3 bot</h3>
+        <div class="screen-preview">
+          <OfflineSetup bots={setupBots} onChange={setSetupBots} onStart={() => {}} onBack={() => {}} />
+        </div>
+        <h3 class="t-label">Phòng tập · 1 bot (không thể bỏ bot cuối)</h3>
+        <div class="screen-preview">
+          <OfflineSetup bots={oneBot} onChange={setOneBot} onStart={() => {}} onBack={() => {}} />
+        </div>
+        <h3 class="t-label">Cài đặt · Mặc định</h3>
+        <div class="screen-preview">
+          <SettingsDialog inline settings={settings} onChange={setSettings} onClose={() => {}} />
+        </div>
+        <Button onClick={() => setSettingsOpen(true)}>Mở cài đặt thật (thử Tab / Escape)</Button>
+        {settingsOpen && (
+          <SettingsDialog settings={settings} onChange={setSettings} onClose={() => setSettingsOpen(false)} />
+        )}
+        <h3 class="t-label">Cài đặt · Tắt tiếng, giảm chuyển động</h3>
+        <div class="screen-preview reduce-motion">
+          <SettingsDialog inline settings={quietSettings} onChange={setQuietSettings} onClose={() => {}} />
+        </div>
+        <h3 class="t-label">Kết quả · Hạng 1</h3>
+        <div class="screen-preview">
+          <ResultScreen report={previewReport} onReplay={() => {}} onHome={() => {}} />
+        </div>
+        <h3 class="t-label">Kết quả · Hạng 3, hết giờ</h3>
+        <div class="screen-preview">
+          <ResultScreen
+            report={{
+              ...previewReport,
+              result: { ranking: [2, 1, 0, 3], winner: 2, reason: 'time-limit', endTick: 6000 },
+            }}
+            onReplay={() => {}}
+            onHome={() => {}}
+          />
+        </div>
+        <h3 class="t-label">Kết quả · Hòa (thứ tự thống kê không phải chiến thắng)</h3>
+        <div class="screen-preview">
+          <ResultScreen
+            report={{
+              ...previewReport,
+              result: { ranking: [0, 2, 1, 3], winner: null, reason: 'time-limit', endTick: 6000 },
+            }}
+            onReplay={() => {}}
+            onHome={() => {}}
+          />
+        </div>
+        <h3 class="t-label">Tạm dừng</h3>
+        <div class="screen-preview">
+          <PauseMenu onResume={() => {}} onSettings={() => setSettingsOpen(true)} onHome={() => {}} />
         </div>
       </Section>
 

@@ -1,8 +1,9 @@
 import { color, scaleFor } from '@ot/design';
 import Phaser from 'phaser';
 import { GameScene } from '../scenes/GameScene';
+import type { OfflineOptions } from './session';
 
-export async function startGame(parent: HTMLElement) {
+export async function startGame(parent: HTMLElement, options: OfflineOptions = {}) {
   await document.fonts.load('16px VT323');
   const initialScale = scaleFor(window.innerWidth, window.innerHeight);
   const game = new Phaser.Game({
@@ -13,7 +14,7 @@ export async function startGame(parent: HTMLElement) {
     backgroundColor: color.bgApp,
     pixelArt: true,
     roundPixels: true,
-    scene: [GameScene],
+    scene: [new GameScene(options)],
     scale: { mode: Phaser.Scale.NONE, autoCenter: Phaser.Scale.NO_CENTER },
   });
   if (import.meta.env.DEV && location.pathname === '/dev/perf') {

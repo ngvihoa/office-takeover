@@ -16,8 +16,13 @@ async function boot() {
     render(<DevUI />, root);
     return;
   }
-  const { startGame } = await import('./game/start');
-  await startGame(root);
+  if (import.meta.env.DEV && location.pathname === '/dev/perf') {
+    const { startGame } = await import('./game/start');
+    await startGame(root);
+    return;
+  }
+  const { App } = await import('./App');
+  render(<App />, root);
 }
 
 void boot();

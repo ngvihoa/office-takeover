@@ -444,7 +444,28 @@ fieldset.seg {
   font-size: calc(var(--n) * 11);
   cursor: pointer;
 }
+.slider-control {
+  display: inline-block;
+  position: relative;
+  width: calc(var(--n) * 100);
+  height: calc(var(--n) * 12);
+}
+.slider-track {
+  position: absolute;
+  inset: calc(var(--n) * 4) 0;
+  border: var(--n) solid var(--border);
+  background: var(--surface-sunken);
+  pointer-events: none;
+}
+.slider-track > span {
+  display: block;
+  height: 100%;
+  width: var(--fill, 50%);
+  background: var(--accent);
+}
 .slider {
+  position: relative;
+  margin: 0;
   appearance: none;
   -webkit-appearance: none;
   width: calc(var(--n) * 100);
@@ -454,19 +475,21 @@ fieldset.seg {
 }
 .slider::-webkit-slider-runnable-track {
   height: calc(var(--n) * 4);
-  background:
-    linear-gradient(var(--accent), var(--accent)) 0 / var(--fill, 50%) 100% no-repeat,
-    var(--surface-sunken);
+  background: transparent;
   border: var(--n) solid var(--border);
 }
 .slider::-moz-range-track {
   height: calc(var(--n) * 4);
-  background: var(--surface-sunken);
+  background: transparent;
   border: var(--n) solid var(--border);
 }
 .slider::-moz-range-progress {
   height: calc(var(--n) * 4);
-  background: var(--accent);
+  background: transparent;
+}
+.slider:focus-visible {
+  outline: var(--n) solid var(--accent);
+  outline-offset: var(--n);
 }
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;

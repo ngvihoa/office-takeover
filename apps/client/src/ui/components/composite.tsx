@@ -1,6 +1,6 @@
 import { type TeamId, team } from '@ot/design';
 import type { ComponentChildren, CSSProperties } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useLayoutEffect, useRef } from 'preact/hooks';
 import { Badge, Button, Flag, Icon, Panel } from './primitives';
 
 export function Modal({
@@ -16,17 +16,74 @@ export function Modal({
   actions: ComponentChildren;
   inline?: boolean;
 }) {
-  useEffect(() => {
+  const dialog = useRef<HTMLDivElement>(null);
+  const close = useRef(onClose);
+  close.current = onClose;
+  useLayoutEffect(() => {
     if (inline) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    addEventListener('keydown', onKey);
-    return () => removeEventListener('keydown', onKey);
-  }, [inline, onClose]);
+    const node = dialog.current;
+    if (!node) return;
+    const previous = document.activeElement;
+    const controls = () =>
+      [...node.querySelectorAll<HTMLElement>('button, input, select, textarea, a[href], [tabindex]')].filter(
+        (el) => !el.matches(':disabled, [tabindex="-1"]') && el.getClientRects().length > 0,
+      );
+    const focusFirst = () => (controls()[0] ?? node).focus();
+    const isolated: { node: HTMLElement; inert: boolean }[] = [];
+    let branch: HTMLElement = node.parentElement ?? node;
+    while (branch.parentElement) {
+      for (const sibling of branch.parentElement.children) {
+        if (sibling !== branch && sibling instanceof HTMLElement) {
+          isolated.push({ node: sibling, inert: sibling.inert });
+          sibling.inert = true;
+        }
+      }
+      branch = branch.parentElement;
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        close.current();
+      } else if (e.key === 'Tab') {
+        const list = controls();
+        const first = list[0] ?? node;
+        const last = list[list.length - 1] ?? node;
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === node)) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && (document.activeElement === last || document.activeElement === node)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    const onFocus = (e: FocusEvent) => {
+      if (e.target instanceof Node && !node.contains(e.target)) focusFirst();
+    };
+    focusFirst();
+    addEventListener('keydown', onKey, true);
+    document.addEventListener('focusin', onFocus);
+    return () => {
+      removeEventListener('keydown', onKey, true);
+      document.removeEventListener('focusin', onFocus);
+      for (const item of isolated) item.node.inert = item.inert;
+      if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
+    };
+  }, [inline]);
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: backdrop click is a mouse shortcut; Esc closes for keyboard users
     // biome-ignore lint/a11y/useKeyWithClickEvents: Esc is handled on window above
     <div class={`scrim ${inline ? 'inline' : ''}`} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div class="modal elev-3" role="dialog" aria-modal="true" aria-label={title}>
+      <div
+        ref={dialog}
+        class="modal elev-3"
+        role="dialog"
+        aria-modal={inline ? undefined : true}
+        aria-label={title}
+        tabIndex={-1}
+        onKeyDown={(e) => !inline && e.stopPropagation()}
+      >
         <Panel title={title}>
           {children}
           <div class="modal-actions">{actions}</div>

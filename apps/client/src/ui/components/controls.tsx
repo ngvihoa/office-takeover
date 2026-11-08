@@ -38,7 +38,14 @@ export function Toggle({
   return (
     <label class="field">
       <span>{label}</span>
-      <button type="button" role="switch" class="toggle" aria-checked={checked} onClick={() => onChange(!checked)} />
+      <button
+        type="button"
+        role="switch"
+        class="toggle"
+        aria-label={label}
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+      />
     </label>
   );
 }
@@ -73,17 +80,21 @@ export function Slider({ value, onChange, label }: { value: number; onChange: (v
     <label class="field">
       <span>{label}</span>
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'calc(var(--n) * 6)' }}>
-        <input
-          class="slider"
-          type="range"
-          min={0}
-          max={100}
-          step={10}
-          value={value}
-          aria-label={label}
-          style={{ '--fill': `${value}%` } as CSSProperties}
-          onInput={(e) => onChange(Number((e.target as HTMLInputElement).value))}
-        />
+        <span class="slider-control" style={{ '--fill': `${value}%` } as CSSProperties}>
+          <span class="slider-track" aria-hidden="true">
+            <span />
+          </span>
+          <input
+            class="slider"
+            type="range"
+            min={0}
+            max={100}
+            step={10}
+            value={value}
+            aria-label={label}
+            onInput={(e) => onChange(Number((e.target as HTMLInputElement).value))}
+          />
+        </span>
         <span style={{ width: 'calc(var(--n) * 22)' }}>{value}%</span>
       </span>
     </label>
