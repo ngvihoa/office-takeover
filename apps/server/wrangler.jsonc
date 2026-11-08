@@ -3,11 +3,15 @@
   "name": "office-takeover",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-30",
+  // Configure an Access-protected Custom Domain before publishing a playtest link.
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": { "EMBED_ALLOWED_ORIGINS": "" },
   "assets": {
     "directory": "../client/dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": true
   },
   "d1_databases": [
     {

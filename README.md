@@ -24,3 +24,7 @@ có encoder libvorbis/aac để sinh lại; thiếu ffmpeg thì báo lỗi, khô
 `pnpm art:sfx --force` ép sinh lại khi cần (ví dụ chủ động đổi encoder). Commit cả
 `apps/client/public/art/sfx.{json,ogg,m4a}` cùng preset đã sửa; không sửa trực tiếp output.
 `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build` để kiểm tra toàn dự án.
+
+`pnpm deploy` build rồi triển khai Worker và static assets; không chạy tự động trong CI.
+Trước khi chạy cần cấu hình D1 và chuẩn bị Cloudflare Access theo [hướng dẫn triển khai](docs/11-deploy.md).
+Không chia sẻ URL trước khi Access bảo vệ toàn bộ hostname; các bước trên tài khoản thật chưa được nghiệm thu.

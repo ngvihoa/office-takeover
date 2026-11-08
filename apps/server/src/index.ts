@@ -3,6 +3,37 @@ import { TELEMETRY_MAX_BYTES, type TelemetryMatch, validateTelemetry } from '@ot
 interface Env {
   TELEMETRY_DB: D1Database;
   ASSETS: Fetcher;
+  EMBED_ALLOWED_ORIGINS?: string;
+}
+
+function frameAncestors(allowedOrigins = ''): string {
+  const ancestors = new Set(["'self'"]);
+  for (const entry of allowedOrigins.split(',')) {
+    const origin = entry.trim();
+    // Canonical HTTPS origins only; reject wildcards, CSP syntax and URL normalization tricks.
+    if (!/^https:\/\/(?:[a-z0-9.-]+|\[[0-9a-f:]+\])(?::[0-9]+)?$/.test(origin)) continue;
+    try {
+      if (new URL(origin).origin === origin) ancestors.add(origin);
+    } catch {
+      // A malformed entry grants no additional framing permission.
+    }
+  }
+  return [...ancestors].join(' ');
+}
+
+function secureResponse(response: Response, env: Env): Response {
+  const secured = new Response(response.body, response);
+  secured.headers.set('X-Content-Type-Options', 'nosniff');
+  secured.headers.set('Referrer-Policy', 'no-referrer');
+  secured.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  secured.headers.set('Strict-Transport-Security', 'max-age=31536000');
+  secured.headers.set(
+    'Content-Security-Policy',
+    `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors ${frameAncestors(env.EMBED_ALLOWED_ORIGINS)}`,
+  );
+  // CSP is authoritative: SAMEORIGIN would conflict with explicitly allowed embedders.
+  secured.headers.delete('X-Frame-Options');
+  return secured;
 }
 
 async function readBody(request: Request): Promise<string | null> {
@@ -77,19 +108,27 @@ async function insertMatch(database: D1Database, match: TelemetryMatch): Promise
     .run();
 }
 
+async function route(request: Request, env: Env): Promise<Response> {
+  const path = new URL(request.url).pathname;
+  if (path === '/api/telemetry') {
+    if (request.method !== 'POST') return new Response(null, { status: 405, headers: { Allow: 'POST' } });
+    const body = await readBody(request);
+    if (body === null) return new Response(null, { status: 413 });
+    const match = validateTelemetry(body);
+    if (!match) return new Response(null, { status: 400 });
+    await insertMatch(env.TELEMETRY_DB, match);
+    return new Response(null, { status: 204 });
+  }
+  if (path.startsWith('/api/')) return new Response(null, { status: 404 });
+  return env.ASSETS.fetch(request);
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const path = new URL(request.url).pathname;
-    if (path === '/api/telemetry') {
-      if (request.method !== 'POST') return new Response(null, { status: 405, headers: { Allow: 'POST' } });
-      const body = await readBody(request);
-      if (body === null) return new Response(null, { status: 413 });
-      const match = validateTelemetry(body);
-      if (!match) return new Response(null, { status: 400 });
-      await insertMatch(env.TELEMETRY_DB, match);
-      return new Response(null, { status: 204 });
+    try {
+      return secureResponse(await route(request, env), env);
+    } catch {
+      return secureResponse(new Response(null, { status: 500 }), env);
     }
-    if (path.startsWith('/api/')) return new Response(null, { status: 404 });
-    return env.ASSETS.fetch(request);
   },
 } satisfies ExportedHandler<Env>;

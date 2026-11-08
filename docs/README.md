@@ -17,6 +17,7 @@ Khi docs và research mâu thuẫn, **docs thắng**.
 | 08 | [Decision log](08-decision-log.md) | Các quyết định đã chốt và lý do |
 | 09 | [Design system](09-design-system.md) | Token màu, chữ, spacing, chuyển động, component, trạng thái, bố cục màn hình, giọng văn |
 | 10 | [Hiệu năng và chơi thử](10-performance-playtest.md) | Đo frame thật, giới hạn kết quả trong orb và quy trình lấy phản hồi người chơi |
+| 11 | [Triển khai](11-deploy.md) | Build, D1, Worker, Access, giới hạn request, CI và rollback |
 | — | [Sketchbook](../research/sketches.html) | Minh hoạ luật chơi (hình tháp trong đây đã cũ) |
 | — | [Map style sketches](../research/map-style-sketches.html) | **Hướng hình ảnh đã chốt** (hướng 1: mặt bằng 3/4) |
 

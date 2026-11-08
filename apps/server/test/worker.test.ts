@@ -7,6 +7,7 @@ import match from './fixtures/match.json';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 let worker: Miniflare;
+let workerOptions: ConstructorParameters<typeof Miniflare>[0];
 let database: Awaited<ReturnType<Miniflare['getD1Database']>>;
 
 beforeAll(async () => {
@@ -19,7 +20,7 @@ beforeAll(async () => {
   });
   const output = bundle.outputFiles[0];
   if (!output) throw new Error('Worker bundling produced no output');
-  worker = new Miniflare({
+  workerOptions = {
     modules: true,
     script: output.text,
     compatibilityDate: '2026-07-30',
@@ -30,7 +31,8 @@ beforeAll(async () => {
       routerConfig: { invoke_user_worker_ahead_of_assets: true, has_user_worker: true },
       assetConfig: { not_found_handling: 'single-page-application' },
     },
-  });
+  };
+  worker = new Miniflare(workerOptions);
   database = await worker.getD1Database('TELEMETRY_DB');
   const migration = await readFile(`${root}migrations/0001_telemetry_matches.sql`, 'utf8');
   await database.batch(
@@ -53,7 +55,93 @@ function post(body: string, headers: Record<string, string> = {}) {
   return worker.dispatchFetch('https://game.example/api/telemetry', { method: 'POST', body, headers });
 }
 
+function expectSecurityHeaders(response: Response, ancestors = "'self'") {
+  expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+  expect(response.headers.get('referrer-policy')).toBe('no-referrer');
+  expect(response.headers.get('permissions-policy')).toBe('camera=(), microphone=(), geolocation=()');
+  expect(response.headers.get('strict-transport-security')).toBe('max-age=31536000');
+  expect(response.headers.get('content-security-policy')).toBe(
+    `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors ${ancestors}`,
+  );
+  expect(response.headers.has('x-frame-options')).toBe(false);
+}
+
 describe('anonymous telemetry HTTP Worker + D1', () => {
+  it('secures accepted and rejected API responses and static SPA responses', async () => {
+    for (const response of [
+      await post(JSON.stringify(match)),
+      await post('{'),
+      await post(' '.repeat(2049)),
+      await worker.dispatchFetch('https://game.example/api/telemetry'),
+      await worker.dispatchFetch('https://game.example/api/unknown'),
+      await worker.dispatchFetch('https://game.example/'),
+      await worker.dispatchFetch('https://game.example/some/client/route'),
+    ]) {
+      expectSecurityHeaders(response);
+    }
+  });
+
+  it('allows only configured canonical HTTPS embed origins, never request Origin or CSP injection', async () => {
+    const embeddedWorker = new Miniflare({
+      ...workerOptions,
+      bindings: {
+        EMBED_ALLOWED_ORIGINS: [
+          ' https://office.example ',
+          'https://office.example',
+          'https://office.example:8443',
+          '*',
+          'https://*.example',
+          'https://evil.example;',
+          'https://office.example:99999',
+          'https://[invalid]',
+          'https://OFFICE.example',
+          'https://office.example:443',
+          "https://evil.example; script-src 'unsafe-eval'",
+          'https://evil.example\n; frame-ancestors *',
+          'https://user:password@evil.example',
+          'https://evil.example/path',
+          'https://evil.example/',
+          'https://evil.example?query',
+          'https://evil.example#fragment',
+          'https://evil.example\\path',
+          'https://evil.example https://other.example',
+          'http://evil.example',
+          'javascript:alert(1)',
+          'data:text/html,evil',
+          '//evil.example',
+          'null',
+          'not-an-origin',
+          '',
+        ].join(','),
+      },
+    });
+    try {
+      for (const path of ['/', '/api/unknown']) {
+        const response = await embeddedWorker.dispatchFetch(`https://game.example${path}`, {
+          headers: { Origin: 'https://untrusted.example' },
+        });
+        expectSecurityHeaders(response, "'self' https://office.example https://office.example:8443");
+      }
+    } finally {
+      await embeddedWorker.dispose();
+    }
+    expectSecurityHeaders(
+      await worker.dispatchFetch('https://game.example/', { headers: { Origin: 'https://office.example' } }),
+    );
+  });
+
+  it('returns a secured empty 500 on database failure without leaking SQL or runtime details', async () => {
+    await database.prepare('ALTER TABLE telemetry_matches RENAME TO unavailable_matches').run();
+    try {
+      const response = await post(JSON.stringify(match));
+      expect(response.status).toBe(500);
+      expect(await response.text()).toBe('');
+      expectSecurityHeaders(response);
+    } finally {
+      await database.prepare('ALTER TABLE unavailable_matches RENAME TO telemetry_matches').run();
+    }
+  });
+
   it('persists every allowed match field and server time, never request identity', async () => {
     const before = Math.floor(Date.now() / 1000);
     const response = await post(JSON.stringify(match), {
@@ -112,6 +200,7 @@ describe('anonymous telemetry HTTP Worker + D1', () => {
       ),
     );
     expect(responses.every((response) => response.status === 204)).toBe(true);
+    for (const response of responses) expectSecurityHeaders(response);
     expect(await database.prepare('SELECT COUNT(*) AS count FROM telemetry_matches').first('count')).toBe(30);
     const other = await post(JSON.stringify({ ...match, sessionId: '650e8400-e29b-41d4-a716-446655440000' }));
     expect(other.status).toBe(204);
@@ -202,6 +291,29 @@ describe('anonymous telemetry HTTP Worker + D1', () => {
       bots: '[null,"normal",null]',
       reduced_motion: 1,
     });
+  });
+
+  it('preserves static asset body, content type, ETag and HEAD/304 status while adding headers', async () => {
+    const asset = await worker.dispatchFetch('https://game.example/asset.txt');
+    expect(asset.status).toBe(200);
+    expect(await asset.text()).toBe('Static asset fixture.\n');
+    expect(asset.headers.get('content-type')).toContain('text/plain');
+    const etag = asset.headers.get('etag');
+    expect(etag).toBeTruthy();
+    expectSecurityHeaders(asset);
+    const head = await worker.dispatchFetch('https://game.example/asset.txt', { method: 'HEAD' });
+    expect(head.status).toBe(200);
+    expect(await head.text()).toBe('');
+    expect(head.headers.get('etag')).toBe(etag);
+    expect(head.headers.get('content-type')).toBe(asset.headers.get('content-type'));
+    expectSecurityHeaders(head);
+    const cached = await worker.dispatchFetch('https://game.example/asset.txt', {
+      headers: { 'If-None-Match': etag ?? '' },
+    });
+    expect(cached.status).toBe(304);
+    expect(await cached.text()).toBe('');
+    expect(cached.headers.get('etag')).toBe(etag);
+    expectSecurityHeaders(cached);
   });
 
   it('routes non-API requests to static assets with SPA fallback, without swallowing API errors', async () => {

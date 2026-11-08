@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm art:build && pnpm --filter @ot/client dev",
     "build": "pnpm art:build && pnpm --filter @ot/client build && pnpm --filter @ot/server build",
+    "deploy": "pnpm build && pnpm --filter @ot/server deploy",
     "art:build": "tsx art/scripts/build.ts",
     "art:sfx": "tsx art/scripts/build-sfx.ts",
     "art:validate": "tsx art/scripts/validate.ts source && tsx art/scripts/validate.ts output",
