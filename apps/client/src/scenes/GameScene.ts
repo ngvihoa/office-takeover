@@ -66,6 +66,10 @@ export class GameScene extends Phaser.Scene {
     return logicalPoint(pointer.x, pointer.y, this.renderScale);
   }
 
+  preload() {
+    if (!this.textures.exists('office')) this.load.atlas('office', '/art/atlas.png', '/art/atlas.json');
+  }
+
   create() {
     const benchmark = import.meta.env.DEV && location.pathname === '/dev/perf';
     this.match = new LocalMatch(
@@ -91,7 +95,7 @@ export class GameScene extends Phaser.Scene {
       640 * this.renderScale,
       360 * this.renderScale,
     ) as Phaser.Textures.CanvasTexture;
-    this.g = canvasPainter(this.texture.context, this.renderScale);
+    this.g = canvasPainter(this.texture.context, this.renderScale, this.textures.get('office'));
     const surface = this.add
       .image(0, 0, 'match')
       .setOrigin(0)
@@ -108,7 +112,7 @@ export class GameScene extends Phaser.Scene {
       surface.setDisplaySize(640 * this.renderScale, 360 * this.renderScale);
       this.background.width = 640 * scale;
       this.background.height = 360 * scale;
-      this.g = canvasPainter(this.texture.context, scale);
+      this.g = canvasPainter(this.texture.context, scale, this.textures.get('office'));
       this.roomCache = '';
     };
     this.scale.on('resize', resize);
@@ -290,7 +294,7 @@ export class GameScene extends Phaser.Scene {
     const key = state.towers.map((t) => `${t.owner}:${t.level}`).join(',');
     if (key !== this.roomCache) {
       const ctx = this.background.getContext('2d') as CanvasRenderingContext2D;
-      const g = canvasPainter(ctx, this.renderScale);
+      const g = canvasPainter(ctx, this.renderScale, this.textures.get('office'));
       corridor(g, world.map.building);
       for (const def of world.map.towers) {
         const tower = state.towers[def.id];
@@ -352,10 +356,12 @@ export class GameScene extends Phaser.Scene {
         state.tick < (state.players[s.owner]?.deadlineUntil ?? 0) ? world.config.deadline.speedMultiplier : 1;
       let distance = Math.max(0, s.traveled - world.config.squadSpeed * boost * (1 - this.elapsed / tickMs));
       let point = route.points[0] as [number, number];
+      let direction = 'down';
       for (let i = 1; i < route.points.length; i++) {
         const next = route.points[i] as [number, number];
         const len = Math.abs(next[0] - point[0]) + Math.abs(next[1] - point[1]);
         if (distance <= len) {
+          direction = next[0] > point[0] ? 'right' : next[0] < point[0] ? 'left' : next[1] < point[1] ? 'up' : 'down';
           point = [
             Math.round(point[0] + Math.sign(next[0] - point[0]) * distance),
             Math.round(point[1] + Math.sign(next[1] - point[1]) * distance),
@@ -365,7 +371,7 @@ export class GameScene extends Phaser.Scene {
         distance -= len;
         point = next;
       }
-      squad(g, ...point, TEAMS[s.owner] as TeamId, s.count, Math.floor(this.time.now / 160) % 2);
+      squad(g, ...point, TEAMS[s.owner] as TeamId, s.count, Math.floor(this.time.now / 160) % 2, direction);
     }
     g.rect(0, 0, 640, 20, p.gray100);
     g.rect(0, 340, 640, 20, p.gray100);

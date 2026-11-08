@@ -37,3 +37,16 @@ WebGL ANGLE/SwiftShader (GPU phần mềm), DPR=2, dev build. Không quay video 
 
 Baseline **không đạt 60fps trong môi trường này**. Đây là số nền để so sánh cùng orb,
 không phải kết luận về laptop thật. Chưa đánh dấu tiêu chí 60fps hoàn thành.
+
+## Sau khi nối atlas
+
+Cùng môi trường và kịch bản, vẫn dev build, không quay video trong lúc đo:
+
+| Viewport | Mẫu / thời gian sau warm-up | FPS | Frame p50 / p95 | CPU p95 | Max squads |
+|---|---|---|---|---|---|
+| 1280×720 | 896 / 39,5s | 22,7 | 40,5 / 68,5ms | 14,3ms | 8 |
+| 1920×1080 | 357 / 30,6s | 11,7 | 86,0 / 105,6ms | 22,3ms | 7 |
+
+Có cải thiện quan sát được; tải ở S=3 không hoàn toàn giống nhau (7 so với 8 đoàn).
+Máy chia sẻ nên không dùng một cặp lần đo để khẳng định mức tăng cố định.
+Vẫn chưa đạt 60fps trong orb và chưa nghiệm thu laptop thật.

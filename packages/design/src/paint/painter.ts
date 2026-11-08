@@ -7,6 +7,8 @@ import { primitive as p } from '../tokens';
  */
 export interface Painter {
   rect(x: number, y: number, w: number, h: number, color: string): void;
+  /** Optional atlas fast path. Return false when the surface has no matching frame. */
+  sprite?(name: string, x: number, y: number, tint?: string): boolean;
   /** Static text (VT323). Numbers that change every frame should use `digits` instead. */
   text(
     x: number,
@@ -57,6 +59,7 @@ export function notchedBox(
 }
 
 export function icon(g: Painter, name: IconName, x: number, y: number, tint?: string): void {
+  if (g.sprite?.(`icon_${name}`, x, y, tint)) return;
   for (const px of iconPixels(name, tint)) g.rect(x + px.x, y + px.y, 1, 1, px.color);
 }
 
@@ -103,9 +106,11 @@ export function digits(
   let cx = align === 'center' ? x - Math.floor(w / 2) : align === 'right' ? x - w : x;
   for (const ch of str) {
     const glyph = GLYPHS[ch] ?? GLYPHS['?'] ?? [];
-    glyph.forEach((row, j) => {
-      for (let i = 0; i < row.length; i++) if (row[i] === '#') g.rect(cx + i, y + j, 1, 1, color);
-    });
+    if (!g.sprite?.(`digit_${ch.codePointAt(0)}`, cx, y, color)) {
+      glyph.forEach((row, j) => {
+        for (let i = 0; i < row.length; i++) if (row[i] === '#') g.rect(cx + i, y + j, 1, 1, color);
+      });
+    }
     cx += (glyph[0]?.length ?? 5) + 1;
   }
 }

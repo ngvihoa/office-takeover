@@ -4,14 +4,21 @@
   "type": "module",
   "packageManager": "pnpm@10.28.2",
   "scripts": {
-    "dev": "pnpm --filter @ot/client dev",
-    "build": "pnpm --filter @ot/client build",
+    "dev": "pnpm art:build && pnpm --filter @ot/client dev",
+    "build": "pnpm art:build && pnpm --filter @ot/client build",
+    "art:build": "tsx art/scripts/build.ts",
+    "art:validate": "tsx art/scripts/validate.ts source && tsx art/scripts/validate.ts output",
+    "art:typecheck": "tsc -p art/tsconfig.json",
     "test": "vitest run",
-    "typecheck": "tsc -b",
-    "lint": "biome check ."
+    "typecheck": "tsc -b && pnpm art:typecheck",
+    "lint": "biome check . --vcs-enabled=true --vcs-client-kind=git --vcs-use-ignore-file=true"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",
+    "@types/node": "^26.6.6",
+    "@types/pngjs": "^6.0.5",
+    "pngjs": "^7.0.0",
+    "tsx": "^4.23.15",
     "typescript": "7.0.2",
     "vitest": "5.1.0"
   }

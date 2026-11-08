@@ -9,6 +9,7 @@ import {
   motion,
   type Painter,
   path,
+  person,
   plant,
   playerChip,
   primitive,
@@ -300,6 +301,27 @@ export function DevUI() {
             </div>
           </div>
         </div>
+      </Section>
+
+      <Section
+        id="employees"
+        title="Nhân viên: 4 hướng × 2 frame"
+        note="Cùng painter với nguồn atlas; đủ 5 phe. Từ trái: lên, xuống, trái, phải; mỗi hướng có 2 bước."
+      >
+        <PixelCanvas
+          w={320}
+          h={100}
+          label="Nhân viên ở mọi hướng và bước chân"
+          draw={(g) => {
+            TEAM_IDS.forEach((t, row) => {
+              g.text(4, row * 20 + 13, team[t].label, { size: 11, color: primitive.ink });
+              ['up', 'down', 'left', 'right'].forEach((direction, column) => {
+                for (const frame of [0, 1])
+                  person(g, 100 + column * 48 + frame * 16, row * 20 + 5, t, frame, direction);
+              });
+            });
+          }}
+        />
       </Section>
 
       <Section

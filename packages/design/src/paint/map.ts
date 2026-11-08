@@ -1,5 +1,5 @@
 import { color, map as m, primitive as p, type TeamId, team } from '../tokens';
-import { countPlate, type PlateState } from './hud';
+import { countPlate, flag, type PlateState } from './hud';
 import { dashedOutline, digits, outline, type Painter } from './painter';
 
 export type Dept =
@@ -50,6 +50,7 @@ function chair(g: Painter, x: number, y: number, t: TeamId) {
 }
 
 export function desk(g: Painter, x: number, y: number, t: TeamId, kind: DeskKind = 'pc') {
+  if (g.sprite?.(`desk_${kind}_${t}`, x - 1, y - 1)) return;
   R(g, x - 1, y - 1, 20, 11, p.ink);
   R(g, x, y, 18, 9, p.wood);
   R(g, x, y, 18, 2, p.tan);
@@ -73,6 +74,7 @@ export function desk(g: Painter, x: number, y: number, t: TeamId, kind: DeskKind
 }
 
 export function cabinet(g: Painter, x: number, y: number) {
+  if (g.sprite?.('cabinet', x, y)) return;
   R(g, x, y, 10, 16, p.ink);
   R(g, x + 1, y + 1, 8, 14, p.gray300);
   R(g, x + 1, y + 1, 8, 2, p.gray100);
@@ -82,6 +84,7 @@ export function cabinet(g: Painter, x: number, y: number) {
 }
 
 export function plant(g: Painter, x: number, y: number) {
+  if (g.sprite?.('plant', x, y)) return;
   R(g, x + 2, y + 7, 7, 5, p.ink);
   R(g, x + 3, y + 8, 5, 3, p.wood);
   R(g, x + 1, y, 9, 8, p.green900);
@@ -92,6 +95,7 @@ export function plant(g: Painter, x: number, y: number) {
 }
 
 export function rack(g: Painter, x: number, y: number) {
+  if (g.sprite?.('rack', x, y)) return;
   R(g, x, y, 12, 20, p.ink);
   R(g, x + 1, y + 1, 10, 18, p.gray700);
   for (let i = 0; i < 4; i++) {
@@ -114,6 +118,7 @@ export function meetingTable(g: Painter, x: number, y: number, w: number, h: num
 }
 
 export function roundTable(g: Painter, x: number, y: number, t: TeamId) {
+  if (g.sprite?.(`round_table_${t}`, x - 9, y - 1)) return;
   chair(g, x - 9, y + 3, t);
   chair(g, x + 13, y + 3, t);
   R(g, x + 1, y - 1, 10, 14, p.ink);
@@ -142,6 +147,7 @@ export function pantryCounter(g: Painter, x: number, y: number, w: number) {
 }
 
 export function sofa(g: Painter, x: number, y: number) {
+  if (g.sprite?.('sofa', x - 1, y - 1)) return;
   R(g, x - 1, y - 1, 26, 11, p.ink);
   R(g, x, y, 24, 9, p.plum);
   R(g, x, y, 24, 3, p.magenta);
@@ -150,6 +156,7 @@ export function sofa(g: Painter, x: number, y: number) {
 }
 
 export function bossDesk(g: Painter, x: number, y: number, t: TeamId) {
+  if (g.sprite?.(`boss_desk_${t}`, x - 1, y - 1)) return;
   R(g, x - 1, y - 1, 38, 14, p.ink);
   R(g, x, y, 36, 12, p.woodDark);
   R(g, x, y, 36, 2, p.wood);
@@ -170,6 +177,7 @@ export function rug(g: Painter, x: number, y: number, w: number, h: number) {
 }
 
 export function bugBoard(g: Painter, x: number, y: number) {
+  if (g.sprite?.('bug_board', x - 1, y - 1)) return;
   R(g, x - 1, y - 1, 22, 14, p.ink);
   R(g, x, y, 20, 12, p.white);
   R(g, x + 2, y + 2, 3, 3, p.red500);
@@ -179,6 +187,7 @@ export function bugBoard(g: Painter, x: number, y: number) {
 }
 
 export function easel(g: Painter, x: number, y: number) {
+  if (g.sprite?.('easel', x - 1, y - 1)) return;
   R(g, x - 1, y - 1, 16, 14, p.ink);
   R(g, x, y, 14, 12, p.white);
   R(g, x + 2, y + 2, 4, 4, p.magenta);
@@ -323,16 +332,31 @@ export function room(g: Painter, r: RoomView, s: RoomState = {}) {
 }
 
 // ---------------- people ----------------
-export function person(g: Painter, x: number, y: number, t: TeamId, frame = 0) {
+export function person(g: Painter, x: number, y: number, t: TeamId, frame = 0, direction = 'down') {
+  if (g.sprite?.(`person_${t}_${direction}_${frame}`, x, y)) return;
   R(g, x, y, 5, 7, p.ink);
   R(g, x + 1, y + 1, 3, 2, p.hair);
   R(g, x + 1, y + 3, 3, 1, p.skin);
   R(g, x + 1, y + 4, 3, 2, team[t].main);
-  if (frame === 1) R(g, x + 1, y + 6, 1, 1, p.ink);
+  R(g, x + 1, y + 4, 1, 1, team[t].light);
+  R(g, x + 3, y + 5, 1, 1, team[t].dark);
+  if (direction === 'up') R(g, x + 1, y + 3, 3, 1, p.hair);
+  if (direction === 'left') R(g, x + 3, y + 3, 1, 1, p.hair);
+  if (direction === 'right') R(g, x + 1, y + 3, 1, 1, p.hair);
+  R(g, x + (frame === 0 ? 1 : 3), y + 6, 1, 1, team[t].dark);
 }
 
 /** A walking group of employees at (x, y), with the count box above. */
-export function squad(g: Painter, x: number, y: number, t: TeamId, n: number, frame = 0) {
+export function squad(
+  g: Painter,
+  x: number,
+  y: number,
+  t: TeamId,
+  n: number,
+  frame = 0,
+  direction = 'down',
+  symbols = true,
+) {
   const slots = [
     [-6, -4],
     [0, -5],
@@ -344,12 +368,16 @@ export function squad(g: Painter, x: number, y: number, t: TeamId, n: number, fr
   const count = Math.min(slots.length, Math.max(3, Math.ceil(n / 3)));
   for (let i = 0; i < count; i++) {
     const [dx, dy] = slots[i] as readonly [number, number];
-    person(g, x + dx - 2, y + dy - 3, t, (i + frame) % 2);
+    person(g, x + dx - 2, y + dy - 3, t, (i + frame) % 2, direction);
   }
   const label = String(n);
   const w = label.length * 6 + 5;
   R(g, x - Math.floor(w / 2), y - 19, w, 10, p.ink);
   digits(g, x, y - 18, label, p.white, 'center');
+  if (symbols && t !== 'neutral') {
+    // Same non-color cue as room/HUD flags; keep it separate from the count.
+    flag(g, t, x + Math.ceil(w / 2) + 1, y - 18);
+  }
 }
 
 /** Dashed corridor path for a squad (polyline of axis-aligned segments). */
