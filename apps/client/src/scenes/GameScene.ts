@@ -67,15 +67,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
+    const benchmark = import.meta.env.DEV && location.pathname === '/dev/perf';
     this.match = new LocalMatch(
       world,
       [
-        { kind: 'human' },
+        benchmark ? { kind: 'bot', level: 'normal' } : { kind: 'human' },
         { kind: 'bot', level: 'easy' },
         { kind: 'bot', level: 'normal' },
         { kind: 'bot', level: 'easy' },
       ],
-      newMatchSeed(this.match?.state.seed),
+      benchmark ? 7 : newMatchSeed(this.match?.state.seed),
     );
     this.selected.clear();
     this.paused = false;
@@ -281,6 +282,10 @@ export class GameScene extends Phaser.Scene {
       }
     }
     const state = this.match.state;
+    if (import.meta.env.DEV) {
+      this.registry.set('squads', state.squads.length);
+      this.registry.set('matchActive', !this.paused && !this.match.ended);
+    }
     for (const id of this.selected) if (state.towers[id]?.owner !== 0) this.selected.delete(id);
     const key = state.towers.map((t) => `${t.owner}:${t.level}`).join(',');
     if (key !== this.roomCache) {

@@ -16,6 +16,10 @@ export async function startGame(parent: HTMLElement) {
     scene: [GameScene],
     scale: { mode: Phaser.Scale.NONE, autoCenter: Phaser.Scale.NO_CENTER },
   });
+  if (import.meta.env.DEV && location.pathname === '/dev/perf') {
+    const { measureGame } = await import('../dev/benchmark');
+    measureGame(game);
+  }
   const resize = () => {
     const s = scaleFor(window.innerWidth, window.innerHeight);
     game.scale.resize(640 * s, 360 * s);
