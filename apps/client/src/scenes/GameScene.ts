@@ -22,11 +22,8 @@ import {
   timerChip,
 } from '@ot/design';
 import {
-  buildWorld,
   type Command,
   LocalMatch,
-  MAPS,
-  type MapDef,
   SEND_PCTS,
   type SeatSetup,
   type SendPct,
@@ -38,17 +35,17 @@ import Phaser from 'phaser';
 import { logicalPoint, newMatchSeed, wheelRatio } from '../game/controls';
 import { MatchFeedback } from '../game/feedback';
 import { canvasPainter } from '../game/painter';
-import { DEFAULT_BOTS, type OfflineOptions, PLAYER_NAMES } from '../game/session';
+import { DEFAULT_BOTS, matchLayout, type OfflineOptions, PLAYER_NAMES } from '../game/session';
 import { readSettings, type Settings, saveSettings, toggleMute } from '../game/settings';
 import { MatchTelemetry } from '../game/telemetry';
 
 const TEAMS: TeamId[] = ['p1', 'p2', 'p3', 'p4'];
 const NAMES = PLAYER_NAMES;
-const world = buildWorld(MAPS['office-01'] as MapDef);
 const tickMs = 1000 / TICKS_PER_SECOND;
 
 export class GameScene extends Phaser.Scene {
   private match!: LocalMatch;
+  private layout!: ReturnType<typeof matchLayout>;
   private selected = new Set<number>();
   private pct: SendPct = 50;
   private aiming: SkillId | null = null;
@@ -97,16 +94,18 @@ export class GameScene extends Phaser.Scene {
       const hotspot = name === 'default' ? '0 0' : name === 'pointer' ? '4 0' : '5 5';
       this.cursors[name] = `url(${this.textures.getBase64('office', `cursor_${name}`)}) ${hotspot}, auto`;
     }
-    this.feedback = new MatchFeedback(world, (cue) => this.play(cue));
+    const seed = benchmark ? 7 : newMatchSeed(this.match?.state.seed);
+    this.layout = matchLayout(seed, benchmark);
+    this.feedback = new MatchFeedback(this.layout.world, (cue) => this.play(cue));
     this.match = new LocalMatch(
-      world,
+      this.layout.world,
       [
         benchmark ? { kind: 'bot', level: 'normal' } : { kind: 'human' },
         ...(benchmark ? DEFAULT_BOTS : (this.options.bots ?? DEFAULT_BOTS)).map(
           (level): SeatSetup => (level ? { kind: 'bot', level } : { kind: 'empty' }),
         ),
       ],
-      benchmark ? 7 : newMatchSeed(this.match?.state.seed),
+      seed,
     );
     this.selected.clear();
     this.sent.fill(0);
@@ -218,14 +217,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   private hit(x: number, y: number) {
-    return world.map.towers.find(
+    return this.layout.world.map.towers.find(
       (t) => x >= t.rect[0] && y >= t.rect[1] && x < t.rect[0] + t.rect[2] && y < t.rect[1] + t.rect[3],
     )?.id;
   }
 
   private submit(command: Command) {
     if (this.options.benchmark) return;
-    if (!validate(world, this.match.state, command)) {
+    if (!validate(this.layout.world, this.match.state, command)) {
       this.status = 'Chưa thể thực hiện. Kiểm tra nhân viên hoặc thời gian hồi.';
       return;
     }
@@ -382,6 +381,7 @@ export class GameScene extends Phaser.Scene {
 
   update(_time: number, delta: number) {
     if (!this.texture) return;
+    const { world, startRoom, order } = this.layout;
     if (!this.paused && !this.match.ended) {
       this.elapsed += Math.min(delta, 250);
       while (this.elapsed >= tickMs && !this.match.ended) {
@@ -398,6 +398,8 @@ export class GameScene extends Phaser.Scene {
             );
             this.options.onEnd?.({
               seed: this.match.state.seed,
+              seatOrder: [...order],
+              startRoom: startRoom.id,
               bots: [...(this.options.benchmark ? DEFAULT_BOTS : (this.options.bots ?? DEFAULT_BOTS))],
               result: event.result,
               players: event.result.ranking.map((id) => ({

@@ -57,6 +57,8 @@ const VN_TEST = 'ẮẰẲẴẶ ẤẦẨẪẬ Đ ƠƯ ỚỜỞỠỢ ỨỪ�
 const feedbackWorld = buildWorld(MAPS['office-01'] as MapDef);
 const previewReport: MatchReport = {
   seed: 2026,
+  seatOrder: [0, 1, 2, 3],
+  startRoom: 0,
   bots: ['easy', 'normal', 'easy'],
   result: { ranking: [0, 2, 1, 3], winner: 0, reason: 'last-standing', endTick: 1250 },
   players: [
