@@ -70,3 +70,11 @@ Tiêu chí hoàn thành:
 - Có chiến thuật nào luôn thắng không? (ví dụ rush Pantry)
 - Bot Dễ có quá khó với người mới không? Bot Thường có quá dễ với người quen tay không?
 - Có thao tác nào gây mỏi hoặc khó chịu không?
+
+### Tiến độ màn chơi Phaser (08/11/2026)
+- Đã nối màn chính vào Phaser 4.2 và `LocalMatch`: 1 người + 3 bot trên `office-01`.
+- Có kéo gom quân, Ctrl+click, click phải điều quân, cuộn/1–4 đổi tỉ lệ, double-click/E mở rộng,
+  Q/W kỹ năng, Space chọn hết, Esc bỏ chọn/tạm dừng; nút chuột cho kỹ năng, tỉ lệ, mở rộng, chọn hết và menu.
+- HUD đọc state thật; đoàn nhân viên nội suy theo đường hành lang. Có bảng thứ hạng và chơi lại.
+- Chưa đánh dấu hoàn tất MVP: còn pipeline asset/atlas, âm thanh và hiệu ứng, menu thiết lập/cài đặt,
+  thống kê kết quả đầy đủ, đo hiệu năng và playtest người thật.
