@@ -3,24 +3,54 @@ import { deriveSeed, Rng } from '../rng';
 import { capacity, interval, isAlive } from '../rules';
 import type { Command, GameState, PlayerId, World } from '../types';
 
+/** Levels offered to players. */
 export type BotLevel = 'easy' | 'normal';
+/** `novice` is a stand-in for a first-time human, used only by balance tests. */
+export type BotProfileName = BotLevel | 'novice';
+
+interface Profile {
+  /** Ticks between decisions (base ± jitter). */
+  base: number;
+  jitter: number;
+  /** Pick uniformly among the best `topK` attack candidates (0 = within 5% of the best). */
+  topK: number;
+  /** Pool several rooms into one attack. */
+  pool: boolean;
+  /** Upgrade rooms and use skills. */
+  advanced: boolean;
+  /** Percent chance to react to a threat in a given decision. */
+  defendChance: number;
+  /** Percent chance to send one step less than needed (a mistake). */
+  shortChance: number;
+}
+
+const PROFILES: Record<BotProfileName, Profile> = {
+  normal: { base: 15, jitter: 3, topK: 0, pool: true, advanced: true, defendChance: 100, shortChance: 0 },
+  easy: { base: 40, jitter: 8, topK: 4, pool: false, advanced: false, defendChance: 60, shortChance: 20 },
+  novice: { base: 45, jitter: 10, topK: 5, pool: false, advanced: false, defendChance: 50, shortChance: 25 },
+};
+
+/** Bots leave human rooms alone at the start so players can get their bearings (docs/02 §9). */
+export const HUMAN_GRACE_TICKS = 450;
 
 export interface Bot {
   player: PlayerId;
-  level: BotLevel;
+  level: BotProfileName;
   rng: Rng;
   nextDecisionTick: number;
+  /** Seats controlled by humans; protected from this bot until `HUMAN_GRACE_TICKS`. */
+  humans: readonly PlayerId[];
 }
 
-const PERIOD: Record<BotLevel, { base: number; jitter: number }> = {
-  easy: { base: 30, jitter: 5 },
-  normal: { base: 15, jitter: 3 },
-};
-
 /** Bots only read state and emit the same commands a human could (docs/02 §9). */
-export function createBot(player: PlayerId, level: BotLevel, matchSeed: number): Bot {
+export function createBot(
+  player: PlayerId,
+  level: BotProfileName,
+  matchSeed: number,
+  humans: readonly PlayerId[] = [],
+): Bot {
   const rng = new Rng(deriveSeed(matchSeed, 101 + player));
-  return { player, level, rng, nextDecisionTick: 5 + rng.int(PERIOD[level].base) };
+  return { player, level, rng, nextDecisionTick: 5 + rng.int(PROFILES[level].base), humans };
 }
 
 interface Candidate {
@@ -73,8 +103,8 @@ function value(world: World, s: GameState, me: PlayerId, target: number): number
   let v = def.kind === 'pantry' ? 3 : def.kind === 'boss' ? 2 : def.kind === 'team' ? 1.4 : 1;
   if (t.owner !== null && t.owner !== me) {
     v += 0.4;
-    const owned = s.towers.filter((x) => x.owner === t.owner).length;
-    if (owned <= 2) v += 0.8;
+    // Do not pile on: a room another player is already attacking is worth less to us.
+    if (s.squads.some((q) => q.to === target && q.owner !== me && q.owner !== t.owner)) v *= 0.6;
   }
   return v;
 }
@@ -82,8 +112,10 @@ function value(world: World, s: GameState, me: PlayerId, target: number): number
 export function botThink(world: World, s: GameState, bot: Bot): Command[] {
   const me = bot.player;
   if (s.result || !isAlive(s, me) || s.tick < bot.nextDecisionTick) return [];
-  const period = PERIOD[bot.level];
-  bot.nextDecisionTick = s.tick + period.base - period.jitter + bot.rng.int(period.jitter * 2 + 1);
+  const profile = PROFILES[bot.level];
+  bot.nextDecisionTick = s.tick + profile.base - profile.jitter + bot.rng.int(profile.jitter * 2 + 1);
+  const protectedOwner = (owner: PlayerId | null) =>
+    owner !== null && s.tick < HUMAN_GRACE_TICKS && bot.humans.includes(owner);
 
   const cmds: Command[] = [];
   const mine = s.towers.filter((t) => t.owner === me);
@@ -102,6 +134,7 @@ export function botThink(world: World, s: GameState, bot: Bot): Command[] {
     const deficit = inc.others - (t.troops + growth + inc.mine) + 2;
     if (deficit <= 0) continue;
     threatened.add(t.id);
+    if (bot.rng.int(100) >= profile.defendChance) continue;
     const helpers = mine
       .filter((h) => h.id !== t.id && !threatened.has(h.id) && eta(world, h.id, t.id) <= inc.soonest + 5)
       .sort((a, b) => eta(world, a.id, t.id) - eta(world, b.id, t.id) || a.id - b.id);
@@ -114,7 +147,7 @@ export function botThink(world: World, s: GameState, bot: Bot): Command[] {
       covered = true;
       break;
     }
-    if (!covered && bot.level === 'normal' && ready('coffee') && deficit <= world.config.coffee.troops) {
+    if (!covered && profile.advanced && ready('coffee') && deficit <= world.config.coffee.troops) {
       cmds.push({ t: 'skill', player: me, skill: 'coffee', target: t.id });
     }
   }
@@ -123,7 +156,7 @@ export function botThink(world: World, s: GameState, bot: Bot): Command[] {
   const sources = mine.filter((t) => !threatened.has(t.id) && avail(t.id) >= 6);
   const cands: Candidate[] = [];
   for (const target of s.towers) {
-    if (target.owner === me) continue;
+    if (target.owner === me || protectedOwner(target.owner)) continue;
     for (const src of sources) {
       const ticks = eta(world, src.id, target.id);
       const need = needed(world, s, me, target.id, ticks);
@@ -136,7 +169,7 @@ export function botThink(world: World, s: GameState, bot: Bot): Command[] {
         score: value(world, s, me, target.id) / (need + dist * 0.08),
       });
     }
-    if (bot.level === 'normal' && sources.length > 1) {
+    if (profile.pool && sources.length > 1) {
       // Pool 75% of several nearby rooms when no single room is enough.
       const near = [...sources].sort(
         (a, b) => eta(world, a.id, target.id) - eta(world, b.id, target.id) || a.id - b.id,
@@ -162,12 +195,17 @@ export function botThink(world: World, s: GameState, bot: Bot): Command[] {
   if (cands.length > 0) {
     cands.sort((a, b) => b.score - a.score);
     const best = cands[0] as Candidate;
-    const pool = bot.level === 'easy' ? cands.slice(0, 3) : cands.filter((c) => c.score >= best.score * 0.95);
-    cmds.push(bot.rng.pick(pool.length > 0 ? pool : [best]).cmd);
+    const pool = profile.topK > 0 ? cands.slice(0, profile.topK) : cands.filter((c) => c.score >= best.score * 0.95);
+    const pick = bot.rng.pick(pool.length > 0 ? pool : [best]).cmd;
+    if (pick.t === 'send' && bot.rng.int(100) < profile.shortChance) {
+      // A typical beginner mistake: one step too few employees.
+      const lower = SEND_PCTS[Math.max(0, SEND_PCTS.indexOf(pick.pct) - 1)] as SendPct;
+      cmds.push({ ...pick, pct: lower });
+    } else cmds.push(pick);
   }
 
-  // 3) Normal bots grow and use Deadline when a big push is on the way.
-  if (bot.level === 'normal') {
+  // 3) Advanced bots grow and use Deadline when a big push is on the way.
+  if (profile.advanced) {
     const safe = mine.filter((t) => !threatened.has(t.id) && t.level < 3);
     for (const t of safe) {
       const cost = world.config.upgradeCost[t.level - 1] as number;
