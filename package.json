@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.28.2",
   "scripts": {
     "dev": "pnpm art:build && pnpm --filter @ot/client dev",
-    "build": "pnpm art:build && pnpm --filter @ot/client build",
+    "build": "pnpm art:build && pnpm --filter @ot/client build && pnpm --filter @ot/server build",
     "art:build": "tsx art/scripts/build.ts",
     "art:sfx": "tsx art/scripts/build-sfx.ts",
     "art:validate": "tsx art/scripts/validate.ts source && tsx art/scripts/validate.ts output",

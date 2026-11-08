@@ -10,6 +10,9 @@
     },
     {
       "path": "../../packages/sim"
+    },
+    {
+      "path": "../../packages/telemetry"
     }
   ]
 }

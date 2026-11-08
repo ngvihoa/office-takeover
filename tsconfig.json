@@ -11,7 +11,13 @@
       "path": "packages/design"
     },
     {
+      "path": "packages/telemetry"
+    },
+    {
       "path": "apps/client"
+    },
+    {
+      "path": "apps/server"
     }
   ]
 }
