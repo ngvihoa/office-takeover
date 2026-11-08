@@ -88,7 +88,7 @@ Tiêu chí hoàn thành:
   `/dev/ui` có preview trang chủ, thiết lập 1/3 bot, cài đặt, thắng/thua/hòa và tạm dừng.
 - Đã đo baseline và sau atlas trên GPU phần mềm trong orb; **chưa đạt 60fps trong orb**,
   chưa nghiệm thu laptop thật. Số đo và quy trình ở [10-performance-playtest.md](10-performance-playtest.md).
-- Đã có `pnpm deploy`, security headers/CSP từ Worker, test D1/HTTP local và CI push/PR
+- Đã có `pnpm deploy:worker`, security headers/CSP từ Worker, test D1/HTTP local và CI push/PR
   (typecheck, lint, 84 unit/integration test, build, 43 Playwright test); CI không deploy.
   Hướng dẫn D1/Access/WAF/rollback ở [11-deploy.md](11-deploy.md); chưa nghiệm thu account thật.
 - Chưa đánh dấu hoàn tất MVP: còn nghiệm thu hiệu năng máy thật, playtest ít nhất 3 đồng nghiệp,

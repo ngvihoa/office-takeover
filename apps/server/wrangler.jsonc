@@ -3,8 +3,8 @@
   "name": "office-takeover",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-30",
-  // Configure an Access-protected Custom Domain before publishing a playtest link.
-  "workers_dev": false,
+  // Existing workers.dev hostname is protected by a self-hosted Access application.
+  "workers_dev": true,
   "preview_urls": false,
   "vars": { "EMBED_ALLOWED_ORIGINS": "" },
   "assets": {

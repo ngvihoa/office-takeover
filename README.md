@@ -31,6 +31,7 @@ rồi `pnpm test:e2e`. Bộ test thao tác chơi ở S=1/2 và chụp từng ph�
 qua `pnpm exec playwright show-report`; trace/video chỉ giữ khi lỗi. Có thể dùng Chromium
 cài sẵn bằng biến `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. Đây không phải phép đo 60fps.
 
-`pnpm deploy` build rồi triển khai Worker và static assets; không chạy tự động trong CI.
+`pnpm deploy:worker` build rồi triển khai Worker và static assets; không chạy tự động trong CI.
+Không đặt tên script root là `deploy`: đó là lệnh có sẵn của pnpm.
 Trước khi chạy cần cấu hình D1 và chuẩn bị Cloudflare Access theo [hướng dẫn triển khai](docs/11-deploy.md).
 Không chia sẻ URL trước khi Access bảo vệ toàn bộ hostname; các bước trên tài khoản thật chưa được nghiệm thu.

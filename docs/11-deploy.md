@@ -74,33 +74,32 @@ production đang có bằng ID môi trường khác.
 
 ## 3. Domain, Access và rate limit trước khi mở đường truy cập
 
-### Domain và các đường có thể bỏ qua bảo vệ
+### Hostname hiện tại và Custom Domain tùy chọn
 
-Để dùng WAF rate limiting của zone Free, cần một **domain sẵn có thuộc tổ chức,
-zone đang active trên Cloudflare Free**. Hướng dẫn này không yêu cầu mua domain.
-Không có zone thì chưa đáp ứng được checklist WAF này; dừng lại, không thay bằng
-dịch vụ trả phí hoặc tuyên bố đã bảo vệ `workers.dev` bằng rule của zone riêng.
+Theo người vận hành, `https://office-takeover.nvhoa29702.workers.dev` hiện đã được
+bảo vệ bằng **self-hosted Access application**, policy email `@thenowproject.com.vn`,
+đăng nhập **One-time PIN**. Agent chưa kiểm chứng cấu hình này trên account thật.
+Giữ `workers_dev: true` để lần deploy tiếp theo không tắt hostname đang dùng;
+giữ `preview_urls: false` để không mở thêm đường preview ngoài ý muốn.
 
-Trong `apps/server/wrangler.jsonc`, thêm hostname thật, không dùng hostname ví dụ:
+Custom Domain là tùy chọn sau này, không phải điều kiện để dùng hostname hiện tại.
+Nếu có domain sẵn có thuộc tổ chức, zone active trên Cloudflare Free, người vận hành
+có thể cấu hình Access cho hostname mới **trước** khi thêm route:
 
 ```jsonc
 "routes": [{ "pattern": "game.example.com", "custom_domain": true }]
 ```
 
-Repository mặc định tắt `workers_dev` và `preview_urls`, chưa khai báo domain thật.
-Đó là chủ ý: deploy chưa cấu hình route không tự tạo link playtest công khai.
-Giữ cả hai giá trị `false` trong cấu hình, không chỉ tắt ở dashboard vì lần deploy
-sau có thể bật lại. `workers_dev: false` **không đủ** để tắt mọi loại URL preview.
-Kiểm tra cả Version URLs (trước đây gọi preview URLs), alias, Preview/Deployment URLs
-nếu tài khoản dùng tính năng preview mới, domain cũ và route phụ.
+Thay hostname ví dụ bằng domain thật. Kiểm tra cả Version URLs, alias, Preview/
+Deployment URLs nếu account dùng tính năng preview mới, domain cũ và route phụ.
 
 ### Cloudflare Access: phải áp trước khi chia sẻ link
 
 1. Bật Zero Trust Free cho account. Tạo **self-hosted Access application** cho toàn
    hostname game, không giới hạn riêng `/api` hay trang chủ. Thực hiện trước khi
    gắn hostname vào Worker để tránh cửa sổ truy cập công khai.
-2. Policy **Allow** chỉ email đồng nghiệp cụ thể hoặc domain email công ty đã xác
-   minh; dùng OTP email hoặc IdP công ty. Không dùng `Everyone`, `Bypass` hay bỏ qua
+2. Với hostname hiện tại, giữ policy **Allow** email `@thenowproject.com.vn` và
+   **One-time PIN**. Không dùng `Everyone`, `Bypass` hay bỏ qua
    `/api/telemetry`/asset. Kiểm tra không có policy theo path cụ thể làm mất bảo vệ.
 3. Sau khi Worker tồn tại, có thể thêm lớp Worker-level Access:
    **Workers & Pages → office-takeover → Access → Protect this Worker behind Access
@@ -108,9 +107,8 @@ nếu tài khoản dùng tính năng preview mới, domain cũ và route phụ.
    các route, Custom Domain, `workers.dev` và previews của Worker; kiểm tra policy
    hostname ưu tiên cao hơn không tạo bypass. Không bật bảo vệ toàn account nếu
    việc đó vô tình tác động các ứng dụng khác.
-4. Nếu cố ý mở lại `workers.dev`/preview, phải bảo vệ chúng bằng Access trước,
-   không coi Access trên Custom Domain là tự bảo vệ hostname khác. WAF rule của
-   zone riêng không bao phủ `workers.dev`; vì vậy giữ chúng tắt cho playtest này.
+4. Access trên Custom Domain không tự bảo vệ hostname khác. Giữ Access của
+   `workers.dev` hiện tại; mọi preview/alias mới phải tắt hoặc có Access tương đương.
 
 MVP không tự xác thực JWT Access và không lưu danh tính Access vào D1: bảo vệ ở
 edge phải đúng. Worker-level Access hiện có hạn chế WebSocket; khi triển khai V1
@@ -118,6 +116,11 @@ online phải xem lại lựa chọn hostname-based Access, không coi hướng 
 nghiệm thu WebSocket hay embed đăng nhập chéo site.
 
 ### Một rate limiting rule trong gói Free
+
+**Chỉ áp dụng khi dùng Custom Domain trong zone do tổ chức quản lý.** Rule của zone
+riêng không bao phủ `workers.dev`. Hostname hiện tại có Access và quota SQL
+30 gói/session/giờ, nhưng chưa có lớp WAF zone này; không tuyên bố đã nghiệm thu WAF.
+Không mua domain hay dịch vụ trả phí để thực hiện bước tùy chọn này.
 
 Ở **zone chứa hostname game**, vào **Security → Security rules → Create rule →
 Rate limiting rules** (dashboard cũ có thể ghi Security → WAF).
@@ -200,12 +203,15 @@ SAMEORIGIN` mâu thuẫn với allowlist ngoài site. Không thêm header đó �
 thật; không tắt Access để sửa lỗi embed.
 
 ```sh
-pnpm deploy
+pnpm deploy:worker
 ```
 
-Script root build toàn dự án rồi chạy deploy của `@ot/server`. Lệnh deploy **ghi lên cloud**;
+Script root build toàn dự án rồi chạy `pnpm --filter @ot/server run deploy`.
+Không đặt tên script root là `deploy`, vì trùng lệnh có sẵn của pnpm.
+Lệnh deploy **ghi lên cloud**;
 chỉ chạy sau khi có quyền, database ID thật, migration
-remote thành công và Access/WAF đúng. Không deploy trực tiếp client dev server.
+remote thành công và Access đúng (WAF zone chỉ áp dụng cho Custom Domain).
+Không deploy trực tiếp client dev server.
 Do mọi asset đều gọi Worker, request asset cũng tính vào quota Worker Free; vượt
 quota có thể trả 429, không fallback static. Theo dõi usage account, không tự nâng gói.
 
@@ -214,14 +220,14 @@ quota có thể trả 429, không fallback static. Theo dõi usage account, khô
 - [ ] Cửa sổ ẩn danh, chưa đăng nhập: `/`, route SPA, JS/font/audio asset và
   `/api/telemetry` đều yêu cầu Access hoặc bị chặn, không trả nội dung game/API thành công.
 - [ ] Email được phép vào được, email ngoài policy không vào được. Kiểm tra phiên hết hạn.
-- [ ] `workers.dev`, mọi URL phiên bản/preview/alias và domain/route cũ đều tắt hoặc
-  đòi Access tương đương; không có đường phụ bỏ qua bảo vệ hay WAF.
+- [ ] `workers.dev` hiện tại yêu cầu Access; mọi URL phiên bản/preview/alias và
+  domain/route cũ đều tắt hoặc đòi Access tương đương, không có đường phụ bỏ qua bảo vệ.
 - [ ] Sau đăng nhập, DevTools Network thấy security headers trên HTML, JS, font,
   audio, SPA fallback, API hợp lệ và API lỗi. CSP không chặn canvas/cursor/style/font/audio;
   không có yêu cầu nới script policy. Chơi một trận và gửi telemetry thật.
 - [ ] Iframe cùng origin hoạt động; nếu dùng allowlist, chỉ origin được khai báo nhúng
   được, origin ngoài danh sách bị CSP chặn. Access vẫn bắt buộc.
-- [ ] Kiểm tra WAF đã deploy, thử burst có kiểm soát bằng request lỗi nhỏ (để không
+- [ ] Nếu dùng Custom Domain: kiểm tra WAF đã deploy, thử burst có kiểm soát bằng request lỗi nhỏ (để không
   ghi dữ liệu), xem sự kiện Block/429; xét tác động NAT, không flood hay làm cạn quota.
 - [ ] Ghi ID deployment, bookmark D1, thời điểm và kết quả kiểm tra; chỉ sau đó chia sẻ.
 
