@@ -145,12 +145,6 @@ export function SettingsDialog({
           onChange={(reducedMotion) => onChange({ ...settings, reducedMotion })}
         />
         <Toggle
-          label="Rung màn hình"
-          checked={settings.screenShake}
-          onChange={(screenShake) => onChange({ ...settings, screenShake })}
-        />
-        {settings.reducedMotion && <p class="t-body muted">Giảm chuyển động cũng tắt rung màn hình.</p>}
-        <Toggle
           label="Ký hiệu phe trên bản đồ"
           checked={settings.symbols}
           onChange={(symbols) => onChange({ ...settings, symbols })}

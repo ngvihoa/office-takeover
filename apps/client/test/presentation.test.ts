@@ -2,10 +2,23 @@
 import { h, render } from 'preact';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { MatchReport } from '../src/game/session';
-import { ResultScreen } from '../src/ui/screens';
+import { readSettings } from '../src/game/settings';
+import { ResultScreen, SettingsDialog } from '../src/ui/screens';
 
 afterEach(() => {
   render(null, document.body);
+  localStorage.clear();
+});
+
+it('does not offer camera shake even when older saved settings enabled it', () => {
+  localStorage.setItem('office-settings', JSON.stringify({ screenShake: true }));
+  render(
+    h(SettingsDialog, { settings: readSettings(), onChange: () => {}, onClose: () => {}, inline: true }),
+    document.body,
+  );
+  expect(document.body.textContent).not.toContain('Rung màn hình');
+  expect(document.body.textContent).toContain('Giảm chuyển động');
+  expect(document.body.textContent).toContain('Gửi số liệu ẩn danh');
 });
 
 describe('match results without a unique winner', () => {

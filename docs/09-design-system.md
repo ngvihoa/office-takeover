@@ -147,7 +147,8 @@ Thang chữ (lpx, VT323 cần cỡ lớn hơn font thường):
 
 - Easing: `steps(n)` hoặc ease-out, **vị trí luôn làm tròn lpx**. Không dùng hiệu ứng nảy (overshoot) cho UI DOM. Nảy chỉ dùng trong canvas (số nhân viên nảy khi thay đổi).
 - Vào màn: trượt 8lpx từ dưới cộng fade (DOM được phép fade opacity, canvas thì không).
-- **Giảm chuyển động** (cài đặt): tắt rung màn hình, tắt nảy, thay trượt bằng xuất hiện ngay, nhấp nháy đổi thành viền tĩnh.
+- Không rung màn hình khi chiếm phòng; phản hồi chỉ tại phòng bằng màu, hạt và âm báo.
+- **Giảm chuyển động** (cài đặt): tắt hạt và nảy, thay trượt bằng xuất hiện ngay, nhấp nháy đổi thành viền tĩnh.
 
 ## 7. Âm thanh UI
 | Token | Khi nào |
@@ -318,7 +319,7 @@ Thanh trên: 4 player chip trái (cách nhau 4), timer phải. Thanh dưới: sk
 ### Kết quả
 Bản đồ cuối trận mờ phía sau. Panel 420: con dấu · bảng xếp hạng 4 dòng (cờ, tên, phòng cuối, nhân viên đã điều, phòng đã chiếm) · [Chơi lại] primary · [Trang chủ] secondary.
 ### Cài đặt
-Modal: âm lượng (slider), giảm chuyển động (toggle), rung màn hình (toggle), ký hiệu mù màu (toggle, mặc định bật), tỉ lệ gửi mặc định (segmented).
+Modal: âm lượng (slider), giảm chuyển động (toggle), ký hiệu mù màu (toggle, mặc định bật), tỉ lệ gửi mặc định (segmented).
 
 ## 10. Giọng văn (copy)
 - Xưng **"bạn"**, câu ngắn, động từ đứng đầu: "Kéo từ phòng của bạn sang phòng khác để điều nhân viên."

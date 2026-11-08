@@ -25,10 +25,9 @@ export class MatchFeedback {
   constructor(
     private world: World,
     private play: (cue: Cue) => void,
-    private shake: () => void,
   ) {}
 
-  consume(events: GameEvent[], now: number, settings: Settings, owned: Set<number>) {
+  consume(events: GameEvent[], now: number, owned: Set<number>) {
     const cues = new Set<Cue>();
     for (const event of events) {
       if (event.t === 'squadSpawned') {
@@ -46,7 +45,6 @@ export class MatchFeedback {
         });
         if (event.to === 0) {
           cues.add('capture');
-          if (settings.screenShake && !settings.reducedMotion) this.shake();
         }
         if (event.from === 0) cues.add('lose');
       } else if (event.t === 'skillUsed' && event.player === 0) {

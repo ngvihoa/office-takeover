@@ -97,13 +97,7 @@ export class GameScene extends Phaser.Scene {
       const hotspot = name === 'default' ? '0 0' : name === 'pointer' ? '4 0' : '5 5';
       this.cursors[name] = `url(${this.textures.getBase64('office', `cursor_${name}`)}) ${hotspot}, auto`;
     }
-    this.feedback = new MatchFeedback(
-      world,
-      (cue) => this.play(cue),
-      () => {
-        this.cameras.main.shake(160, 2 / (640 * this.renderScale));
-      },
-    );
+    this.feedback = new MatchFeedback(world, (cue) => this.play(cue));
     this.match = new LocalMatch(
       world,
       [
@@ -172,7 +166,6 @@ export class GameScene extends Phaser.Scene {
       this.settings = { ...settings };
       this.sound.volume = settings.volume / 100;
       if (settings.volume === 0) this.sound.removeByKey('sfx');
-      if (settings.reducedMotion || !settings.screenShake) this.cameras.main.shakeEffect.reset();
       this.roomCache = '';
     };
     this.game.events.on('resume-match', resume);
@@ -394,7 +387,7 @@ export class GameScene extends Phaser.Scene {
       while (this.elapsed >= tickMs && !this.match.ended) {
         const owned = new Set(this.match.state.towers.filter((t) => t.owner === 0).map((t) => t.id));
         const events = this.match.tick();
-        this.feedback.consume(events, this.time.now, this.settings, owned);
+        this.feedback.consume(events, this.time.now, owned);
         for (const event of events) {
           if (event.t === 'squadSpawned') this.sent[event.owner] = (this.sent[event.owner] ?? 0) + event.count;
           if (event.t === 'captured') this.captured[event.to] = (this.captured[event.to] ?? 0) + 1;

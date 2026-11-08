@@ -77,7 +77,7 @@ Tiêu chí hoàn thành:
   Q/W kỹ năng, Space chọn hết, Esc bỏ chọn/tạm dừng; nút chuột cho kỹ năng, tỉ lệ, mở rộng, chọn hết và menu.
 - HUD đọc state thật; đoàn nhân viên nội suy theo đường hành lang. Có bảng thứ hạng và chơi lại.
 - Đã có pipeline validate/atlas, 10 âm thanh sinh lặp lại được, hiệu ứng từ sự kiện sim,
-  giảm chuyển động/tắt rung/tắt âm, menu thiết lập 1–3 bot và cài đặt lưu trên máy.
+  giảm chuyển động/tắt âm, không rung màn hình khi chiếm phòng, menu thiết lập 1–3 bot và cài đặt lưu trên máy.
 - Kết quả có thứ hạng, phòng còn lại, nhân viên đã điều, số lần chiếm, thời gian, seed và tải JSON.
   `/dev/ui` có preview trang chủ, thiết lập 1/3 bot, cài đặt, thắng/thua/hòa và tạm dừng.
 - Đã đo baseline và sau atlas trên GPU phần mềm trong orb; **chưa đạt 60fps trong orb**,

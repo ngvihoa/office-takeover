@@ -25,7 +25,7 @@
 | Thiết lập trận offline | Số bot (1–3), độ khó từng bot, chọn map | MVP |
 | Trận | Canvas game + HUD | MVP |
 | Kết quả | Thứ hạng, số tháp, lính đã gửi, tháp đã chiếm, thời gian | MVP |
-| Cài đặt | Âm lượng, tắt rung màn hình, chế độ màu cho người mù màu, tỉ lệ gửi mặc định | MVP (cơ bản) |
+| Cài đặt | Âm lượng, giảm chuyển động, chế độ màu cho người mù màu, tỉ lệ gửi mặc định | MVP (cơ bản) |
 | Trận hướng dẫn | 3 bước: kéo gửi lính → chiếm trung lập → chiếm tháp bot đứng yên | V1 |
 | Lobby 4 ghế | Mã phòng (4 ký tự) + nút copy link, 4 ghế (người / bot Dễ / bot Thường / khoá), trạng thái sẵn sàng, chủ phòng bấm Bắt đầu | V1 |
 | Hồ sơ / avatar | Tạo avatar pixel ghép | V2 |
@@ -81,14 +81,14 @@ Trong trận chỉ dùng Phaser.
 |---|---|---|---|
 | Gửi lính | Tháp nguồn co nhẹ | "pop" | MVP |
 | Lính chạm tháp | Số trên tháp nảy | "tick" nhỏ | MVP |
-| Chiếm được tháp | Hạt màu đội bung, rung màn hình 2px (tắt được) | "ting" | MVP |
+| Chiếm được tháp | Hạt màu đội bung, đổi màu phòng; không rung màn hình | "ting" | MVP |
 | Mất tháp | Viền đỏ nhấp nháy | âm trầm | MVP |
 | Tháp đầy | Viền nhấp nháy chậm | — | V1 |
 | Kỹ năng | Icon to giữa màn hình 0.3s | riêng mỗi kỹ năng | MVP |
 | Thắng / thua | Màn hình kết quả với avatar | jingle ngắn | MVP |
 
 ## 7. Khả năng tiếp cận
-- Chế độ mù màu (ký hiệu cờ). Tắt rung màn hình. Thanh âm lượng tổng.
+- Chế độ mù màu (ký hiệu cờ). Giảm chuyển động. Thanh âm lượng tổng.
 - Cỡ chữ tối thiểu tương đương 16px màn hình. Mọi chữ dùng font có dấu tiếng Việt (xem Art bible).
 
 ## 8. Khi chạy trong iframe (virtual office) `[V2]`

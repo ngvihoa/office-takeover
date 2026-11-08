@@ -69,11 +69,7 @@ const previewReport: MatchReport = {
 
 function drawFeedback(g: Painter, t: number, reducedMotion: boolean) {
   drawMapScene(g, reducedMotion ? 0 : t);
-  const feedback = new MatchFeedback(
-    feedbackWorld,
-    () => {},
-    () => {},
-  );
+  const feedback = new MatchFeedback(feedbackWorld, () => {});
   feedback.consume(
     [
       { t: 'captured', tower: 1, from: null, to: 0 },
@@ -81,7 +77,6 @@ function drawFeedback(g: Painter, t: number, reducedMotion: boolean) {
       { t: 'skillUsed', player: 0, skill: 'coffee' },
     ],
     0,
-    { ...DEFAULT_SETTINGS, reducedMotion },
     new Set(),
   );
   feedback.draw(g, reducedMotion ? 100 : t % 640, { ...DEFAULT_SETTINGS, reducedMotion });
@@ -446,7 +441,7 @@ export function DevUI() {
       <Section
         id="match-feedback"
         title="Phản hồi trận"
-        note="Thâu tóm, mất phòng và kỹ năng; bản giảm chuyển động dùng viền tĩnh, không hạt/rung/nảy."
+        note="Thâu tóm, mất phòng và kỹ năng; không rung màn hình. Bản giảm chuyển động dùng viền tĩnh, không hạt/nảy."
       >
         <PixelCanvas
           w={640}

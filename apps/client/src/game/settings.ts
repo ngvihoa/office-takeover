@@ -4,7 +4,6 @@ export interface Settings {
   volume: number;
   lastVolume: number;
   reducedMotion: boolean;
-  screenShake: boolean;
   symbols: boolean;
   sendPct: SendPct;
   telemetry: boolean;
@@ -14,7 +13,6 @@ export const DEFAULT_SETTINGS: Settings = {
   volume: 40,
   lastVolume: 40,
   reducedMotion: false,
-  screenShake: true,
   symbols: true,
   sendPct: 50,
   telemetry: true,
@@ -34,7 +32,6 @@ export function readSettings(): Settings {
           ? Math.max(10, Math.min(100, Math.round(saved.lastVolume / 10) * 10))
           : 40,
       reducedMotion: typeof saved?.reducedMotion === 'boolean' ? saved.reducedMotion : reducedMotion,
-      screenShake: typeof saved?.screenShake === 'boolean' ? saved.screenShake : true,
       symbols: typeof saved?.symbols === 'boolean' ? saved.symbols : true,
       sendPct: SEND_PCTS.includes(saved?.sendPct) ? saved.sendPct : 50,
       telemetry: typeof saved?.telemetry === 'boolean' ? saved.telemetry : true,
