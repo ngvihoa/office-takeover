@@ -19,6 +19,12 @@ Tiêu chí hoàn thành:
 - [x] Test tất định qua. 1000 trận bot-vs-bot không lỗi. Tỉ lệ thắng theo ghế trong khoảng 20–30% (đo được 22.6–26.4%).
   - Ghi nhận: trận bot Thường × 4 kết thúc nhanh (trung vị khoảng 60 giây, p90 khoảng 80 giây), ngắn hơn nhiều so với mục tiêu 4–6 phút.
     Cần xem lại khi playtest với người (bot đang chơi kiểu dồn ép). Chỉnh trong `packages/sim/src/config.ts`.
+  - Playtest 08/11 (1 người, telemetry D1): bị loại ở giây 105, hạng 2, 60fps ở 2×. Phản hồi: khó thắng, không biết phòng mình
+    ở đâu khi vào trận, vào trận quá nhanh, vị trí xuất phát cố định. Đã xử lý phía sim: bot dễ hơn, không hùa, ân hạn 45 giây,
+    xáo phòng xuất phát (decision #34, #35). Phần giao diện đầu trận (đếm ngược, làm nổi bật phòng của bạn) chờ client.
+  - Thử chỉnh luật bằng mô phỏng (400 trận mỗi phương án, chưa áp dụng): nhân đôi lính phòng trung lập, tốc độ 4px/tick,
+    tuyển chậm 12/10/8 tick, hoặc kết hợp, chỉ kéo trung vị trận từ khoảng 100 lên khoảng 118 giây. Thời lượng do cơ chế
+    tuyết lăn quyết định, không do vài thông số; cần quyết định thiết kế riêng sau playtest 3 người.
 - [x] Mọi asset qua `validate.ts`. Có contact sheet (88 nguồn, 164 frame runtime; `pnpm art:build`).
 - [x] `/dev/ui` hiển thị đủ component MVP ở S=1, 2, 3. Kiểm tra tự động 18 mục, màu DOM thuộc token, canvas integer/pixelated và không tràn ngang; chụp từng mục/trạng thái ở DPR=2. Đã xem lại ảnh đại diện ở ba S; chưa có so sánh ảnh baseline tự động (V1). `pnpm test:e2e`: 43 test qua, ảnh/report được giữ trong CI 7 ngày.
 - [ ] 60fps trên một laptop văn phòng phổ biến.

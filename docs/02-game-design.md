@@ -37,8 +37,8 @@ Mọi biến thể phải giữ **đối xứng 4 phía** cho chế độ Đấu
 
 | Mức | Thay đổi mỗi trận | Phạm vi |
 |---|---|---|
-| 0. Cố định | Một map `office-01`, không ngẫu nhiên | **MVP** |
-| 1. Chọn từ bộ map | Chọn 1 trong N map vẽ tay. Xáo ghế ngồi, tên phòng ban trung lập (từ danh sách tên), cách bày nội thất | V2 |
+| 0. Cố định + xáo phòng xuất phát | Một map `office-01`. **Phòng xuất phát của 4 ghế được xáo theo seed** (`seatOrder` / `withSeatOrder`). Màu của bạn luôn là xanh (p1) để dễ nhận ra; chỉ vị trí thay đổi. Công bằng nhờ map đối xứng 4 phía | **MVP** |
+| 1. Chọn từ bộ map | Chọn 1 trong N map vẽ tay. Xáo tên phòng ban trung lập (từ danh sách tên), cách bày nội thất | V2 |
 | 2. Bán ngẫu nhiên theo khuôn | Map khai báo các **ô** (slot) đối xứng. Phòng đặc biệt (Pantry, Phòng họp, Server) được xáo giữa các ô. Số nhân viên trung lập ±20%, áp đối xứng. Phòng sếp luôn ở trung tâm | V2 |
 | 3. Sinh bằng thuật toán | Sinh 1/4 toà nhà (phòng, hành lang) từ seed rồi lật gương. Phải qua bộ kiểm tra: liên thông, khoảng cách đều, kích thước phòng tối thiểu, không quá 16 phòng | Tuỳ chọn (cùng chế độ D) |
 
@@ -138,15 +138,23 @@ Mỗi lần ra quyết định (chu kỳ tuỳ độ khó):
 1. Nếu một tháp mình sắp bị chiếm (đoàn địch đang đến lớn hơn số lính thủ), gửi tiếp viện từ tháp gần nhất có dư lính.
 2. Ngược lại, với mỗi tháp mình có lính > ngưỡng, chấm điểm từng đích:
    `score = value(target) / (troopsNeeded + distance × k)`.
-   `value`: pantry 3 · phòng sếp 2 · tháp địch yếu 2 · phòng thường 1. `troopsNeeded` = lính thủ + lính sinh thêm trong lúc đoàn đi + 2.
+   `value`: pantry 3 · phòng sếp 2 · phòng team 1,4 · phòng thường 1; +0,4 nếu là phòng của phe khác.
+   **Không hùa:** phòng đang bị một phe thứ ba đánh thì giá trị × 0,6 (bỏ điểm cộng "đánh phe sắp chết" cũ, vốn khiến
+   cả 3 bot cùng dồn vào người chơi đang yếu). `troopsNeeded` = lính thủ + lính sinh thêm trong lúc đoàn đi + 2.
 3. Chỉ gửi khi số gửi đủ để chiếm.
 4. Dùng kỹ năng khi có cơ hội (Deadline khi đang đánh tháp giá trị cao, Coffee khi tháp sắp mất).
+5. **Ân hạn đầu trận:** trong **450 tick (45 giây)** đầu, bot không gửi quân vào phòng của người chơi thật,
+   chỉ chiếm phòng trung lập và đánh nhau. Mục đích: người chơi có thời gian định hướng (playtest 08/11: người thật bị loại ở giây 105).
 
-| Độ khó | Chu kỳ quyết định | Nhiễu | Dùng kỹ năng | Phạm vi |
-|---|---|---|---|---|
-| Dễ | 30 tick | Chọn ngẫu nhiên trong top 3 | Không | MVP |
-| Thường | 15 tick | Không | Có | MVP |
-| Khó | 10 tick | Không, phối hợp đánh 2 hướng | Có | V2 |
+| Độ khó | Chu kỳ quyết định | Chọn mục tiêu | Gom quân | Nâng cấp / kỹ năng | Phản ứng phòng thủ | Gửi thiếu (sai sót) | Phạm vi |
+|---|---|---|---|---|---|---|---|
+| Dễ | 40 ± 8 tick | Ngẫu nhiên trong top 4 | Không | Không | 60% số lần | 20% | MVP |
+| Thường | 15 ± 3 tick | Trong 5% của nước tốt nhất | Có | Có | Luôn | 0% | MVP |
+| Khó | 10 tick | Phối hợp đánh 2 hướng | Có | Có | Luôn | 0% | V2 |
+
+Có thêm hồ sơ `novice` (45 ± 10 tick, top 5, phòng thủ 50%, gửi thiếu 25%) **chỉ dùng trong test** để đóng vai
+người chơi lần đầu. Mục tiêu cân bằng: `novice` ở ghế người chơi thắng **25–45%** trước đội hình mặc định
+Dễ/Thường/Dễ (đo được 31,5% trên 600 trận, vị trí xuất phát ngẫu nhiên). Không có ân hạn thì chỉ thắng khoảng 6%.
 
 Ở online, người chơi mất kết nối **> 15 giây** thì bot "Dễ" tạm thay ghế đó, cho đến khi người chơi vào lại `[V1]`.
 
