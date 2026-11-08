@@ -18,7 +18,9 @@ pnpm dev   # mở http://localhost:5173 để chơi; /dev/ui để xem design sy
 ```
 
 Cần Node và pnpm. `pnpm dev` và `pnpm build` tự sinh/validate atlas từ nguồn trong `art/`.
-Audio runtime được lưu trong Git; nếu không có ffmpeg, build cảnh báo và dùng bộ audio này.
-Khi sửa preset `art/sfx/`, cần ffmpeg có encoder libvorbis/aac để sinh lại audio và commit cả
-`apps/client/public/art/sfx.{json,ogg,m4a}`. Không sửa trực tiếp file audio sinh tự động.
+Audio runtime được lưu trong Git, kèm `sourceHash` trong `sfx.json`. Nguồn không đổi thì build
+không ghi lại audio, dù máy có hay không có ffmpeg. Khi sửa preset `art/sfx/`, build cần ffmpeg
+có encoder libvorbis/aac để sinh lại; thiếu ffmpeg thì báo lỗi, không dùng âm thanh cũ.
+`pnpm art:sfx --force` ép sinh lại khi cần (ví dụ chủ động đổi encoder). Commit cả
+`apps/client/public/art/sfx.{json,ogg,m4a}` cùng preset đã sửa; không sửa trực tiếp output.
 `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build` để kiểm tra toàn dự án.

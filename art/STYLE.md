@@ -137,10 +137,24 @@ sprite toàn phòng. Không bao gồm avatar, emote, logo, nhạc hoặc nội d
 `art/sfx/*.json` chứa 10 preset jsfxr 1.4.1 đã chốt tham số, không sinh preset
 ngẫu nhiên/noise. `build-sfx.ts` nối PCM mono 44.100Hz/16-bit ở biên sample nguyên,
 chừa 250ms im lặng trước/giữa/sau marker, rồi encode **một lần** thành Ogg và M4A.
-`pnpm art:build` gọi bước này. Nếu có **ffmpeg có libvorbis và aac** trong PATH,
-audio được sinh lại; lỗi encode vẫn làm build thất bại. Nếu thiếu lệnh ffmpeg,
-build cảnh báo và giữ bộ `sfx.json`, `sfx.ogg`, `sfx.m4a` trong public/art đã lưu Git.
-Khi sửa preset, phải sinh lại bằng ffmpeg và commit cả ba output cùng preset.
+`pnpm art:build` gọi bước này; cũng có thể chạy riêng `pnpm art:sfx`.
+Bộ `sfx.json`, `sfx.ogg`, `sfx.m4a` trong public/art được lưu Git.
+
+`sourceHash` trong `sfx.json` là SHA-256 của JSON chuẩn hóa: cue theo thứ tự cố định,
+key preset sắp theo thứ tự UTF-16, bỏ khác biệt whitespace/thứ tự key; kèm phiên bản
+jsfxr **đang cài**, sampleRate, paddingSamples, số kênh, bit depth và phiên bản hợp đồng PCM.
+Nếu đổi thuật toán dựng PCM mà không đổi các đầu vào trên, tăng `version` trong nội dung hash.
+
+- Hash khớp và đủ ba output: bỏ qua trước cả bước kiểm tra ffmpeg, **không ghi file public/art**.
+- Hash lệch hoặc thiếu output: cần **ffmpeg có libvorbis và aac**, sinh lại rồi ghi hash mới.
+  Thiếu ffmpeg thì build thất bại với hướng dẫn cài, sinh lại và commit; không dùng âm thanh cũ.
+- `pnpm art:sfx --force`: ép sinh lại dù hash khớp; luôn cần ffmpeg. Lỗi encoder không bị bỏ qua.
+- Khi sửa preset, phải sinh lại và commit cả ba output cùng preset. Phiên bản ffmpeg không
+  nằm trong hash: chủ động dùng `--force` nếu muốn đổi bản encode, thay vì build vô tình ghi đè.
+
+Test CLI dùng `OT_SFX_SOURCE` và `OT_SFX_PUBLIC` để trỏ tới preset/output tạm, không sửa
+preset thật hay bộ audio public khi kiểm tra nhánh sinh lại. Kiểm tra byte và mtime bắt cả
+trường hợp ghi lại file có nội dung giống hệt. Test cần ffmpeg tự bỏ qua khi máy không có lệnh này.
 WAV gốc và WAV từng cue chỉ nằm trong `art/out/` để kiểm tra.
 
 Tham số/PCM/marker tất định. Byte codec đã được so sánh qua 2 lần build với
