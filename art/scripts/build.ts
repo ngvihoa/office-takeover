@@ -9,6 +9,7 @@ for (const [script, ...args] of [
   ['validate', 'output'],
   ['pack'],
   ['contact-sheet'],
+  ['build-sfx'],
 ]) {
   execFileSync(process.execPath, ['--import', 'tsx', resolve(ROOT, `art/scripts/${script}.ts`), ...args], {
     cwd: ROOT,

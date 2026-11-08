@@ -4,6 +4,7 @@ import {
   countPlate,
   dashedOutline,
   flag,
+  map as mapTokens,
   notchedBox,
   outline,
   type Painter,
@@ -34,7 +35,9 @@ import {
 } from '@ot/sim';
 import Phaser from 'phaser';
 import { logicalPoint, newMatchSeed, wheelRatio } from '../game/controls';
+import { MatchFeedback } from '../game/feedback';
 import { canvasPainter } from '../game/painter';
+import { readSettings, type Settings, saveSettings } from '../game/settings';
 
 const TEAMS: TeamId[] = ['p1', 'p2', 'p3', 'p4'];
 const NAMES = ['Bạn', 'Bot An', 'Bot Bình', 'Bot Chi'];
@@ -57,6 +60,10 @@ export class GameScene extends Phaser.Scene {
   private renderScale = 1;
   private status = 'Kéo từ phòng của bạn đến phòng khác để điều nhân viên.';
   private roomCache = '';
+  private settings: Settings = readSettings();
+  private feedback!: MatchFeedback;
+  private lastSound = new Map<string, number>();
+  private cursors: Record<string, string> = {};
 
   constructor() {
     super('Game');
@@ -68,10 +75,27 @@ export class GameScene extends Phaser.Scene {
 
   preload() {
     if (!this.textures.exists('office')) this.load.atlas('office', '/art/atlas.png', '/art/atlas.json');
+    if (!this.cache.audio.exists('sfx'))
+      this.load.audioSprite('sfx', '/art/sfx.json', ['/art/sfx.ogg', '/art/sfx.m4a']);
   }
 
   create() {
     const benchmark = import.meta.env.DEV && location.pathname === '/dev/perf';
+    this.settings = readSettings();
+    this.pct = this.settings.sendPct;
+    this.sound.volume = this.settings.volume / 100;
+    this.lastSound.clear();
+    for (const name of ['default', 'drag', 'target', 'no', 'pointer']) {
+      const hotspot = name === 'default' ? '0 0' : name === 'pointer' ? '4 0' : '5 5';
+      this.cursors[name] = `url(${this.textures.getBase64('office', `cursor_${name}`)}) ${hotspot}, auto`;
+    }
+    this.feedback = new MatchFeedback(
+      world,
+      (cue) => this.play(cue),
+      () => {
+        this.cameras.main.shake(160, 2 / (640 * this.renderScale));
+      },
+    );
     this.match = new LocalMatch(
       world,
       [
@@ -163,6 +187,21 @@ export class GameScene extends Phaser.Scene {
           : 'Đã dùng kỹ năng.';
   }
 
+  private play(cue: string) {
+    if (this.sound.locked || !this.cache.audio.exists('sfx') || this.settings.volume === 0) return;
+    if (this.time.now - (this.lastSound.get(cue) ?? -1000) < 80) return;
+    this.lastSound.set(cue, this.time.now);
+    this.sound.playAudioSprite('sfx', cue);
+  }
+
+  private toggleSound() {
+    this.settings.volume = this.settings.volume ? 0 : 40;
+    this.sound.volume = this.settings.volume / 100;
+    if (!this.settings.volume) this.sound.removeByKey('sfx');
+    saveSettings(this.settings);
+    this.play('click');
+  }
+
   private skill(skill: SkillId) {
     if (skill === 'deadline') {
       this.submit({ t: 'skill', player: 0, skill });
@@ -175,6 +214,10 @@ export class GameScene extends Phaser.Scene {
 
   private down(pointer: Phaser.Input.Pointer) {
     const { x, y } = this.point(pointer);
+    if (y < 20 && x >= 466 && x < 536) {
+      this.toggleSound();
+      return;
+    }
     if (this.match.ended) {
       if (x >= 240 && x <= 400 && y >= 252 && y <= 280) this.scene.restart();
       return;
@@ -183,6 +226,10 @@ export class GameScene extends Phaser.Scene {
       if (x >= 240 && x <= 400 && y >= 190 && y <= 218) {
         this.paused = false;
         this.elapsed = 0;
+      }
+      if (x >= 200 && x <= 440 && y >= 222 && y <= 240) {
+        this.settings.reducedMotion = !this.settings.reducedMotion;
+        saveSettings(this.settings);
       }
       return;
     }
@@ -281,7 +328,11 @@ export class GameScene extends Phaser.Scene {
     if (!this.paused && !this.match.ended) {
       this.elapsed += Math.min(delta, 250);
       while (this.elapsed >= tickMs && !this.match.ended) {
-        this.match.tick();
+        const owned = new Set(this.match.state.towers.filter((t) => t.owner === 0).map((t) => t.id));
+        const events = this.match.tick();
+        this.feedback.consume(events, this.time.now, this.settings, owned);
+        const remaining = world.config.matchTicks - this.match.state.tick;
+        if (remaining > 0 && remaining <= 100 && remaining % TICKS_PER_SECOND === 0) this.play('countdown');
         this.elapsed -= tickMs;
       }
     }
@@ -314,18 +365,60 @@ export class GameScene extends Phaser.Scene {
     }
     this.texture.context.drawImage(this.background, 0, 0);
     const g = this.g;
+    if (!this.settings.reducedMotion) {
+      for (const id of this.feedback.sent.keys()) {
+        const rect = world.map.towers[id]?.rect;
+        if (!rect) continue;
+        const [x, y, w, h] = rect;
+        g.rect(x, y, w, h, mapTokens.corridor);
+        const s = this.renderScale;
+        this.texture.context.drawImage(
+          this.background,
+          x * s,
+          y * s,
+          w * s,
+          h * s,
+          (x + 1) * s,
+          (y + 1) * s,
+          (w - 2) * s,
+          (h - 2) * s,
+        );
+      }
+    }
     const pointer = this.input.activePointer;
     const target = this.hit(this.point(pointer).x, this.point(pointer).y);
+    const cursor =
+      this.paused || state.result
+        ? 'pointer'
+        : this.aiming
+          ? target !== undefined && state.towers[target]?.owner === 0
+            ? 'target'
+            : 'no'
+          : this.dragging
+            ? target === undefined
+              ? 'no'
+              : 'drag'
+            : 'default';
+    this.game.canvas.style.cursor = this.cursors[cursor] ?? 'auto';
     for (const t of state.towers) {
       const def = world.map.towers[t.id];
       if (!def) continue;
       const [x, y, w, h] = def.rect;
       const tid = t.owner === null ? 'neutral' : (TEAMS[t.owner] as TeamId);
       if (this.selected.has(t.id))
-        dashedOutline(g, x - 3, y - 3, w + 6, h + 6, team[tid].main, Math.floor(this.time.now / 160) % 4);
+        dashedOutline(
+          g,
+          x - 3,
+          y - 3,
+          w + 6,
+          h + 6,
+          team[tid].main,
+          this.settings.reducedMotion ? 0 : Math.floor(this.time.now / 160) % 4,
+        );
       if (target === t.id && t.owner === 0) outline(g, x + 3, y + 12, w - 6, h - 15, p.white);
       if (target === t.id && this.dragging) outline(g, x - 2, y - 2, w + 4, h + 4, color.accent);
-      countPlate(g, x + w - 4, y - 5, t.troops, tid, {
+      const bounce = !this.settings.reducedMotion && this.feedback.arrived.has(t.id) ? 1 : 0;
+      countPlate(g, x + w - 4, y - 5 - bounce, t.troops, tid, {
         underAttack: state.squads.some((s) => t.owner !== null && s.to === t.id && s.owner !== t.owner),
       });
     }
@@ -371,8 +464,17 @@ export class GameScene extends Phaser.Scene {
         distance -= len;
         point = next;
       }
-      squad(g, ...point, TEAMS[s.owner] as TeamId, s.count, Math.floor(this.time.now / 160) % 2, direction);
+      squad(
+        g,
+        ...point,
+        TEAMS[s.owner] as TeamId,
+        s.count,
+        this.settings.reducedMotion ? 0 : Math.floor(this.time.now / 160) % 2,
+        direction,
+        this.settings.symbols,
+      );
     }
+    this.feedback.draw(g, this.time.now, this.settings);
     g.rect(0, 0, 640, 20, p.gray100);
     g.rect(0, 340, 640, 20, p.gray100);
     state.players.forEach((player, i) => {
@@ -387,6 +489,8 @@ export class GameScene extends Phaser.Scene {
         { you: i === 0, eliminated: player.eliminatedAt !== null },
       );
     });
+    notchedBox(g, 466, 3, 70, 14, p.white);
+    g.text(501, 14, this.settings.volume ? 'Âm: bật' : 'Âm: tắt', { size: 11, color: p.ink, align: 'center' });
     g.text(546, 14, 'Menu', { size: 11, color: p.ink });
     timerChip(g, 582, 3, Math.max(0, Math.ceil((world.config.matchTicks - state.tick) / TICKS_PER_SECOND)));
     for (const [i, skill] of (['deadline', 'coffee'] as const).entries()) {
@@ -433,6 +537,11 @@ export class GameScene extends Phaser.Scene {
       g.text(320, 150, 'Trận offline đã dừng thời gian.', { size: 13, color: p.ink, align: 'center' });
       notchedBox(g, 240, 190, 160, 28, color.accent);
       g.text(320, 209, 'TIẾP TỤC', { size: 13, color: p.white, align: 'center' });
+      g.text(320, 235, `Giảm chuyển động: ${this.settings.reducedMotion ? 'bật' : 'tắt'}`, {
+        size: 11,
+        color: p.ink,
+        align: 'center',
+      });
       g.text(320, 248, 'Esc để tiếp tục · Cuộn hoặc 1–4 đổi tỉ lệ', { size: 11, color: p.ink, align: 'center' });
     }
   }

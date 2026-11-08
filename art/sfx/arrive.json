@@ -1,0 +1,11 @@
+{
+  "wave_type": 2,
+  "p_env_attack": 0.02,
+  "p_env_sustain": 0.07,
+  "p_env_decay": 0.13,
+  "p_base_freq": 0.27,
+  "p_freq_ramp": -0.08,
+  "sound_vol": 0.16,
+  "sample_rate": 44100,
+  "sample_size": 16
+}

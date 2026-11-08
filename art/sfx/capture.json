@@ -1,0 +1,12 @@
+{
+  "wave_type": 2,
+  "p_env_attack": 0.035,
+  "p_env_sustain": 0.24,
+  "p_env_decay": 0.29,
+  "p_base_freq": 0.35,
+  "p_arp_mod": 0.35,
+  "p_arp_speed": 0.68,
+  "sound_vol": 0.25,
+  "sample_rate": 44100,
+  "sample_size": 16
+}

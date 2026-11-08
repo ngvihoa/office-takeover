@@ -1,0 +1,15 @@
+{
+  "wave_type": 0,
+  "p_env_attack": 0.025,
+  "p_env_sustain": 0.18,
+  "p_env_decay": 0.23,
+  "p_base_freq": 0.3,
+  "p_freq_ramp": 0.08,
+  "p_duty": 0.35,
+  "p_arp_mod": 0.22,
+  "p_arp_speed": 0.75,
+  "p_lpf_freq": 0.38,
+  "sound_vol": 0.17,
+  "sample_rate": 44100,
+  "sample_size": 16
+}

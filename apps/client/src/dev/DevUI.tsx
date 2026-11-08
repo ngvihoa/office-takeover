@@ -27,8 +27,11 @@ import {
   tooltip,
   type as typeScale,
 } from '@ot/design';
+import { buildWorld, MAPS, type MapDef } from '@ot/sim';
 import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
+import { MatchFeedback } from '../game/feedback';
+import { DEFAULT_SETTINGS } from '../game/settings';
 import { Modal, SeatCard } from '../ui/components/composite';
 import { Checkbox, RoomCodeInput, Segmented, Slider, Toggle } from '../ui/components/controls';
 import { PixelCanvas } from '../ui/components/PixelCanvas';
@@ -48,6 +51,27 @@ import { along, PREVIEW_PLANTS, PREVIEW_ROOMS, PREVIEW_SQUADS } from './previewM
 import './dev.css';
 
 const VN_TEST = 'ẮẰẲẴẶ ẤẦẨẪẬ Đ ƠƯ ỚỜỞỠỢ ỨỪỬỮỰ';
+const feedbackWorld = buildWorld(MAPS['office-01'] as MapDef);
+
+function drawFeedback(g: Painter, t: number, reducedMotion: boolean) {
+  drawMapScene(g, reducedMotion ? 0 : t);
+  const feedback = new MatchFeedback(
+    feedbackWorld,
+    () => {},
+    () => {},
+  );
+  feedback.consume(
+    [
+      { t: 'captured', tower: 1, from: null, to: 0 },
+      { t: 'captured', tower: 3, from: 0, to: 1 },
+      { t: 'skillUsed', player: 0, skill: 'coffee' },
+    ],
+    0,
+    { ...DEFAULT_SETTINGS, reducedMotion },
+    new Set(),
+  );
+  feedback.draw(g, reducedMotion ? 100 : t % 640, { ...DEFAULT_SETTINGS, reducedMotion });
+}
 
 function Section({
   id,
@@ -322,6 +346,21 @@ export function DevUI() {
             });
           }}
         />
+      </Section>
+
+      <Section
+        id="match-feedback"
+        title="Phản hồi trận"
+        note="Thâu tóm, mất phòng và kỹ năng; bản giảm chuyển động dùng viền tĩnh, không hạt/rung/nảy."
+      >
+        <PixelCanvas
+          w={640}
+          h={360}
+          label="Hiệu ứng thâu tóm và kỹ năng"
+          animate
+          draw={(g, t) => drawFeedback(g, t, false)}
+        />
+        <PixelCanvas w={640} h={360} label="Phản hồi giảm chuyển động" draw={(g) => drawFeedback(g, 100, true)} />
       </Section>
 
       <Section

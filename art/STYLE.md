@@ -131,4 +131,22 @@ Raster không có phương thức `sprite`, để các painter gọi lại rect 
 
 Phòng phải lắp ghép lúc chạy. Pantry và bàn họp là mảnh lặp/tái sử dụng, không
 sprite toàn phòng. Không bao gồm avatar, emote, logo, nhạc hoặc nội dung V1/V2.
-Âm thanh và hiệu ứng runtime thuộc bước tiếp theo; pipeline này chỉ xuất hạt.
+
+## Âm thanh MVP
+
+`art/sfx/*.json` chứa 10 preset jsfxr 1.4.1 đã chốt tham số, không sinh preset
+ngẫu nhiên/noise. `build-sfx.ts` nối PCM mono 44.100Hz/16-bit ở biên sample nguyên,
+chừa 250ms im lặng trước/giữa/sau marker, rồi encode **một lần** thành Ogg và M4A.
+`pnpm art:build` gọi bước này; cần **ffmpeg có libvorbis và aac** trong PATH.
+Output `sfx.json`, `sfx.ogg`, `sfx.m4a` được copy vào public/art và gitignore.
+WAV gốc và WAV từng cue chỉ nằm trong `art/out/` để kiểm tra.
+
+Tham số/PCM/marker tất định. Byte codec đã được so sánh qua 2 lần build với
+ffmpeg 5.1.9; phiên bản encoder khác có thể sinh byte khác. AAC có padding ở
+đuôi, nằm trong khoảng im lặng, không thay đổi vị trí marker.
+
+Runtime dùng sự kiện **đã được sim xác nhận**, không phát âm/hiệu ứng chỉ vì
+người chơi gửi yêu cầu. Âm lượng mặc định 40%; HUD tắt âm ngay, không xếp hàng
+âm cũ trước khi trình duyệt cho phép phát. Giảm chuyển động mặc định theo hệ
+điều hành nếu chưa lưu lựa chọn; tắt rung, hạt, nảy và hoạt ảnh bước chân.
+Không thêm nhạc nền hay âm thanh hover.

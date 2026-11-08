@@ -6,5 +6,8 @@ apps/client/public/art/atlas.png
 apps/client/public/art/atlas.json
 apps/client/public/art/manifest.json
 apps/client/public/art/digits.xml
+apps/client/public/art/sfx.json
+apps/client/public/art/sfx.ogg
+apps/client/public/art/sfx.m4a
 *.log
 *.tsbuildinfo
