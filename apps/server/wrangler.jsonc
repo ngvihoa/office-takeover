@@ -13,8 +13,8 @@
     {
       "binding": "TELEMETRY_DB",
       "database_name": "office-takeover-telemetry",
-      // Replace with the provisioned D1 ID before deploying; local D1 needs no account.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Production D1 (APAC). Local dev and tests use a local D1, never this one.
+      "database_id": "74e2c0c4-a21d-49fd-812b-da85611f6564",
       "migrations_dir": "migrations"
     }
   ],
