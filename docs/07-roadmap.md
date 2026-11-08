@@ -14,12 +14,12 @@ Phạm vi:
 - Deploy static lên Cloudflare (Workers static assets) để đồng nghiệp chơi thử.
 
 Tiêu chí hoàn thành:
-- [ ] Chơi trọn một trận 1 người + 3 bot, đến khi có người thắng hoặc hết 6 phút.
+- [x] Luồng 1 ghế người + 3 bot đi tới kết quả: kiểm tra trình duyệt hết 360 giây, seed 1137046465; chơi lại/về trang chủ hoạt động. Đây là kiểm tra tự động, không thay playtest người thật.
 - [ ] Mọi thao tác MVP trong UX spec hoạt động bằng chuột. Phím `1`–`4`, `Q`, `W`, `E`, `Space`, `Esc` hoạt động.
 - [x] Test tất định qua. 1000 trận bot-vs-bot không lỗi. Tỉ lệ thắng theo ghế trong khoảng 20–30% (đo được 22.6–26.4%).
   - Ghi nhận: trận bot Thường × 4 kết thúc nhanh (trung vị khoảng 60 giây, p90 khoảng 80 giây), ngắn hơn nhiều so với mục tiêu 4–6 phút.
     Cần xem lại khi playtest với người (bot đang chơi kiểu dồn ép). Chỉnh trong `packages/sim/src/config.ts`.
-- [ ] Mọi asset qua `validate.ts`. Có contact sheet.
+- [x] Mọi asset qua `validate.ts`. Có contact sheet (88 nguồn, 164 frame runtime; `pnpm art:build`).
 - [ ] `/dev/ui` hiển thị đủ component MVP ở S=1, 2, 3. Không có màu ngoài token.
 - [ ] 60fps trên một laptop văn phòng phổ biến.
 - [ ] Ít nhất 3 đồng nghiệp chơi thử và góp ý. Đã chỉnh số liệu theo góp ý.
@@ -76,5 +76,11 @@ Tiêu chí hoàn thành:
 - Có kéo gom quân, Ctrl+click, click phải điều quân, cuộn/1–4 đổi tỉ lệ, double-click/E mở rộng,
   Q/W kỹ năng, Space chọn hết, Esc bỏ chọn/tạm dừng; nút chuột cho kỹ năng, tỉ lệ, mở rộng, chọn hết và menu.
 - HUD đọc state thật; đoàn nhân viên nội suy theo đường hành lang. Có bảng thứ hạng và chơi lại.
-- Chưa đánh dấu hoàn tất MVP: còn pipeline asset/atlas, âm thanh và hiệu ứng, menu thiết lập/cài đặt,
-  thống kê kết quả đầy đủ, đo hiệu năng và playtest người thật.
+- Đã có pipeline validate/atlas, 10 âm thanh sinh lặp lại được, hiệu ứng từ sự kiện sim,
+  giảm chuyển động/tắt rung/tắt âm, menu thiết lập 1–3 bot và cài đặt lưu trên máy.
+- Kết quả có thứ hạng, phòng còn lại, nhân viên đã điều, số lần chiếm, thời gian, seed và tải JSON.
+  `/dev/ui` có preview trang chủ, thiết lập 1/3 bot, cài đặt, thắng/thua/hòa và tạm dừng.
+- Đã đo baseline và sau atlas trên GPU phần mềm trong orb; **chưa đạt 60fps trong orb**,
+  chưa nghiệm thu laptop thật. Số đo và quy trình ở [10-performance-playtest.md](10-performance-playtest.md).
+- Chưa đánh dấu hoàn tất MVP: còn nghiệm thu hiệu năng máy thật, playtest ít nhất 3 đồng nghiệp,
+  xem lại thời lượng trận theo phản hồi và deploy static (chưa thực hiện).

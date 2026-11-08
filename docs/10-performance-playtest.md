@@ -50,3 +50,54 @@ Cùng môi trường và kịch bản, vẫn dev build, không quay video trong 
 Có cải thiện quan sát được; tải ở S=3 không hoàn toàn giống nhau (7 so với 8 đoàn).
 Máy chia sẻ nên không dùng một cặp lần đo để khẳng định mức tăng cố định.
 Vẫn chưa đạt 60fps trong orb và chưa nghiệm thu laptop thật.
+
+## Chơi thử với người: chưa thực hiện
+
+MVP hiện là **mỗi người chơi trên máy mình với bot**, không phải nhiều người trong
+cùng trận. Chưa có server/lobby online; không dùng buổi này để nghiệm thu V1.
+Chưa chỉnh số liệu luật chơi: trận bot Thường × 4 trước đây có trung vị khoảng
+60 giây, p90 khoảng 80 giây, chưa chứng minh trải nghiệm của người mới cũng vậy.
+
+Kiểm tra luồng bằng Chromium trong orb: seed 1137046465, một ghế người gần như
+không điều quân, 3 bot mặc định, kết thúc do hết giờ ở tick 3600 (360 giây).
+Kết quả: Bot An 11 phòng, ghế người 1 phòng, hai bot còn lại 0 phòng.
+Chơi lại tạo một canvas mới; về trang chủ không còn game host. Không coi trận
+thụ động này là đánh giá độ vui/độ khó, cũng không phủ định vấn đề rush/snowball.
+
+### Một buổi 15–20 phút / người
+
+Mời ít nhất 3 đồng nghiệp; ghi mã A/B/C thay tên thật. Dùng cùng một build,
+trình duyệt đang focus, ghi máy, viewport, DPR và bật/tắt hiệu ứng. Không giải thích
+chiến thuật trước trận đầu; chỉ chỉ ra cách mở game.
+
+1. Trận đầu: 1 bot Dễ (bỏ Bot Bình và Bot Chi). Quan sát 30 giây đầu:
+   người chơi có tự gửi được nhân viên, hiểu màu phe và phòng trung lập không?
+   Ghi lúc cần trợ giúp, thao tác nhầm, chỗ không đọc được.
+2. Trận hai: mặc định 3 bot (Dễ / Thường / Dễ). Chơi tới kết quả, không bỏ giữa
+   trận chỉ vì đã mất lợi thế. Ghi thời điểm người chơi thấy đã thắng/thua chắc.
+3. Nếu còn thời gian, chơi lại cùng thiết lập sau khi đã hiểu điều khiển.
+   Không gộp trận đầu và trận đã quen tay khi phân tích độ khó.
+4. Ở màn kết quả bấm **Tải báo cáo JSON**. File có seed, ghế/độ khó bot,
+   lý do kết thúc, tick kết thúc, thứ hạng, phòng còn lại, nhân viên đã điều và
+   số lần chiếm phòng (có tính chiếm lại). Không có lịch sử lệnh nên **không phải replay**.
+5. Hỏi ngắn: vui ở đâu, khó chịu ở đâu, trận quá ngắn/vừa/quá dài, muốn thử lại không?
+   Nếu quá nhanh: thua vì chưa biết thao tác, bị rush, snowball, hay vì không kịp phản ứng?
+
+| Người / lượt | Thiết lập bot | Seed / file JSON | Thời gian trận | Hiểu gửi trong 30s? | Lúc thắng/thua chắc | Nhận xét / muốn chơi lại? |
+|---|---|---|---|---|---|---|
+| A / 1–3 | Chưa chơi | — | — | — | — | Chờ phản hồi |
+| B / 1–3 | Chưa chơi | — | — | — | — | Chờ phản hồi |
+| C / 1–3 | Chưa chơi | — | — | — | — | Chờ phản hồi |
+
+### Quyết định về thời lượng sau buổi thử
+
+- Tách thời gian sim (`endTick / 10`) khỏi thời gian nghỉ/tạm dừng thực tế.
+- Tổng hợp trung vị, khoảng thời gian và phản hồi theo thiết lập bot / mức quen tay;
+  mẫu 3 người chỉ giúp tìm vấn đề, không đủ kết luận cân bằng thống kê.
+- So với mục tiêu 4–6 phút, nhưng không kéo dài trận chỉ để đạt con số nếu người chơi
+  thấy trận ngắn vẫn vui. Ghi riêng thời gian từ lúc hết cơ hội tới kết quả để nhận diện snowball.
+- Nếu cần chỉnh luật, chọn một giả thuyết và một nhóm tham số trong
+  `packages/sim/src/config.ts`, sửa test, chạy lại tất định/đối xứng và 1000 trận bot,
+  rồi cho người chơi thử lại. Không đổi đồng thời nhiều luật để tránh mất dấu nguyên nhân.
+- Chỉ đánh dấu playtest hoàn thành khi đã có người thật và xử lý phản hồi; các ô trống
+  ở trên không phải kết quả.
