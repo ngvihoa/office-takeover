@@ -180,6 +180,7 @@ export class GameScene extends Phaser.Scene {
     });
     this.telemetry = new MatchTelemetry({
       bots: benchmark ? DEFAULT_BOTS : (this.options.bots ?? DEFAULT_BOTS),
+      startRoom: this.layout.startRoom.id,
       controlled: benchmark,
       settings: () => this.settings,
       state: () => ({

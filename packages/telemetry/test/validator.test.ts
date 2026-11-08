@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { validateTelemetry } from '../src/index';
 
 export const validMatch = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   sessionId: '550e8400-e29b-41d4-a716-446655440000',
   buildVersion: 'dev',
   mode: 'offline',
@@ -10,6 +10,8 @@ export const validMatch = {
   fps: 60,
   frameP50Ms: 16,
   frameP95Ms: 20,
+  maxFrameMs: 40.125,
+  startRoom: 0,
   cpuP95Ms: null,
   framesOver20Ms: 2,
   maxSquads: 30,
@@ -76,7 +78,8 @@ describe('validateTelemetry', () => {
 
   it('rejects invalid enum, UUID and build values including trailing line terminators', () => {
     for (const change of [
-      { schemaVersion: 2 },
+      { schemaVersion: 1 },
+      { schemaVersion: 3 },
       { sessionId: 'not-a-uuid' },
       { sessionId: '550e8400-e29b-11d4-a716-446655440000' },
       { sessionId: '550e8400-e29b-41d4-7716-446655440000' },
@@ -99,10 +102,12 @@ describe('validateTelemetry', () => {
 
   it('enforces all numeric bounds, integer requirements and nullable fields', () => {
     const invalid: Record<string, unknown[]> = {
-      samples: [-1, 3601, 1.5, null],
+      samples: [-1, Number.MAX_SAFE_INTEGER + 1, 1.5, null],
       fps: [-1, 1000001, null],
       frameP50Ms: [-1, 1000001, null, 21],
       frameP95Ms: [-1, 1000001, null, 15],
+      maxFrameMs: [-1, 0, 19, 1000001, null],
+      startRoom: [-1, 13, 0.5, null],
       cpuP95Ms: [-1, 1000001],
       framesOver20Ms: [-1, 61, 1.5, null],
       maxSquads: [-1, 1000001, 1.5, null],
@@ -127,7 +132,7 @@ describe('validateTelemetry', () => {
         expect(validateTelemetry(JSON.stringify({ ...validMatch, [key]: value })), `${key}: ${value}`).toBeNull();
       }
     }
-    for (const key of ['fps', 'frameP50Ms', 'frameP95Ms', 'cpuP95Ms', 'dpr', 'wallSeconds']) {
+    for (const key of ['fps', 'frameP50Ms', 'frameP95Ms', 'maxFrameMs', 'cpuP95Ms', 'dpr', 'wallSeconds']) {
       const json = JSON.stringify({ ...validMatch, [key]: 'NONFINITE' });
       expect(validateTelemetry(json.replace('"NONFINITE"', '1e999')), key).toBeNull();
       expect(validateTelemetry(json.replace('"NONFINITE"', '-1e999')), key).toBeNull();
@@ -135,21 +140,31 @@ describe('validateTelemetry', () => {
   });
 
   it('accepts zero-sample and upper-bound packets but rejects inconsistent timings', () => {
-    const zero = { ...validMatch, samples: 0, fps: null, frameP50Ms: null, frameP95Ms: null, framesOver20Ms: 0 };
+    const zero = {
+      ...validMatch,
+      samples: 0,
+      fps: null,
+      frameP50Ms: null,
+      frameP95Ms: null,
+      maxFrameMs: null,
+      framesOver20Ms: 0,
+    };
     expect(validateTelemetry(JSON.stringify(zero))).toEqual(zero);
-    for (const key of ['fps', 'frameP50Ms', 'frameP95Ms']) {
+    for (const key of ['fps', 'frameP50Ms', 'frameP95Ms', 'maxFrameMs']) {
       expect(validateTelemetry(JSON.stringify({ ...zero, [key]: 0 }))).toBeNull();
     }
     const upper = {
       ...validMatch,
       buildVersion: 'a'.repeat(64),
       mode: 'controlled',
-      samples: 3600,
+      samples: Number.MAX_SAFE_INTEGER,
       fps: 1000000,
       frameP50Ms: 1000000,
       frameP95Ms: 1000000,
+      maxFrameMs: 1000000,
+      startRoom: 12,
       cpuP95Ms: 1000000,
-      framesOver20Ms: 3600,
+      framesOver20Ms: Number.MAX_SAFE_INTEGER,
       maxSquads: 1000000,
       scale: 32,
       viewport: [16384, 16384],
@@ -165,5 +180,10 @@ describe('validateTelemetry', () => {
     expect(validateTelemetry(JSON.stringify(upper))).toEqual(upper);
     const nullable = { ...validMatch, hardwareConcurrency: null, playerRank: null, cpuP95Ms: null };
     expect(validateTelemetry(JSON.stringify(nullable))).toEqual(nullable);
+  });
+
+  it('accepts full-match counts rather than imposing the old 3600 frame budget', () => {
+    const full = { ...validMatch, samples: 21600, framesOver20Ms: 4000 };
+    expect(validateTelemetry(JSON.stringify(full))).toEqual(full);
   });
 });

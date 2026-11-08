@@ -162,7 +162,9 @@ pnpm --filter @ot/server exec wrangler d1 migrations list TELEMETRY_DB --remote
 
 Script remote tương đương `wrangler d1 migrations apply TELEMETRY_DB --remote`.
 Đọc danh sách migration trước khi xác nhận; migration đầu tiên là
-`0001_telemetry_matches.sql`. `--local` không thay thế bước này. Migration bị lỗi
+`0001_telemetry_matches.sql`, tiếp theo `0002_telemetry_v2.sql`. Áp dụng 0002 trước
+deploy v2: migration giữ các hàng v1, cột mới NULL, không xóa lịch sử. API v2 không
+nhận gói v1 từ tab cũ; tải lại trang sau deploy. `--local` không thay thế bước này. Migration bị lỗi
 được hoàn tác riêng, các migration trước đã thành công vẫn được áp dụng.
 
 ### Header và quyền nhúng

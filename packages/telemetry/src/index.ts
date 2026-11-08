@@ -1,7 +1,7 @@
 export const TELEMETRY_MAX_BYTES = 2048;
 
 export interface TelemetryMatch {
-  schemaVersion: 1;
+  schemaVersion: 2;
   sessionId: string;
   buildVersion: string;
   mode: 'offline' | 'controlled';
@@ -9,6 +9,8 @@ export interface TelemetryMatch {
   fps: number | null;
   frameP50Ms: number | null;
   frameP95Ms: number | null;
+  maxFrameMs: number | null;
+  startRoom: number;
   cpuP95Ms: number | null;
   framesOver20Ms: number;
   maxSquads: number;
@@ -37,6 +39,8 @@ const fields = [
   'fps',
   'frameP50Ms',
   'frameP95Ms',
+  'maxFrameMs',
+  'startRoom',
   'cpuP95Ms',
   'framesOver20Ms',
   'maxSquads',
@@ -81,6 +85,8 @@ function isTelemetryMatch(value: unknown): value is TelemetryMatch {
       'fps' in value &&
       'frameP50Ms' in value &&
       'frameP95Ms' in value &&
+      'maxFrameMs' in value &&
+      'startRoom' in value &&
       'cpuP95Ms' in value &&
       'framesOver20Ms' in value &&
       'maxSquads' in value &&
@@ -103,19 +109,24 @@ function isTelemetryMatch(value: unknown): value is TelemetryMatch {
     return false;
 
   return (
-    value.schemaVersion === 1 &&
+    value.schemaVersion === 2 &&
     typeof value.sessionId === 'string' &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.sessionId) &&
     typeof value.buildVersion === 'string' &&
     /^[A-Za-z0-9._-]{1,64}$/.test(value.buildVersion) &&
     oneOf(value.mode, ['offline', 'controlled']) &&
-    integer(value.samples, 0, 3600) &&
+    // Full-match counts, bounded by exact JavaScript integer representation, not a frame budget.
+    integer(value.samples, 0, Number.MAX_SAFE_INTEGER) &&
+    integer(value.startRoom, 0, 12) &&
     (value.samples === 0
-      ? value.fps === null && value.frameP50Ms === null && value.frameP95Ms === null
+      ? value.fps === null && value.frameP50Ms === null && value.frameP95Ms === null && value.maxFrameMs === null
       : finite(value.fps, 0, 1000000) &&
         finite(value.frameP50Ms, 0, 1000000) &&
         finite(value.frameP95Ms, 0, 1000000) &&
-        value.frameP50Ms <= value.frameP95Ms) &&
+        finite(value.maxFrameMs, 0, 1000000) &&
+        value.maxFrameMs > 0 &&
+        value.frameP50Ms <= value.frameP95Ms &&
+        value.frameP95Ms <= value.maxFrameMs) &&
     (value.cpuP95Ms === null || finite(value.cpuP95Ms, 0, 1000000)) &&
     integer(value.framesOver20Ms, 0, value.samples) &&
     integer(value.maxSquads, 0, 1000000) &&

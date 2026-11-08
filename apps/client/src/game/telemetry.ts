@@ -51,7 +51,7 @@ function platform(): Pick<TelemetryMatch, 'browser' | 'os'> {
 
 export class MatchTelemetry {
   private frames = new FrameSamples();
-  private started = performance.now();
+  private started: number | null = null;
   private previous: number | null = null;
   private maxSquads = 0;
   private finished = false;
@@ -61,6 +61,7 @@ export class MatchTelemetry {
   constructor(
     private options: {
       bots: readonly (BotLevel | null)[];
+      startRoom: number;
       controlled: boolean;
       settings: () => Settings;
       state: () => { matchTicks: number; humanCommands: number; humanCaptured: number };
@@ -76,6 +77,8 @@ export class MatchTelemetry {
       this.previous = null;
       return;
     }
+    // Intro/ready time is excluded; after play begins wall time includes pauses.
+    this.started ??= performance.now();
     this.maxSquads = Math.max(this.maxSquads, squads);
     if (this.previous !== null) this.frames.add(now - this.previous);
     this.previous = now;
@@ -85,7 +88,8 @@ export class MatchTelemetry {
     if (this.finalReport) return this.finalReport;
     const settings = this.options.settings();
     return {
-      schemaVersion: 1,
+      schemaVersion: 2,
+      startRoom: this.options.startRoom,
       buildVersion: typeof __BUILD_VERSION__ === 'string' ? __BUILD_VERSION__ : 'dev',
       mode: this.options.controlled ? 'controlled' : 'offline',
       ...this.frames.report(),
@@ -97,7 +101,7 @@ export class MatchTelemetry {
       hardwareConcurrency: navigator.hardwareConcurrency || null,
       ...platform(),
       ...this.options.state(),
-      wallSeconds: Number(((performance.now() - this.started) / 1000).toFixed(2)),
+      wallSeconds: this.started === null ? 0 : Number(((performance.now() - this.started) / 1000).toFixed(2)),
       bots: [this.options.bots[0] ?? null, this.options.bots[1] ?? null, this.options.bots[2] ?? null],
       reducedMotion: settings.reducedMotion,
     };

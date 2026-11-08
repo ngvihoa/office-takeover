@@ -15,6 +15,7 @@ it('does not send or create a session identifier when anonymous telemetry is dis
   vi.stubGlobal('navigator', { sendBeacon });
   const telemetry = new MatchTelemetry({
     bots: ['easy', null, null],
+    startRoom: 0,
     controlled: false,
     settings: () => ({ ...DEFAULT_SETTINGS, telemetry: false }),
     state: () => ({ matchTicks: 25, humanCommands: 3, humanCaptured: 1 }),
@@ -23,6 +24,35 @@ it('does not send or create a session identifier when anonymous telemetry is dis
   window.dispatchEvent(new Event('pagehide'));
   expect(sendBeacon).not.toHaveBeenCalled();
   expect(localStorage.getItem('office-telemetry-session')).toBeNull();
+});
+
+it('excludes the intro from wall time, reports zero if left before play, and includes later pauses', () => {
+  let clock = 1000;
+  vi.spyOn(performance, 'now').mockImplementation(() => clock);
+  const options = {
+    bots: ['easy', null, null] as const,
+    startRoom: 0,
+    controlled: false,
+    settings: () => ({ ...DEFAULT_SETTINGS, telemetry: false }),
+    state: () => ({ matchTicks: 0, humanCommands: 0, humanCaptured: 0 }),
+  };
+  const abandoned = new MatchTelemetry(options);
+  abandoned.frame(clock, false, 100);
+  clock = 4000;
+  abandoned.finish('left');
+  expect(abandoned.report()).toMatchObject({ wallSeconds: 0, samples: 0, maxFrameMs: null, maxSquads: 0 });
+
+  const playing = new MatchTelemetry(options);
+  playing.frame(clock, false, 100);
+  clock = 7000;
+  playing.frame(clock, true, 2);
+  clock = 7016;
+  playing.frame(clock, true, 3);
+  clock = 8000;
+  playing.frame(clock, false, 100);
+  clock = 9000;
+  playing.finish('left');
+  expect(playing.report()).toMatchObject({ wallSeconds: 2, samples: 1, maxFrameMs: 16, maxSquads: 3 });
 });
 
 it('sends one bounded summary at match end, excludes pauses, and freezes its end time', async () => {
@@ -36,13 +66,14 @@ it('sends one bounded summary at match end, excludes pauses, and freezes its end
   });
   const telemetry = new MatchTelemetry({
     bots: ['easy', 'normal', null],
+    startRoom: 12,
     controlled: false,
     settings: () => DEFAULT_SETTINGS,
     state: () => ({ matchTicks: 340, humanCommands: 7, humanCaptured: 3 }),
   });
   let frame = 0;
   telemetry.frame(frame, true, 2);
-  for (let i = 0; i < 120; i++) {
+  for (let i = 0; i < 3600; i++) {
     frame += 16;
     telemetry.frame(frame, true, 4);
   }
@@ -53,6 +84,10 @@ it('sends one bounded summary at match end, excludes pauses, and freezes its end
   for (const ms of [10, 20, 30, 40, 50]) {
     frame += ms;
     telemetry.frame(frame, true, 7);
+  }
+  for (let i = 0; i < 200; i++) {
+    frame += 1000;
+    telemetry.frame(frame, true, 6);
   }
   clock = 2100;
   telemetry.finish('timeout', 2);
@@ -65,14 +100,16 @@ it('sends one bounded summary at match end, excludes pauses, and freezes its end
   const summary = JSON.parse(text);
   expect(validateTelemetry(text)).toEqual(summary);
   expect(summary).toMatchObject({
-    schemaVersion: 1,
+    schemaVersion: 2,
+    startRoom: 12,
     mode: 'offline',
-    samples: 5,
-    fps: 33.3,
-    frameP50Ms: 30,
-    frameP95Ms: 50,
+    samples: 3805,
+    fps: 14.8,
+    frameP50Ms: 16,
+    frameP95Ms: 1000,
+    maxFrameMs: 1000,
     cpuP95Ms: null,
-    framesOver20Ms: 3,
+    framesOver20Ms: 203,
     maxSquads: 7,
     hardwareConcurrency: 8,
     browser: 'chrome',
@@ -99,6 +136,7 @@ it('checks the current opt-out when leaving a match, not only the initial settin
   vi.stubGlobal('navigator', { sendBeacon });
   const telemetry = new MatchTelemetry({
     bots: ['normal', null, 'easy'],
+    startRoom: 3,
     controlled: false,
     settings: () => settings,
     state: () => ({ matchTicks: 10, humanCommands: 1, humanCaptured: 0 }),
@@ -116,6 +154,7 @@ it('leaves once on pagehide and swallows beacon errors without retrying', async 
   vi.stubGlobal('navigator', { sendBeacon });
   const telemetry = new MatchTelemetry({
     bots: ['normal', null, null],
+    startRoom: 8,
     controlled: false,
     settings: () => DEFAULT_SETTINGS,
     state: () => ({ matchTicks: 75, humanCommands: 2, humanCaptured: 1 }),
@@ -125,5 +164,13 @@ it('leaves once on pagehide and swallows beacon errors without retrying', async 
   expect(sendBeacon).toHaveBeenCalledTimes(1);
   const body = sendBeacon.mock.calls[0]?.[1] as Blob;
   const summary = JSON.parse(await body.text());
-  expect(summary).toMatchObject({ endReason: 'left', playerRank: null, matchTicks: 75 });
+  expect(summary).toMatchObject({
+    schemaVersion: 2,
+    startRoom: 8,
+    samples: 0,
+    maxFrameMs: null,
+    endReason: 'left',
+    playerRank: null,
+    matchTicks: 75,
+  });
 });

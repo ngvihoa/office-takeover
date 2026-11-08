@@ -8,7 +8,7 @@ import { MatchTelemetry } from '../src/game/telemetry';
 
 afterEach(() => vi.restoreAllMocks());
 
-it('starts controlled replay with its own CPU warm-up rather than the previous match samples', () => {
+it('samples the entire controlled match CPU and resets immediately for replay', () => {
   let now = 0;
   vi.spyOn(performance, 'now').mockImplementation(() => now);
   const events = new EventEmitter();
@@ -24,6 +24,7 @@ it('starts controlled replay with its own CPU warm-up rather than the previous m
   const newMatch = () => {
     const telemetry = new MatchTelemetry({
       bots: ['easy', 'normal', 'easy'],
+      startRoom: 12,
       controlled: true,
       settings: () => ({ ...DEFAULT_SETTINGS, telemetry: false }),
       state: () => ({ matchTicks: 0, humanCommands: 0, humanCaptured: 0 }),
@@ -48,14 +49,17 @@ it('starts controlled replay with its own CPU warm-up rather than the previous m
   let second: MatchTelemetry | undefined;
   try {
     first = newMatch();
-    frames(first, 125, 2);
+    frames(first, 3600, 2);
     expect(report().cpuP95Ms).toBe(2);
+    frames(first, 200, 143.25);
+    expect(report().cpuP95Ms).toBe(143.25);
     first.finish('elimination');
     second = newMatch();
     expect(report().cpuP95Ms).toBeNull();
-    frames(second, 120, 18);
-    expect(report().cpuP95Ms).toBeNull();
     frames(second, 1, 18);
+    expect(report().cpuP95Ms).toBe(18);
+    registry.set('matchActive', false);
+    frames(second, 20, 1000);
     expect(report().cpuP95Ms).toBe(18);
   } finally {
     first?.finish('left');

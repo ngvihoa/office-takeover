@@ -3,12 +3,24 @@ import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 import { Miniflare } from 'miniflare';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import match from './fixtures/match.json';
+import legacyMatch from './fixtures/match.json';
+
+const match = { ...legacyMatch, schemaVersion: 2, samples: 21600, maxFrameMs: 40.125, startRoom: 12 };
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 let worker: Miniflare;
 let workerOptions: ConstructorParameters<typeof Miniflare>[0];
 let database: Awaited<ReturnType<Miniflare['getD1Database']>>;
+
+async function migrate(db: typeof database, name: string) {
+  const migration = await readFile(`${root}migrations/${name}`, 'utf8');
+  await db.batch(
+    migration
+      .split(';')
+      .filter((sql) => sql.trim())
+      .map((sql) => db.prepare(sql)),
+  );
+}
 
 beforeAll(async () => {
   const bundle = await build({
@@ -34,13 +46,8 @@ beforeAll(async () => {
   };
   worker = new Miniflare(workerOptions);
   database = await worker.getD1Database('TELEMETRY_DB');
-  const migration = await readFile(`${root}migrations/0001_telemetry_matches.sql`, 'utf8');
-  await database.batch(
-    migration
-      .split(';')
-      .filter((sql) => sql.trim())
-      .map((sql) => database.prepare(sql)),
-  );
+  await migrate(database, '0001_telemetry_matches.sql');
+  await migrate(database, '0002_telemetry_v2.sql');
 }, 30000);
 
 afterAll(async () => {
@@ -67,6 +74,63 @@ function expectSecurityHeaders(response: Response, ancestors = "'self'") {
 }
 
 describe('anonymous telemetry HTTP Worker + D1', () => {
+  it('retains populated v1 rows and the quota index while sharing one atomic quota with v2', async () => {
+    const upgraded = new Miniflare(workerOptions);
+    try {
+      const db = await upgraded.getD1Database('TELEMETRY_DB');
+      await migrate(db, '0001_telemetry_matches.sql');
+      await db.batch(
+        Array.from({ length: 29 }, (_, index) =>
+          db
+            .prepare(`
+            INSERT INTO telemetry_matches (
+              id, received_at, schema_version, session_id, build_version, mode, samples,
+              fps, frame_p50_ms, frame_p95_ms, cpu_p95_ms, frames_over_20_ms,
+              max_squads, scale, viewport_width, viewport_height, dpr, hardware_concurrency,
+              browser, os, match_ticks, wall_seconds, end_reason, player_rank, bots,
+              human_commands, human_captured, reduced_motion
+            ) VALUES (?, unixepoch() - 100, 1, ?, 'legacy', 'offline', 60,
+              60, 16, 20, NULL, 2, 30, 2, 1280, 720, 1.5, 8,
+              'chrome', 'linux', 1200, 123.5, 'elimination', 1, '["easy","normal",null]', 10, 4, 0)
+          `)
+            .bind(index + 41, legacyMatch.sessionId),
+        ),
+      );
+      const before = await db.prepare('SELECT * FROM telemetry_matches ORDER BY id').all();
+      await migrate(db, '0002_telemetry_v2.sql');
+      const after = await db.prepare('SELECT * FROM telemetry_matches ORDER BY id').all();
+      expect(after.results).toEqual(before.results.map((row) => ({ ...row, max_frame_ms: null, start_room: null })));
+      const indexColumns = await db.prepare("PRAGMA index_info('telemetry_matches_session_received_at')").all();
+      expect(indexColumns.results.map((column) => column.name)).toEqual(['session_id', 'received_at']);
+
+      const responses = await Promise.all(
+        Array.from({ length: 45 }, () =>
+          upgraded.dispatchFetch('https://game.example/api/telemetry', {
+            method: 'POST',
+            body: JSON.stringify({ ...match, sessionId: match.sessionId.toUpperCase() }),
+          }),
+        ),
+      );
+      expect(responses.every((response) => response.status === 204)).toBe(true);
+      expect(await db.prepare('SELECT COUNT(*) AS count FROM telemetry_matches').first('count')).toBe(30);
+      expect(
+        await db.prepare('SELECT COUNT(*) AS count FROM telemetry_matches WHERE schema_version = 1').first('count'),
+      ).toBe(29);
+      expect(
+        await db.prepare('SELECT COUNT(*) AS count FROM telemetry_matches WHERE schema_version = 2').first('count'),
+      ).toBe(1);
+      expect(await db.prepare('SELECT * FROM telemetry_matches WHERE schema_version = 2').first()).toMatchObject({
+        id: 70,
+        max_frame_ms: 40.125,
+        start_room: 12,
+        samples: 21600,
+      });
+      await expect(db.prepare('UPDATE telemetry_matches SET schema_version = 3').run()).rejects.toThrow();
+    } finally {
+      await upgraded.dispose();
+    }
+  });
+
   it('secures accepted and rejected API responses and static SPA responses', async () => {
     for (const response of [
       await post(JSON.stringify(match)),
@@ -157,14 +221,16 @@ describe('anonymous telemetry HTTP Worker + D1', () => {
     expect(row).toEqual({
       id: 1,
       received_at: expect.any(Number),
-      schema_version: 1,
+      schema_version: 2,
       session_id: match.sessionId,
       build_version: 'dev',
       mode: 'offline',
-      samples: 60,
+      samples: 21600,
       fps: 60,
       frame_p50_ms: 16,
       frame_p95_ms: 20,
+      max_frame_ms: 40.125,
+      start_room: 12,
       cpu_p95_ms: null,
       frames_over_20_ms: 2,
       max_squads: 30,
@@ -221,6 +287,10 @@ describe('anonymous telemetry HTTP Worker + D1', () => {
     for (const body of [
       '{',
       'null',
+      JSON.stringify(legacyMatch),
+      JSON.stringify({ ...match, schemaVersion: 1 }),
+      JSON.stringify({ ...match, startRoom: 13 }),
+      JSON.stringify({ ...match, maxFrameMs: null }),
       JSON.stringify({ ...match, email: 'private@example.com' }),
       JSON.stringify({ ...match, viewport: { width: 1280, height: 720, secret: true } }),
       JSON.stringify({ ...match, bots: ['easy', 'normal', { secret: true }] }),
@@ -264,6 +334,7 @@ describe('anonymous telemetry HTTP Worker + D1', () => {
         fps: null,
         frameP50Ms: null,
         frameP95Ms: null,
+        maxFrameMs: null,
         framesOver20Ms: 0,
         hardwareConcurrency: null,
         playerRank: null,
@@ -275,7 +346,7 @@ describe('anonymous telemetry HTTP Worker + D1', () => {
     expect(
       await database
         .prepare(`
-      SELECT mode, samples, fps, frame_p50_ms, frame_p95_ms, cpu_p95_ms,
+      SELECT mode, samples, fps, frame_p50_ms, frame_p95_ms, max_frame_ms, start_room, cpu_p95_ms,
         hardware_concurrency, player_rank, bots, reduced_motion FROM telemetry_matches
     `)
         .first(),
@@ -285,6 +356,8 @@ describe('anonymous telemetry HTTP Worker + D1', () => {
       fps: null,
       frame_p50_ms: null,
       frame_p95_ms: null,
+      max_frame_ms: null,
+      start_room: 12,
       cpu_p95_ms: null,
       hardware_concurrency: null,
       player_rank: null,

@@ -1,29 +1,54 @@
-export const MAX_FRAME_SAMPLES = 3600;
-export const WARMUP_FRAMES = 120;
+// Fixed memory for the entire match: bucket 0 is zero, 1..100 are (n-1, n] ms,
+// and 101 is overflow (>100ms). No warm-up discard or sample budget.
+export class DurationHistogram {
+  private buckets = new Float64Array(102);
+  count = 0;
+  totalMs = 0;
+  maxMs: number | null = null;
 
-export function percentile(values: readonly number[], p: number): number | null {
-  if (!values.length) return null;
-  const sorted = [...values].sort((a, b) => a - b);
-  return Number(sorted[Math.ceil(sorted.length * p) - 1]?.toFixed(2));
+  add(ms: number) {
+    if (!Number.isFinite(ms) || ms < 0) return;
+    const bucket = Math.min(101, Math.ceil(ms));
+    this.buckets[bucket] = (this.buckets[bucket] ?? 0) + 1;
+    this.count++;
+    this.totalMs += ms;
+    this.maxMs = Math.max(this.maxMs ?? 0, ms);
+  }
+
+  percentile(p: number): number | null {
+    if (!this.count) return null;
+    // Nearest-rank: the first bucket reaching ceil(count*p). Use its upper edge,
+    // capped at the exact max; overflow uses the exact max (not a false 100ms).
+    const rank = Math.ceil(this.count * p);
+    let cumulative = 0;
+    for (let bucket = 0; bucket < this.buckets.length; bucket++) {
+      cumulative += this.buckets[bucket] ?? 0;
+      if (cumulative >= rank) return Math.min(bucket === 101 ? Number.POSITIVE_INFINITY : bucket, this.maxMs ?? 0);
+    }
+    return this.maxMs;
+  }
 }
 
-// The ordinary match sampler retains only intervals, never individual frame events.
+// No individual frame events are retained. FPS and the >20ms count use raw durations,
+// not quantized buckets; in particular exactly 20ms is not counted as slow.
 export class FrameSamples {
-  private intervals: number[] = [];
+  private durations = new DurationHistogram();
+  private over20 = 0;
 
   add(interval: number) {
-    if (this.intervals.length < MAX_FRAME_SAMPLES && Number.isFinite(interval) && interval > 0)
-      this.intervals.push(interval);
+    if (!Number.isFinite(interval) || interval <= 0) return;
+    this.durations.add(interval);
+    if (interval > 20) this.over20++;
   }
 
   report() {
-    const values = this.intervals.slice(WARMUP_FRAMES);
     return {
-      samples: values.length,
-      fps: values.length ? Number(((1000 * values.length) / values.reduce((a, b) => a + b, 0)).toFixed(1)) : null,
-      frameP50Ms: percentile(values, 0.5),
-      frameP95Ms: percentile(values, 0.95),
-      framesOver20Ms: values.filter((ms) => ms > 20).length,
+      samples: this.durations.count,
+      fps: this.durations.count ? Number(((1000 * this.durations.count) / this.durations.totalMs).toFixed(1)) : null,
+      frameP50Ms: this.durations.percentile(0.5),
+      frameP95Ms: this.durations.percentile(0.95),
+      maxFrameMs: this.durations.maxMs,
+      framesOver20Ms: this.over20,
     };
   }
 }

@@ -68,9 +68,10 @@ async function insertMatch(database: D1Database, match: TelemetryMatch): Promise
       fps, frame_p50_ms, frame_p95_ms, cpu_p95_ms, frames_over_20_ms,
       max_squads, scale, viewport_width, viewport_height, dpr,
       hardware_concurrency, browser, os, match_ticks, wall_seconds,
-      end_reason, player_rank, bots, human_commands, human_captured, reduced_motion
+      end_reason, player_rank, bots, human_commands, human_captured, reduced_motion,
+      max_frame_ms, start_room
     )
-    SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+    SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
     WHERE (
       SELECT COUNT(*) FROM telemetry_matches
       WHERE session_id = ? AND received_at > unixepoch() - 3600
@@ -103,6 +104,8 @@ async function insertMatch(database: D1Database, match: TelemetryMatch): Promise
       match.humanCommands,
       match.humanCaptured,
       Number(match.reducedMotion),
+      match.maxFrameMs,
+      match.startRoom,
       match.sessionId.toLowerCase(),
     )
     .run();

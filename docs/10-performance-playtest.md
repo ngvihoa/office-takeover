@@ -5,7 +5,8 @@
 1. `pnpm install --frozen-lockfile`, `pnpm build`. Lệnh build gồm client và Worker
    dry-run, **không deploy**. Chạy bản production cục bộ theo phần D1 bên dưới.
 2. Mở `/?perf=1` ở cửa sổ đang focus: seed 7, 4 bot (Thường, Dễ, Thường, Dễ),
-   vẫn chạy renderer và tick thật, không tăng tốc sim. Lệnh người không can thiệp
+   giữ thứ tự ghế mặc định, không intro/ân hạn của người; vẫn chạy renderer và tick
+   thật, không tăng tốc sim. Lệnh người không can thiệp
    vào sim trong chế độ này. `/dev/perf` của `pnpm dev` dùng cùng kịch bản,
    nhưng không so kết quả dev với production.
 3. Đặt viewport 1280×720 (S=2), DPR=2. Không quay video/chụp ảnh trong lúc đo.
@@ -14,11 +15,15 @@
    thống kê frame và cấu hình môi trường ở mức thô, không có UA đầy đủ.
 5. Tải lại trang rồi lặp ở 1920×1080 (S=3). Ghi máy, trình duyệt, DPR và trạng thái tăng tốc GPU.
 
-Bộ đo giữ tối đa 3600 khoảng cách frame, bỏ 120 mẫu đầu để làm nóng, tức tối đa
-3480 mẫu được tổng hợp. Chỉ lấy frame trong trận đang chạy, không nối qua khoảng
-tạm dừng/blur. Hết ngân sách thì giữ mẫu đầu, không xoay vòng; đây không phải phân
-bố đầy đủ của cả trận dài. Phân vị dùng nearest-rank; chưa đủ warm-up thì FPS và
-frame p50/p95 là `null`, không phải 0 hay NaN.
+Bộ đo v2 dùng histogram cố định 102 ô: 0ms, (0,1]…(99,100]ms và >100ms.
+Đo toàn trận, không giới hạn 3600 mẫu và không bỏ warm-up; `samples` là tổng khoảng
+cách frame hợp lệ. Chỉ lấy frame trong trận đang chạy, không nối qua intro hoặc
+tạm dừng/blur. Phân vị nearest-rank lấy cận trên ô (sai số dưới 1ms trong 0–100ms),
+chặn ở maximum thực; phân vị rơi vào ô >100ms dùng maximum thực như ước lượng bảo
+thủ, không khẳng định đó là phân vị chính xác. `maxFrameMs` giữ maximum thô, FPS
+dùng tổng thời gian thô và `framesOver20Ms` chỉ đếm >20ms, không gồm đúng 20ms.
+Không có mẫu thì FPS/p50/p95/max là `null`. CPU controlled cũng dùng histogram
+cố định cho toàn trận, kể cả mẫu CPU 0ms. Bộ nhớ không tăng theo thời lượng trận.
 FPS tính từ thời gian thực giữa các `prestep`, **không lấy delta đã làm mượt của Phaser**.
 `cpuP95Ms` đo từ `prestep` tới `postrender`, không phải thời gian GPU trình bày frame.
 `maxSquads` là số đoàn tối đa quan sát ở đầu frame, kể cả ngoài cửa sổ mẫu;
@@ -29,8 +34,8 @@ Không có cờ thì **không tải chunk benchmark, panel hay bộ đo CPU** (d
 
 ## Tracking trận ẩn danh
 
-Trận thường chỉ thêm một bộ đếm nhẹ: thời gian giữa các `prestep`, tối đa 3600
-mẫu số, cùng bộ đếm số đoàn tối đa. Không đo CPU ở chế độ thường, nên `cpuP95Ms`
+Trận thường chỉ thêm bộ histogram nhẹ của thời gian giữa các `prestep` trong toàn
+trận, cùng bộ đếm số đoàn tối đa. Không đo CPU ở chế độ thường, nên `cpuP95Ms`
 là `null`. Chế độ có kiểm soát bổ sung đo CPU, ghi `mode='controlled'`; không trộn
 những trận 4 bot này với `mode='offline'` khi phân tích người chơi.
 
@@ -42,15 +47,17 @@ fetch, không hàng đợi và không chờ phản hồi để kết thúc trậ
 không phát `pagehide` khi bị hệ điều hành kill, đây là **best effort**, không phải
 nguồn kiểm đếm mọi trận chính xác tuyệt đối.
 
-Schema v1 dùng chung tại `packages/telemetry/src/index.ts`:
+Schema v2 dùng chung tại `packages/telemetry/src/index.ts`:
 
 - `schemaVersion`, `sessionId` (UUIDv4 trong localStorage), `buildVersion` (Git commit
   lúc build, `unknown` nếu source không có Git), `mode`.
-- `samples`, `fps`, `frameP50Ms`, `frameP95Ms`, `cpuP95Ms`, `framesOver20Ms`, `maxSquads`.
+- `samples`, `fps`, `frameP50Ms`, `frameP95Ms`, `maxFrameMs`, `cpuP95Ms`, `framesOver20Ms`, `maxSquads`.
+- `startRoom`: ID phòng xuất phát có seat 0 sau xáo theo seed; người vẫn là player 0,
+  màu xanh. Report tải thủ công có thêm `seatOrder` và `startRoom` để dựng lại bố trí.
 - `scale`, `viewport=[width,height]` (CSS px), `dpr`, `hardwareConcurrency` (hoặc null),
   `browser` / `os` ở mức nhóm, `reducedMotion`. Viewport/S và cài đặt lấy lúc kết thúc;
   trận có resize có thể trộn nhiều tải trong cùng thống kê, nên không dùng để so benchmark.
-- `matchTicks`, `wallSeconds` từ lúc scene sẵn sàng, **có tính tạm dừng**;
+- `matchTicks`, `wallSeconds` từ frame chơi đầu tiên, **không tính intro, có tính tạm dừng**;
   thời gian sim là `matchTicks / 10`. Báo cáo giữ nguyên thời gian sau khi kết thúc.
 - `endReason`: `elimination` (last-standing), `timeout`, `left`;
   `playerRank` là hạng ghế người từ kết quả, hoặc null khi rời sớm / chạy 4 bot.
@@ -94,15 +101,19 @@ có D1/API. `pnpm test` chạy validator, client opt-out/send-once và Worker qu
 với D1 thật cục bộ, gồm 45 request đồng thời chỉ lưu 30. Không cần tài khoản Cloudflare.
 State cục bộ ở `apps/server/.wrangler/` (gitignored).
 
-`apps/server/wrangler.jsonc` đang có D1 ID placeholder. Trước deploy thật cần tạo D1,
-điền ID, áp dụng `migrations/0001_telemetry_matches.sql` bằng `--remote`, rồi deploy
-Worker/static assets. **Đây là các thao tác từ xa cần được chủ dự án cho phép riêng**;
+`apps/server/wrangler.jsonc` đã có D1 ID do người vận hành điền. Xác nhận account/ID,
+áp dụng migration còn thiếu (gồm `0002_telemetry_v2.sql`) **trước** deploy Worker v2.
+Migration dựng lại bảng để bỏ CHECK v1, giữ ID/thời điểm/mọi giá trị cũ và index quota;
+hai cột mới ở hàng v1 để NULL, không bịa số đo. Quota 30/session/giờ tính cả hai
+phiên bản. API mới chỉ nhận v2; tab cũ gửi v1 bị từ chối (400), cần tải lại trang.
+Không gộp FPS v1 (cửa sổ đầu trận) và v2 (toàn trận) khi so sánh.
+**Đây là các thao tác từ xa cần được chủ dự án cho phép riêng**;
 build dry-run và test không thực hiện chúng. Không đặt email/Access/IP vào bảng.
 
 Xem mẫu gần nhất; dùng `--local` để không chạm dữ liệu thật:
 
 ```sh copy Copy Recent Telemetry Query
-pnpm --filter @ot/server exec wrangler d1 execute TELEMETRY_DB --local --command "SELECT received_at, build_version, mode, scale, samples, fps, frame_p95_ms, cpu_p95_ms, match_ticks / 10.0 AS sim_seconds, wall_seconds, end_reason, player_rank, bots, human_commands, human_captured FROM telemetry_matches ORDER BY id DESC LIMIT 20;"
+pnpm --filter @ot/server exec wrangler d1 execute TELEMETRY_DB --local --command "SELECT schema_version, received_at, build_version, mode, scale, samples, fps, frame_p95_ms, max_frame_ms, start_room, cpu_p95_ms, match_ticks / 10.0 AS sim_seconds, wall_seconds, end_reason, player_rank, bots, human_commands, human_captured FROM telemetry_matches ORDER BY id DESC LIMIT 20;"
 ```
 
 p50/p95 **FPS giữa các trận** theo S, 7 ngày gần nhất, loại controlled và trận thiếu
@@ -111,7 +122,7 @@ mẫu. p95 FPS cao **không phải** đuôi frame chậm; xem thêm `frame_p95_m
 `dpr`, `reduced_motion`; không gộp thiết bị khác nhau thành kết luận 60fps.
 
 ```sh copy Copy FPS Percentile Query
-pnpm --filter @ot/server exec wrangler d1 execute TELEMETRY_DB --local --command "WITH ranked AS (SELECT scale, fps, ROW_NUMBER() OVER (PARTITION BY scale ORDER BY fps) AS rn, COUNT(*) OVER (PARTITION BY scale) AS n FROM telemetry_matches WHERE mode = 'offline' AND samples > 0 AND received_at > unixepoch() - 604800) SELECT scale, MAX(n) AS matches, MIN(CASE WHEN rn >= (n + 1) / 2 THEN fps END) AS fps_p50, MIN(CASE WHEN rn >= (95 * n + 99) / 100 THEN fps END) AS fps_p95 FROM ranked GROUP BY scale ORDER BY scale;"
+pnpm --filter @ot/server exec wrangler d1 execute TELEMETRY_DB --local --command "WITH ranked AS (SELECT scale, fps, ROW_NUMBER() OVER (PARTITION BY scale ORDER BY fps) AS rn, COUNT(*) OVER (PARTITION BY scale) AS n FROM telemetry_matches WHERE schema_version = 2 AND mode = 'offline' AND samples > 0 AND received_at > unixepoch() - 604800) SELECT scale, MAX(n) AS matches, MIN(CASE WHEN rn >= (n + 1) / 2 THEN fps END) AS fps_p50, MIN(CASE WHEN rn >= (95 * n + 99) / 100 THEN fps END) AS fps_p95 FROM ranked GROUP BY scale ORDER BY scale;"
 ```
 
 Thời lượng theo đúng cấu hình 3 ghế bot, chỉ trận đã kết thúc tự nhiên; báo riêng

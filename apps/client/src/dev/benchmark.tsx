@@ -2,34 +2,31 @@ import { scaleFor } from '@ot/design';
 import type Phaser from 'phaser';
 import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { MAX_FRAME_SAMPLES, percentile, WARMUP_FRAMES } from '../game/metrics';
+import { DurationHistogram } from '../game/metrics';
 import type { MatchTelemetry } from '../game/telemetry';
 import { BenchmarkPanel } from '../ui/BenchmarkPanel';
 
 // Loaded only for ?perf=1 or /dev/perf. CPU work is not GPU presentation time.
 export function measureGame(game: Phaser.Game) {
-  const cpu: number[] = [];
+  let cpu = new DurationHistogram();
   let match: MatchTelemetry | undefined;
   let start = 0;
   let active = false;
   const begin = () => {
     const next = game.registry.get('telemetry') as MatchTelemetry | undefined;
     if (next !== match) {
-      cpu.length = 0;
+      cpu = new DurationHistogram();
       match = next;
     }
     active = Boolean(game.registry.get('matchActive'));
     if (active) start = performance.now();
   };
   const end = () => {
-    if (active && game.registry.get('matchActive') && cpu.length < MAX_FRAME_SAMPLES)
-      cpu.push(performance.now() - start);
+    if (active && game.registry.get('matchActive')) cpu.add(performance.now() - start);
   };
   game.events.on('prestep', begin);
   game.events.on('postrender', end);
-  game.registry.set('cpuP95', () =>
-    game.registry.get('telemetry') === match ? percentile(cpu.slice(WARMUP_FRAMES), 0.95) : null,
-  );
+  game.registry.set('cpuP95', () => (game.registry.get('telemetry') === match ? cpu.percentile(0.95) : null));
   const report = () => {
     const telemetry = game.registry.get('telemetry') as MatchTelemetry | undefined;
     return telemetry ? { seed: 7, ...telemetry.report() } : null;
