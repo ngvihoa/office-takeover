@@ -364,7 +364,26 @@ export function DevUI() {
           <ResultScreen
             report={{
               ...previewReport,
-              result: { ranking: [0, 2, 1, 3], winner: null, reason: 'time-limit', endTick: 6000 },
+              result: { ranking: [0, 2, 1, 3], winner: null, reason: 'time-limit', endTick: 3600 },
+              players: previewReport.players.map((player) => ({
+                ...player,
+                rooms: player.id === 0 || player.id === 2 ? 6 : 0,
+              })),
+            }}
+            onReplay={() => {}}
+            onHome={() => {}}
+          />
+        </div>
+        <h3 class="t-label">Kết quả · Bạn hạng 4, hai bot dẫn đầu hòa</h3>
+        <div class="screen-preview">
+          <ResultScreen
+            report={{
+              ...previewReport,
+              result: { ranking: [1, 2, 3, 0], winner: null, reason: 'time-limit', endTick: 3600 },
+              players: previewReport.players.map((player) => ({
+                ...player,
+                rooms: player.id === 1 || player.id === 2 ? 6 : 0,
+              })),
             }}
             onReplay={() => {}}
             onHome={() => {}}

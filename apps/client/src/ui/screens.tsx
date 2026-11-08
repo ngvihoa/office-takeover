@@ -197,11 +197,12 @@ export function ResultScreen({
         <div class="screen-stack">
           <h1 class="result-heading">
             <Stamp muted={report.result.winner !== 0}>
-              {report.result.winner === null ? 'Hòa' : `Hạng ${rank}`}
+              {`Hạng ${rank}`}
               {report.result.winner === 0 ? ' · Thâu tóm thành công' : ''}
             </Stamp>
           </h1>
           <p class="t-body muted">
+            {report.result.winner === null && 'Không có phe thắng chung cuộc. '}
             {report.result.reason === 'time-limit' ? 'Hết giờ làm việc' : 'Chỉ còn một phe trụ lại'} · Thời gian:{' '}
             {report.result.endTick / 10} giây
           </p>
