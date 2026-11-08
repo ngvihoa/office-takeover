@@ -1,17 +1,10 @@
 import { execFileSync } from 'node:child_process';
-import { accessSync, copyFileSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, resolve } from 'node:path';
 import { jsfxr, sfxr } from 'jsfxr';
 import { OUT, PUBLIC, ROOT, readJson, writeJson } from './lib';
-
-try {
-  execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' });
-} catch (error) {
-  if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-  for (const file of ['sfx.json', 'sfx.ogg', 'sfx.m4a']) accessSync(resolve(PUBLIC, file));
-  console.warn('ffmpeg not found: using bundled audio. Install ffmpeg to rebuild changed SFX presets.');
-  process.exit(0);
-}
 
 const names = [
   'send',
@@ -27,20 +20,17 @@ const names = [
 ] as const;
 const sampleRate = 44100;
 const paddingSamples = 11025; // 250ms before, between and after markers (codec/seek guard).
-const source = resolve(ROOT, 'art/sfx');
+const source = resolve(process.env.OT_SFX_SOURCE ?? resolve(ROOT, 'art/sfx'));
+const publicDir = resolve(process.env.OT_SFX_PUBLIC ?? PUBLIC);
+const force = process.argv.includes('--force');
 const expected = names.map((name) => `${name}.json`).sort();
 const actual = readdirSync(source)
   .filter((file) => file.endsWith('.json'))
   .sort();
 if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error('Expected exactly the 10 MVP SFX presets');
-mkdirSync(resolve(OUT, 'sfx'), { recursive: true });
-const chunks: Buffer[] = [Buffer.alloc(paddingSamples * 2)];
-const spritemap: Record<string, { start: number; end: number; loop: false }> = {};
-let cursor = paddingSamples;
-
-for (const name of names) {
+const defaults = new jsfxr.Params().fromJSON({});
+const presets = names.map((name) => {
   const preset = readJson<Record<string, number>>(resolve(source, `${name}.json`));
-  const defaults = new jsfxr.Params().fromJSON({});
   for (const [key, value] of Object.entries(preset)) {
     if (key === 'oldParams' || !(key in defaults) || !Number.isFinite(value)) {
       throw new Error(`${name}: invalid parameter ${key}`);
@@ -50,6 +40,45 @@ for (const name of names) {
   if (preset.sample_rate !== sampleRate || preset.sample_size !== 16) {
     throw new Error(`${name}: expected mono 44100Hz / 16-bit PCM`);
   }
+  return {
+    name,
+    preset: Object.fromEntries(Object.entries(preset).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))),
+  };
+});
+const jsfxrVersion = readJson<{ version: string }>(
+  resolve(dirname(createRequire(import.meta.url).resolve('jsfxr')), 'package.json'),
+).version;
+const sourceHash = createHash('sha256')
+  .update(
+    JSON.stringify({ version: 1, jsfxrVersion, sampleRate, paddingSamples, channels: 1, sampleSize: 16, presets }),
+  )
+  .digest('hex');
+const manifestPath = resolve(publicDir, 'sfx.json');
+const bundled = existsSync(manifestPath) ? readJson<{ sourceHash?: string }>(manifestPath) : null;
+if (
+  !force &&
+  bundled?.sourceHash === sourceHash &&
+  ['sfx.ogg', 'sfx.m4a'].every((file) => existsSync(resolve(publicDir, file)))
+) {
+  console.log(`SFX source unchanged: using bundled audio (${sourceHash}).`);
+  process.exit(0);
+}
+
+try {
+  execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' });
+} catch (error) {
+  if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  throw new Error(
+    'SFX rebuild required: bundled audio is missing, stale or --force was requested. ' +
+      'Install ffmpeg with libvorbis/aac, run pnpm art:sfx --force, and commit sfx.json, sfx.ogg and sfx.m4a with the presets.',
+  );
+}
+
+mkdirSync(resolve(OUT, 'sfx'), { recursive: true });
+const chunks: Buffer[] = [Buffer.alloc(paddingSamples * 2)];
+const spritemap: Record<string, { start: number; end: number; loop: false }> = {};
+let cursor = paddingSamples;
+for (const { name, preset } of presets) {
   const wave = sfxr.toWave(new jsfxr.Params().fromJSON(preset));
   const pcm = Buffer.from(wave.data);
   const samples = pcm.length / 2;
@@ -111,7 +140,7 @@ for (const [extension, codec] of [
     { stdio: 'inherit' },
   );
 }
-writeJson(resolve(OUT, 'sfx.json'), { resources: ['/art/sfx.ogg', '/art/sfx.m4a'], spritemap });
-mkdirSync(PUBLIC, { recursive: true });
-for (const file of ['sfx.ogg', 'sfx.m4a', 'sfx.json']) copyFileSync(resolve(OUT, file), resolve(PUBLIC, file));
+writeJson(resolve(OUT, 'sfx.json'), { sourceHash, resources: ['/art/sfx.ogg', '/art/sfx.m4a'], spritemap });
+mkdirSync(publicDir, { recursive: true });
+for (const file of ['sfx.ogg', 'sfx.m4a', 'sfx.json']) copyFileSync(resolve(OUT, file), resolve(publicDir, file));
 console.log(`Built 10 SFX markers in ${(cursor / sampleRate).toFixed(3)}s; copied audio sprite to public/art.`);

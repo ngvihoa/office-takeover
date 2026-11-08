@@ -7,6 +7,7 @@
     "dev": "pnpm art:build && pnpm --filter @ot/client dev",
     "build": "pnpm art:build && pnpm --filter @ot/client build",
     "art:build": "tsx art/scripts/build.ts",
+    "art:sfx": "tsx art/scripts/build-sfx.ts",
     "art:validate": "tsx art/scripts/validate.ts source && tsx art/scripts/validate.ts output",
     "art:typecheck": "tsc -p art/tsconfig.json",
     "test": "vitest run",
