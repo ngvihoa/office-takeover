@@ -39,7 +39,7 @@ import { logicalPoint, newMatchSeed, wheelRatio } from '../game/controls';
 import { MatchFeedback } from '../game/feedback';
 import { canvasPainter } from '../game/painter';
 import { DEFAULT_BOTS, type OfflineOptions, PLAYER_NAMES } from '../game/session';
-import { readSettings, type Settings, saveSettings } from '../game/settings';
+import { readSettings, type Settings, saveSettings, toggleMute } from '../game/settings';
 
 const TEAMS: TeamId[] = ['p1', 'p2', 'p3', 'p4'];
 const NAMES = PLAYER_NAMES;
@@ -223,7 +223,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private toggleSound() {
-    this.settings.volume = this.settings.volume ? 0 : 40;
+    this.settings = toggleMute(this.settings);
     this.sound.volume = this.settings.volume / 100;
     if (!this.settings.volume) this.sound.removeByKey('sfx');
     saveSettings(this.settings);
