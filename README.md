@@ -25,6 +25,12 @@ có encoder libvorbis/aac để sinh lại; thiếu ffmpeg thì báo lỗi, khô
 `apps/client/public/art/sfx.{json,ogg,m4a}` cùng preset đã sửa; không sửa trực tiếp output.
 `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm build` để kiểm tra toàn dự án.
 
+Kiểm thử trình duyệt: chạy `pnpm exec playwright install --with-deps chromium` một lần,
+rồi `pnpm test:e2e`. Bộ test thao tác chơi ở S=1/2 và chụp từng phần `/dev/ui` ở S=1/2/3
+(DPR=2), kiểm tra màu DOM theo token và canvas pixelated. Xem ảnh trong `playwright-report/`
+qua `pnpm exec playwright show-report`; trace/video chỉ giữ khi lỗi. Có thể dùng Chromium
+cài sẵn bằng biến `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. Đây không phải phép đo 60fps.
+
 `pnpm deploy` build rồi triển khai Worker và static assets; không chạy tự động trong CI.
 Trước khi chạy cần cấu hình D1 và chuẩn bị Cloudflare Access theo [hướng dẫn triển khai](docs/11-deploy.md).
 Không chia sẻ URL trước khi Access bảo vệ toàn bộ hostname; các bước trên tài khoản thật chưa được nghiệm thu.

@@ -23,6 +23,8 @@ pnpm test
 pnpm typecheck
 pnpm lint
 pnpm build
+pnpm exec playwright install --with-deps chromium
+pnpm test:e2e
 pnpm --filter @ot/server db:migrate:local
 ```
 
@@ -31,6 +33,17 @@ pnpm --filter @ot/server db:migrate:local
 `apps/server/test/worker.test.ts` dùng Miniflare và D1 local: validation, giới hạn 2KB,
 30 gói/session/giờ, API 204/400/405/413/404, SPA/static, HEAD/304, CSP allowlist và
 lỗi database 500 không lộ chi tiết.
+
+GitHub Actions chạy frozen install, typecheck, lint, unit/integration test, build và
+Playwright Chromium trên mỗi push/PR; **không deploy** và không dùng credential cloud.
+Cuối job kiểm tra worktree sạch để phát hiện build sửa file đã lưu trong Git.
+Artifact `browser-tests` giữ 7 ngày: HTML report, ảnh từng phần `/dev/ui` ở S=1/2/3
+và ảnh đang kéo/kết quả kỹ năng ở S=1/2; trace/video chỉ giữ khi test lỗi. Xem local bằng
+`pnpm exec playwright show-report`. Các test chơi dùng seed cố định, một bot Thường,
+thời gian trình duyệt có kiểm soát và tắt telemetry, không ghi D1 thật. Ảnh là bằng
+chứng để xem lại, **không** tự so sánh pixel với ảnh baseline đã duyệt. Kiểm tra màu
+tự động áp dụng cho DOM; không chứng minh mọi pixel canvas đúng palette. Đây không
+phải benchmark hay nghiệm thu 60fps trên laptop thật, cũng không thay playtest người.
 
 ## 2. Xác nhận tài khoản và D1, chỉ tạo nếu chưa có
 

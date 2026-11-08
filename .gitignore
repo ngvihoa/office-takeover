@@ -8,3 +8,5 @@ apps/client/public/art/manifest.json
 apps/client/public/art/digits.xml
 *.log
 *.tsbuildinfo
+playwright-report
+test-results

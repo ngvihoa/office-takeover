@@ -12,11 +12,13 @@
     "art:validate": "tsx art/scripts/validate.ts source && tsx art/scripts/validate.ts output",
     "art:typecheck": "tsc -p art/tsconfig.json",
     "test": "vitest run",
-    "typecheck": "tsc -b && pnpm art:typecheck",
+    "test:e2e": "pnpm art:build && playwright test",
+    "typecheck": "tsc -b && pnpm art:typecheck && tsc -p e2e/tsconfig.json",
     "lint": "biome check . --vcs-enabled=true --vcs-client-kind=git --vcs-use-ignore-file=true"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.6",
+    "@playwright/test": "1.65.0",
     "@types/node": "^26.6.6",
     "@types/pngjs": "^6.0.5",
     "happy-dom": "^21.0.4",

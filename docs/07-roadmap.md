@@ -15,12 +15,12 @@ Phạm vi:
 
 Tiêu chí hoàn thành:
 - [x] Luồng 1 ghế người + 3 bot đi tới kết quả: kiểm tra trình duyệt hết 360 giây, seed 1137046465; chơi lại/về trang chủ hoạt động. Đây là kiểm tra tự động, không thay playtest người thật.
-- [ ] Mọi thao tác MVP trong UX spec hoạt động bằng chuột. Phím `1`–`4`, `Q`, `W`, `E`, `Space`, `Esc` hoạt động.
+- [x] Mọi thao tác MVP trong UX spec hoạt động bằng chuột. Phím `1`–`4`, `Q`, `W`, `E`, `Space`, `Esc` hoạt động. Playwright Chromium kiểm tra S=1/2: kết quả điều quân, gom hai phòng, nâng cấp/sinh quân, kỹ năng, hủy ngắm, tạm dừng; cả ngưỡng kéo 5/6px logic, hướng dẫn theo hành lang và chặn context menu.
 - [x] Test tất định qua. 1000 trận bot-vs-bot không lỗi. Tỉ lệ thắng theo ghế trong khoảng 20–30% (đo được 22.6–26.4%).
   - Ghi nhận: trận bot Thường × 4 kết thúc nhanh (trung vị khoảng 60 giây, p90 khoảng 80 giây), ngắn hơn nhiều so với mục tiêu 4–6 phút.
     Cần xem lại khi playtest với người (bot đang chơi kiểu dồn ép). Chỉnh trong `packages/sim/src/config.ts`.
 - [x] Mọi asset qua `validate.ts`. Có contact sheet (88 nguồn, 164 frame runtime; `pnpm art:build`).
-- [ ] `/dev/ui` hiển thị đủ component MVP ở S=1, 2, 3. Không có màu ngoài token.
+- [x] `/dev/ui` hiển thị đủ component MVP ở S=1, 2, 3. Kiểm tra tự động 18 mục, màu DOM thuộc token, canvas integer/pixelated và không tràn ngang; chụp từng mục/trạng thái ở DPR=2. Đã xem lại ảnh đại diện ở ba S; chưa có so sánh ảnh baseline tự động (V1). `pnpm test:e2e`: 43 test qua, ảnh/report được giữ trong CI 7 ngày.
 - [ ] 60fps trên một laptop văn phòng phổ biến.
 - [ ] Ít nhất 3 đồng nghiệp chơi thử và góp ý. Đã chỉnh số liệu theo góp ý.
 
@@ -82,5 +82,8 @@ Tiêu chí hoàn thành:
   `/dev/ui` có preview trang chủ, thiết lập 1/3 bot, cài đặt, thắng/thua/hòa và tạm dừng.
 - Đã đo baseline và sau atlas trên GPU phần mềm trong orb; **chưa đạt 60fps trong orb**,
   chưa nghiệm thu laptop thật. Số đo và quy trình ở [10-performance-playtest.md](10-performance-playtest.md).
+- Đã có `pnpm deploy`, security headers/CSP từ Worker, test D1/HTTP local và CI push/PR
+  (typecheck, lint, 84 unit/integration test, build, 43 Playwright test); CI không deploy.
+  Hướng dẫn D1/Access/WAF/rollback ở [11-deploy.md](11-deploy.md); chưa nghiệm thu account thật.
 - Chưa đánh dấu hoàn tất MVP: còn nghiệm thu hiệu năng máy thật, playtest ít nhất 3 đồng nghiệp,
   xem lại thời lượng trận theo phản hồi và deploy static (chưa thực hiện).
