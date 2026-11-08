@@ -16,13 +16,8 @@ async function boot() {
     render(<DevUI />, root);
     return;
   }
-  render(
-    <main class="ot-root placeholder">
-      <p>Office Takeover: đang phát triển.</p>
-      {import.meta.env.DEV && <a href="/dev/ui">Mở /dev/ui</a>}
-    </main>,
-    root,
-  );
+  const { startGame } = await import('./game/start');
+  await startGame(root);
 }
 
 void boot();

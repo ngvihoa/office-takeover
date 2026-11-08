@@ -1,0 +1,27 @@
+import { color, scaleFor } from '@ot/design';
+import Phaser from 'phaser';
+import { GameScene } from '../scenes/GameScene';
+
+export async function startGame(parent: HTMLElement) {
+  await document.fonts.load('16px VT323');
+  const initialScale = scaleFor(window.innerWidth, window.innerHeight);
+  const game = new Phaser.Game({
+    type: Phaser.AUTO,
+    parent,
+    width: 640 * initialScale,
+    height: 360 * initialScale,
+    backgroundColor: color.bgApp,
+    pixelArt: true,
+    roundPixels: true,
+    scene: [GameScene],
+    scale: { mode: Phaser.Scale.NONE, autoCenter: Phaser.Scale.NO_CENTER },
+  });
+  const resize = () => {
+    const s = scaleFor(window.innerWidth, window.innerHeight);
+    game.scale.resize(640 * s, 360 * s);
+  };
+  game.events.once('ready', resize);
+  window.addEventListener('resize', resize);
+  game.events.once('destroy', () => window.removeEventListener('resize', resize));
+  return game;
+}

@@ -685,3 +685,13 @@ fieldset.seg {
   animation: none !important;
   transition: none !important;
 }
+
+/* Phaser owns the match surface; integer zoom leaves an even letterbox. */
+#app > canvas {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0 !important;
+  image-rendering: pixelated;
+}
