@@ -13,6 +13,7 @@ export interface MatchReport {
 
 export interface OfflineOptions {
   bots?: (BotLevel | null)[];
+  benchmark?: boolean;
   onReady?: () => void;
   onLoadError?: () => void;
   onPause?: () => void;

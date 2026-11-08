@@ -7,6 +7,7 @@ export interface Settings {
   screenShake: boolean;
   symbols: boolean;
   sendPct: SendPct;
+  telemetry: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -16,6 +17,7 @@ export const DEFAULT_SETTINGS: Settings = {
   screenShake: true,
   symbols: true,
   sendPct: 50,
+  telemetry: true,
 };
 
 export function readSettings(): Settings {
@@ -35,6 +37,7 @@ export function readSettings(): Settings {
       screenShake: typeof saved?.screenShake === 'boolean' ? saved.screenShake : true,
       symbols: typeof saved?.symbols === 'boolean' ? saved.symbols : true,
       sendPct: SEND_PCTS.includes(saved?.sendPct) ? saved.sendPct : 50,
+      telemetry: typeof saved?.telemetry === 'boolean' ? saved.telemetry : true,
     };
   } catch {
     return { ...DEFAULT_SETTINGS, reducedMotion };

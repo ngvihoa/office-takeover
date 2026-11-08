@@ -156,6 +156,16 @@ export function SettingsDialog({
           onChange={(symbols) => onChange({ ...settings, symbols })}
         />
         <div class="screen-stack">
+          <Toggle
+            label="Gửi số liệu ẩn danh"
+            checked={settings.telemetry}
+            onChange={(telemetry) => onChange({ ...settings, telemetry })}
+          />
+          <p class="t-body muted">
+            Gửi hiệu năng, thiết lập và kết quả trận cùng mã trình duyệt ngẫu nhiên; không gửi tên, email hay IP.
+          </p>
+        </div>
+        <div class="screen-stack">
           <span class="t-body">Tỉ lệ điều nhân viên mặc định</span>
           <Segmented
             label="Tỉ lệ điều nhân viên mặc định"

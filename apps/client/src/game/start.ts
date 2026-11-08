@@ -5,6 +5,7 @@ import type { OfflineOptions } from './session';
 
 export async function startGame(parent: HTMLElement, options: OfflineOptions = {}) {
   await document.fonts.load('16px VT323');
+  const benchmark = options.benchmark ? await import('../dev/benchmark') : null;
   const initialScale = scaleFor(window.innerWidth, window.innerHeight);
   const game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -17,10 +18,7 @@ export async function startGame(parent: HTMLElement, options: OfflineOptions = {
     scene: [new GameScene(options)],
     scale: { mode: Phaser.Scale.NONE, autoCenter: Phaser.Scale.NO_CENTER },
   });
-  if (import.meta.env.DEV && location.pathname === '/dev/perf') {
-    const { measureGame } = await import('../dev/benchmark');
-    measureGame(game);
-  }
+  benchmark?.measureGame(game);
   const resize = () => {
     const s = scaleFor(window.innerWidth, window.innerHeight);
     game.scale.resize(640 * s, 360 * s);

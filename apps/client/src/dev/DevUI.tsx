@@ -33,6 +33,7 @@ import { useState } from 'preact/hooks';
 import { MatchFeedback } from '../game/feedback';
 import type { MatchReport } from '../game/session';
 import { DEFAULT_SETTINGS } from '../game/settings';
+import { BenchmarkPanel } from '../ui/BenchmarkPanel';
 import { Modal, SeatCard } from '../ui/components/composite';
 import { Checkbox, RoomCodeInput, Segmented, Slider, Toggle } from '../ui/components/controls';
 import { PixelCanvas } from '../ui/components/PixelCanvas';
@@ -244,7 +245,12 @@ export function DevUI() {
   const [setupBots, setSetupBots] = useState<(BotLevel | null)[]>(['easy', 'normal', 'easy']);
   const [oneBot, setOneBot] = useState<(BotLevel | null)[]>(['easy', null, null]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [quietSettings, setQuietSettings] = useState({ ...DEFAULT_SETTINGS, volume: 0, reducedMotion: true });
+  const [quietSettings, setQuietSettings] = useState({
+    ...DEFAULT_SETTINGS,
+    volume: 0,
+    reducedMotion: true,
+    telemetry: false,
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
@@ -273,6 +279,7 @@ export function DevUI() {
         {[
           ['screen', 'Màn hình mẫu'],
           ['app-screens', 'Menu offline'],
+          ['benchmark', 'Đo hiệu năng'],
           ['color', 'Màu'],
           ['type', 'Chữ'],
           ['shape', 'Spacing & nổi'],
@@ -340,7 +347,7 @@ export function DevUI() {
         {settingsOpen && (
           <SettingsDialog settings={settings} onChange={setSettings} onClose={() => setSettingsOpen(false)} />
         )}
-        <h3 class="t-label">Cài đặt · Tắt tiếng, giảm chuyển động</h3>
+        <h3 class="t-label">Cài đặt · Tắt tiếng, giảm chuyển động, không gửi số liệu</h3>
         <div class="screen-preview reduce-motion">
           <SettingsDialog inline settings={quietSettings} onChange={setQuietSettings} onClose={() => {}} />
         </div>
@@ -392,6 +399,26 @@ export function DevUI() {
         <h3 class="t-label">Tạm dừng</h3>
         <div class="screen-preview">
           <PauseMenu onResume={() => {}} onSettings={() => setSettingsOpen(true)} onHome={() => {}} />
+        </div>
+      </Section>
+
+      <Section id="benchmark" title="Đo hiệu năng có kiểm soát" note="Panel chỉ tải khi mở ?perf=1 hoặc /dev/perf.">
+        <div class="row">
+          <BenchmarkPanel report={null} onCopy={() => {}} onDownload={() => {}} />
+          <BenchmarkPanel
+            report={{ samples: 0, fps: null, frameP95Ms: null, cpuP95Ms: null }}
+            onCopy={() => {}}
+            onDownload={() => {}}
+          />
+          {['', 'Đã sao chép JSON.', 'Đã tải JSON.', 'Không sao chép được. Hãy tải JSON.'].map((status) => (
+            <BenchmarkPanel
+              key={status}
+              report={{ samples: 1800, fps: 59.8, frameP95Ms: 18.2, cpuP95Ms: 6.4 }}
+              status={status}
+              onCopy={() => {}}
+              onDownload={() => {}}
+            />
+          ))}
         </div>
       </Section>
 

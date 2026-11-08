@@ -40,6 +40,7 @@ import { MatchFeedback } from '../game/feedback';
 import { canvasPainter } from '../game/painter';
 import { DEFAULT_BOTS, type OfflineOptions, PLAYER_NAMES } from '../game/session';
 import { readSettings, type Settings, saveSettings, toggleMute } from '../game/settings';
+import { MatchTelemetry } from '../game/telemetry';
 
 const TEAMS: TeamId[] = ['p1', 'p2', 'p3', 'p4'];
 const NAMES = PLAYER_NAMES;
@@ -68,6 +69,8 @@ export class GameScene extends Phaser.Scene {
   private cursors: Record<string, string> = {};
   private sent = [0, 0, 0, 0];
   private captured = [0, 0, 0, 0];
+  private commands = 0;
+  private telemetry?: MatchTelemetry;
 
   constructor(private options: OfflineOptions = {}) {
     super('Game');
@@ -85,7 +88,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
-    const benchmark = import.meta.env.DEV && location.pathname === '/dev/perf';
+    const benchmark = this.options.benchmark ?? false;
     this.settings = readSettings();
     this.pct = this.settings.sendPct;
     this.sound.volume = this.settings.volume / 100;
@@ -114,6 +117,7 @@ export class GameScene extends Phaser.Scene {
     this.selected.clear();
     this.sent.fill(0);
     this.captured.fill(0);
+    this.commands = 0;
     this.paused = false;
     this.elapsed = 0;
     this.aiming = null;
@@ -182,12 +186,37 @@ export class GameScene extends Phaser.Scene {
       this.sound.removeByKey('sfx');
       this.textures.remove('match');
     });
+    this.telemetry = new MatchTelemetry({
+      bots: benchmark ? DEFAULT_BOTS : (this.options.bots ?? DEFAULT_BOTS),
+      controlled: benchmark,
+      settings: () => this.settings,
+      state: () => ({
+        matchTicks: this.match.state.tick,
+        humanCommands: this.commands,
+        humanCaptured: benchmark ? 0 : (this.captured[0] ?? 0),
+      }),
+      cpuP95: () => this.registry.get('cpuP95')?.() ?? null,
+    });
+    this.registry.set('telemetry', this.telemetry);
+    const sample = () =>
+      this.telemetry?.frame(performance.now(), !this.paused && !this.match.ended, this.match.state.squads.length);
+    this.game.events.on('prestep', sample);
+    const stopTelemetry = () => {
+      this.telemetry?.finish('left');
+      this.game.events.off('prestep', sample);
+      this.registry.remove('telemetry');
+      this.events.off('shutdown', stopTelemetry);
+      this.events.off('destroy', stopTelemetry);
+    };
+    this.events.once('shutdown', stopTelemetry);
+    this.events.once('destroy', stopTelemetry);
     this.options.onReady?.();
   }
 
   private pauseMatch() {
     if (this.paused || this.match.ended) return;
     this.paused = true;
+    this.telemetry?.frame(performance.now(), false, 0);
     this.elapsed = 0;
     this.origin = null;
     this.dragging = false;
@@ -202,11 +231,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   private submit(command: Command) {
+    if (this.options.benchmark) return;
     if (!validate(world, this.match.state, command)) {
       this.status = 'Chưa thể thực hiện. Kiểm tra nhân viên hoặc thời gian hồi.';
       return;
     }
     this.match.submit(command);
+    this.commands++;
     this.status =
       command.t === 'send'
         ? 'Đã điều nhân viên theo hành lang.'
@@ -367,10 +398,14 @@ export class GameScene extends Phaser.Scene {
         for (const event of events) {
           if (event.t === 'squadSpawned') this.sent[event.owner] = (this.sent[event.owner] ?? 0) + event.count;
           if (event.t === 'captured') this.captured[event.to] = (this.captured[event.to] ?? 0) + 1;
-          if (event.t === 'matchEnded')
+          if (event.t === 'matchEnded') {
+            this.telemetry?.finish(
+              event.result.reason === 'last-standing' ? 'elimination' : 'timeout',
+              this.options.benchmark ? null : event.result.ranking.indexOf(0) + 1,
+            );
             this.options.onEnd?.({
               seed: this.match.state.seed,
-              bots: [...(this.options.bots ?? DEFAULT_BOTS)],
+              bots: [...(this.options.benchmark ? DEFAULT_BOTS : (this.options.bots ?? DEFAULT_BOTS))],
               result: event.result,
               players: event.result.ranking.map((id) => ({
                 id,
@@ -380,6 +415,7 @@ export class GameScene extends Phaser.Scene {
                 captured: this.captured[id] ?? 0,
               })),
             });
+          }
         }
         const remaining = world.config.matchTicks - this.match.state.tick;
         if (remaining > 0 && remaining <= 100 && remaining % TICKS_PER_SECOND === 0) this.play('countdown');
@@ -387,10 +423,8 @@ export class GameScene extends Phaser.Scene {
       }
     }
     const state = this.match.state;
-    if (import.meta.env.DEV) {
-      this.registry.set('squads', state.squads.length);
-      this.registry.set('matchActive', !this.paused && !this.match.ended);
-    }
+    this.registry.set('squads', state.squads.length);
+    this.registry.set('matchActive', !this.paused && !this.match.ended);
     for (const id of this.selected) if (state.towers[id]?.owner !== 0) this.selected.delete(id);
     const key = state.towers.map((t) => `${t.owner}:${t.level}`).join(',');
     if (key !== this.roomCache) {

@@ -1,0 +1,21 @@
+.benchmark-panel {
+  width: calc(var(--n) * 288);
+}
+.benchmark-stack {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--n) * 6);
+}
+.benchmark-stack p {
+  margin: 0;
+}
+.benchmark-actions {
+  display: flex;
+  gap: calc(var(--n) * 8);
+}
+.benchmark-overlay {
+  position: fixed;
+  right: calc(var(--n) * 8);
+  bottom: calc(var(--n) * 8);
+  z-index: 3;
+}

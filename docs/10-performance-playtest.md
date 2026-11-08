@@ -2,19 +2,129 @@
 
 ## Đo lặp lại được
 
-1. `pnpm install --frozen-lockfile`, `pnpm dev`.
-2. Mở `/dev/perf` ở cửa sổ đang focus. Đây là **route chỉ có trong dev**: seed 7,
-   4 bot (Thường, Dễ, Thường, Dễ), vẫn chạy renderer và tick thật, không tăng tốc sim.
+1. `pnpm install --frozen-lockfile`, `pnpm build`. Lệnh build gồm client và Worker
+   dry-run, **không deploy**. Chạy bản production cục bộ theo phần D1 bên dưới.
+2. Mở `/?perf=1` ở cửa sổ đang focus: seed 7, 4 bot (Thường, Dễ, Thường, Dễ),
+   vẫn chạy renderer và tick thật, không tăng tốc sim. Lệnh người không can thiệp
+   vào sim trong chế độ này. `/dev/perf` của `pnpm dev` dùng cùng kịch bản,
+   nhưng không so kết quả dev với production.
 3. Đặt viewport 1280×720 (S=2), DPR=2. Không quay video/chụp ảnh trong lúc đo.
-4. Để chạy ít nhất 30 giây sau khởi động. Trong console trình duyệt:
-   `window.officeBenchmark()`.
+4. Để chạy ít nhất 30 giây sau khởi động. Bấm **Sao chép JSON** / **Tải JSON**,
+   hoặc gọi `window.officeBenchmark()` trong console. JSON gồm seed, build commit,
+   thống kê frame và cấu hình môi trường ở mức thô, không có UA đầy đủ.
 5. Tải lại trang rồi lặp ở 1920×1080 (S=3). Ghi máy, trình duyệt, DPR và trạng thái tăng tốc GPU.
 
-Bộ đo bỏ 120 frame đầu, lưu tối đa 3600 frame, chỉ lấy frame trong trận đang chạy.
+Bộ đo giữ tối đa 3600 khoảng cách frame, bỏ 120 mẫu đầu để làm nóng, tức tối đa
+3480 mẫu được tổng hợp. Chỉ lấy frame trong trận đang chạy, không nối qua khoảng
+tạm dừng/blur. Hết ngân sách thì giữ mẫu đầu, không xoay vòng; đây không phải phân
+bố đầy đủ của cả trận dài. Phân vị dùng nearest-rank; chưa đủ warm-up thì FPS và
+frame p50/p95 là `null`, không phải 0 hay NaN.
 FPS tính từ thời gian thực giữa các `prestep`, **không lấy delta đã làm mượt của Phaser**.
 `cpuP95Ms` đo từ `prestep` tới `postrender`, không phải thời gian GPU trình bày frame.
-`maxSquads` cho biết tải quan sát được; trận seed này không thay cho kiểm tra tải cực đại.
+`maxSquads` là số đoàn tối đa quan sát ở đầu frame, kể cả ngoài cửa sổ mẫu;
+trận seed này không thay cho kiểm tra tải cực đại.
 Không so sánh hai lần đo có viewport, DPR hoặc cách chạy trình duyệt khác nhau.
+Blur tạm dừng trận; Escape tiếp tục. Tải lại để đo lại từ cùng trạng thái ban đầu.
+Không có cờ thì **không tải chunk benchmark, panel hay bộ đo CPU** (dynamic import).
+
+## Tracking trận ẩn danh
+
+Trận thường chỉ thêm một bộ đếm nhẹ: thời gian giữa các `prestep`, tối đa 3600
+mẫu số, cùng bộ đếm số đoàn tối đa. Không đo CPU ở chế độ thường, nên `cpuP95Ms`
+là `null`. Chế độ có kiểm soát bổ sung đo CPU, ghi `mode='controlled'`; không trộn
+những trận 4 bot này với `mode='offline'` khi phân tích người chơi.
+
+Mỗi trận thử gọi **một lần** `navigator.sendBeacon('/api/telemetry')` khi nhận
+`matchEnded`, về trang chủ/hủy game, hoặc `pagehide` (đóng/tải lại/rời trang).
+Một cờ hoàn tất chặn gửi lặp giữa các đường này. Không gửi khi chỉ đổi tab/blur.
+Beacon bị từ chối, thiếu API, hoặc lỗi mạng thì bỏ qua: không retry, không fallback
+fetch, không hàng đợi và không chờ phản hồi để kết thúc trận. Vì trình duyệt có thể
+không phát `pagehide` khi bị hệ điều hành kill, đây là **best effort**, không phải
+nguồn kiểm đếm mọi trận chính xác tuyệt đối.
+
+Schema v1 dùng chung tại `packages/telemetry/src/index.ts`:
+
+- `schemaVersion`, `sessionId` (UUIDv4 trong localStorage), `buildVersion` (Git commit
+  lúc build, `unknown` nếu source không có Git), `mode`.
+- `samples`, `fps`, `frameP50Ms`, `frameP95Ms`, `cpuP95Ms`, `framesOver20Ms`, `maxSquads`.
+- `scale`, `viewport=[width,height]` (CSS px), `dpr`, `hardwareConcurrency` (hoặc null),
+  `browser` / `os` ở mức nhóm, `reducedMotion`. Viewport/S và cài đặt lấy lúc kết thúc;
+  trận có resize có thể trộn nhiều tải trong cùng thống kê, nên không dùng để so benchmark.
+- `matchTicks`, `wallSeconds` từ lúc scene sẵn sàng, **có tính tạm dừng**;
+  thời gian sim là `matchTicks / 10`. Báo cáo giữ nguyên thời gian sau khi kết thúc.
+- `endReason`: `elimination` (last-standing), `timeout`, `left`;
+  `playerRank` là hạng ghế người từ kết quả, hoặc null khi rời sớm / chạy 4 bot.
+- `bots` là đúng 3 ghế đối thủ (`easy`, `normal`, hoặc null), không rút gọn khi bỏ bot.
+  Trong controlled, ghế 0 luôn là bot Thường. `humanCommands` đếm lệnh người hợp lệ
+  đã xếp hàng (gửi quân, nâng cấp, kỹ năng), không phải số nhân viên. `humanCaptured`
+  đếm sự kiện chiếm phòng, gồm chiếm lại; cả hai là 0 trong controlled.
+
+### Quyền riêng tư và giới hạn
+
+**Gửi số liệu ẩn danh** trong Cài đặt mặc định bật, kể cả dữ liệu cài đặt cũ.
+Tắt thì không gửi, không tạo mã session mới. Lựa chọn được kiểm tra lại khi kết thúc,
+nên tắt giữa trận cũng có hiệu lực. Tải/copy JSON benchmark thủ công vẫn dùng được.
+
+Không có tên, email, seed, lịch sử lệnh, full UA hay GPU trong gói tự động; không đọc
+`WEBGL_debug_renderer_info`. UA chỉ được phân nhóm ngay trên client. Worker không
+đọc/lưu IP, cookie hay header Cloudflare Access; observability bị tắt trong cấu hình.
+Cloudflare vẫn xử lý metadata HTTP để phục vụ request; cam kết này là **không thu
+thập/lưu trong ứng dụng**, không phải loại bỏ thông tin mà hạ tầng mạng cần dùng.
+Mã UUID tồn tại trên trình duyệt, có thể nối nhiều trận cùng mã nhưng không gắn danh
+tính. Tắt không xóa bản ghi đã gửi; xóa site data sẽ đổi mã cho lần gửi sau. Storage
+bị chặn thì mã chỉ dùng cho trận hiện tại. Không có dịch vụ analytics bên thứ ba.
+
+Worker chỉ nhận POST, từ chối trường lạ/thiếu/sai kiểu (400); đọc body theo luồng,
+giới hạn **2048 byte UTF-8** kể cả không có Content-Length (413). Một câu INSERT có
+điều kiện trong D1 nhận tối đa 30 gói mỗi session trong cửa sổ trượt 3600 giây theo
+giờ server; vượt giới hạn trả 204 nhưng không lưu. Chuẩn hóa UUID về chữ thường để
+không lách quota bằng đổi hoa/thường. Đây không phải chống lạm dụng theo danh tính:
+xóa storage/tạo UUID khác có thể đổi quota. Không dùng IP để giới hạn.
+
+### Chạy và xem D1 cục bộ
+
+```sh copy Copy Local Telemetry Commands
+pnpm build
+pnpm --filter @ot/server db:migrate:local
+pnpm --filter @ot/server dev
+```
+
+Wrangler phục vụ client production và API cùng origin; `pnpm dev` chỉ là Vite, không
+có D1/API. `pnpm test` chạy validator, client opt-out/send-once và Worker qua Miniflare
+với D1 thật cục bộ, gồm 45 request đồng thời chỉ lưu 30. Không cần tài khoản Cloudflare.
+State cục bộ ở `apps/server/.wrangler/` (gitignored).
+
+`apps/server/wrangler.jsonc` đang có D1 ID placeholder. Trước deploy thật cần tạo D1,
+điền ID, áp dụng `migrations/0001_telemetry_matches.sql` bằng `--remote`, rồi deploy
+Worker/static assets. **Đây là các thao tác từ xa cần được chủ dự án cho phép riêng**;
+build dry-run và test không thực hiện chúng. Không đặt email/Access/IP vào bảng.
+
+Xem mẫu gần nhất; dùng `--local` để không chạm dữ liệu thật:
+
+```sh copy Copy Recent Telemetry Query
+pnpm --filter @ot/server exec wrangler d1 execute TELEMETRY_DB --local --command "SELECT received_at, build_version, mode, scale, samples, fps, frame_p95_ms, cpu_p95_ms, match_ticks / 10.0 AS sim_seconds, wall_seconds, end_reason, player_rank, bots, human_commands, human_captured FROM telemetry_matches ORDER BY id DESC LIMIT 20;"
+```
+
+p50/p95 **FPS giữa các trận** theo S, 7 ngày gần nhất, loại controlled và trận thiếu
+mẫu. p95 FPS cao **không phải** đuôi frame chậm; xem thêm `frame_p95_ms` và
+`frames_over_20_ms` để tìm giật. Khi so build/máy, thêm lọc `build_version`, `browser`,
+`dpr`, `reduced_motion`; không gộp thiết bị khác nhau thành kết luận 60fps.
+
+```sh copy Copy FPS Percentile Query
+pnpm --filter @ot/server exec wrangler d1 execute TELEMETRY_DB --local --command "WITH ranked AS (SELECT scale, fps, ROW_NUMBER() OVER (PARTITION BY scale ORDER BY fps) AS rn, COUNT(*) OVER (PARTITION BY scale) AS n FROM telemetry_matches WHERE mode = 'offline' AND samples > 0 AND received_at > unixepoch() - 604800) SELECT scale, MAX(n) AS matches, MIN(CASE WHEN rn >= (n + 1) / 2 THEN fps END) AS fps_p50, MIN(CASE WHEN rn >= (95 * n + 99) / 100 THEN fps END) AS fps_p95 FROM ranked GROUP BY scale ORDER BY scale;"
+```
+
+Thời lượng theo đúng cấu hình 3 ghế bot, chỉ trận đã kết thúc tự nhiên; báo riêng
+rời sớm để không làm lệch đánh giá "trận quá nhanh". Phân vị thời gian sim dùng
+nearest-rank; trung bình thời gian thực gồm cả nghỉ/tạm dừng.
+
+```sh copy Copy Match Duration Query
+pnpm --filter @ot/server exec wrangler d1 execute TELEMETRY_DB --local --command "WITH ranked AS (SELECT bots, match_ticks / 10.0 AS sim_seconds, wall_seconds, ROW_NUMBER() OVER (PARTITION BY bots ORDER BY match_ticks) AS rn, COUNT(*) OVER (PARTITION BY bots) AS n FROM telemetry_matches WHERE mode = 'offline' AND end_reason <> 'left') SELECT bots, MAX(n) AS matches, MIN(CASE WHEN rn >= (n + 1) / 2 THEN sim_seconds END) AS sim_p50_seconds, MIN(CASE WHEN rn >= (95 * n + 99) / 100 THEN sim_seconds END) AS sim_p95_seconds, ROUND(AVG(wall_seconds), 1) AS wall_mean_seconds FROM ranked GROUP BY bots;"
+pnpm --filter @ot/server exec wrangler d1 execute TELEMETRY_DB --local --command "SELECT bots, end_reason, COUNT(*) AS matches FROM telemetry_matches WHERE mode = 'offline' GROUP BY bots, end_reason;"
+```
+
+Sau khi được phép và đã triển khai, thay `--local` bằng `--remote` để đọc D1 production.
+Telemetry là dữ liệu tự khai từ client, không dùng làm bảng điểm đáng tin hay chống gian lận.
 
 ## Điều kiện nghiệm thu 60fps
 

@@ -11,3 +11,10 @@ it('restores the chosen volume after HUD mute, reload and unmute', () => {
   saveSettings(muted);
   expect(toggleMute(readSettings()).volume).toBe(80);
 });
+
+it('defaults anonymous telemetry on for older settings and preserves an explicit opt-out', () => {
+  localStorage.setItem('office-settings', JSON.stringify({ volume: 60 }));
+  expect(readSettings().telemetry).toBe(true);
+  saveSettings({ ...readSettings(), telemetry: false });
+  expect(readSettings().telemetry).toBe(false);
+});
