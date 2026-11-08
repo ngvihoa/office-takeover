@@ -1,8 +1,17 @@
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { accessSync, copyFileSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { jsfxr, sfxr } from 'jsfxr';
 import { OUT, PUBLIC, ROOT, readJson, writeJson } from './lib';
+
+try {
+  execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' });
+} catch (error) {
+  if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  for (const file of ['sfx.json', 'sfx.ogg', 'sfx.m4a']) accessSync(resolve(PUBLIC, file));
+  console.warn('ffmpeg not found: using bundled audio. Install ffmpeg to rebuild changed SFX presets.');
+  process.exit(0);
+}
 
 const names = [
   'send',

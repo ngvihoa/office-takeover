@@ -137,8 +137,10 @@ sprite toàn phòng. Không bao gồm avatar, emote, logo, nhạc hoặc nội d
 `art/sfx/*.json` chứa 10 preset jsfxr 1.4.1 đã chốt tham số, không sinh preset
 ngẫu nhiên/noise. `build-sfx.ts` nối PCM mono 44.100Hz/16-bit ở biên sample nguyên,
 chừa 250ms im lặng trước/giữa/sau marker, rồi encode **một lần** thành Ogg và M4A.
-`pnpm art:build` gọi bước này; cần **ffmpeg có libvorbis và aac** trong PATH.
-Output `sfx.json`, `sfx.ogg`, `sfx.m4a` được copy vào public/art và gitignore.
+`pnpm art:build` gọi bước này. Nếu có **ffmpeg có libvorbis và aac** trong PATH,
+audio được sinh lại; lỗi encode vẫn làm build thất bại. Nếu thiếu lệnh ffmpeg,
+build cảnh báo và giữ bộ `sfx.json`, `sfx.ogg`, `sfx.m4a` trong public/art đã lưu Git.
+Khi sửa preset, phải sinh lại bằng ffmpeg và commit cả ba output cùng preset.
 WAV gốc và WAV từng cue chỉ nằm trong `art/out/` để kiểm tra.
 
 Tham số/PCM/marker tất định. Byte codec đã được so sánh qua 2 lần build với

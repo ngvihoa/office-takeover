@@ -1,0 +1,58 @@
+{
+  "resources": [
+    "/art/sfx.ogg",
+    "/art/sfx.m4a"
+  ],
+  "spritemap": {
+    "send": {
+      "start": 0.25,
+      "end": 0.3278684807256236,
+      "loop": false
+    },
+    "arrive": {
+      "start": 0.5778684807256236,
+      "end": 0.6282539682539683,
+      "loop": false
+    },
+    "capture": {
+      "start": 0.8782539682539683,
+      "end": 1.2023809523809523,
+      "loop": false
+    },
+    "lose": {
+      "start": 1.4523809523809523,
+      "end": 1.6227664399092971,
+      "loop": false
+    },
+    "skill_deadline": {
+      "start": 1.8727664399092971,
+      "end": 2.067641723356009,
+      "loop": false
+    },
+    "skill_coffee": {
+      "start": 2.317641723356009,
+      "end": 2.671655328798186,
+      "loop": false
+    },
+    "countdown": {
+      "start": 2.921655328798186,
+      "end": 3.0392063492063492,
+      "loop": false
+    },
+    "win": {
+      "start": 3.2892063492063492,
+      "end": 4.057709750566893,
+      "loop": false
+    },
+    "lose_match": {
+      "start": 4.307709750566893,
+      "end": 4.90639455782313,
+      "loop": false
+    },
+    "click": {
+      "start": 5.15639455782313,
+      "end": 5.17671201814059,
+      "loop": false
+    }
+  }
+}
