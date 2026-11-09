@@ -1,5 +1,6 @@
 import type { TeamId } from '@ot/design';
 import { type BotLevel, SEND_PCTS } from '@ot/sim';
+import { useState } from 'preact/hooks';
 import type { MatchReport } from '../game/session';
 import type { Settings } from '../game/settings';
 import { Modal } from './components/composite';
@@ -14,7 +15,15 @@ const LEVELS = [
   { value: 'normal', label: 'Thường' },
 ] as const;
 
-export function HomeScreen({ onPlay, onSettings }: { onPlay: () => void; onSettings: () => void }) {
+export function HomeScreen({
+  onPlay,
+  onOnline,
+  onSettings,
+}: {
+  onPlay: () => void;
+  onOnline?: () => void;
+  onSettings: () => void;
+}) {
   return (
     <section class="screen-layer" aria-label="Trang chủ">
       <Panel class="screen-panel home-screen" title="Văn phòng của bạn">
@@ -25,14 +34,101 @@ export function HomeScreen({ onPlay, onSettings }: { onPlay: () => void; onSetti
             <Button variant="primary" size="L" icon="play" block onClick={onPlay}>
               Chơi với bot
             </Button>
+            {onOnline && (
+              <Button size="L" icon="person" block onClick={onOnline}>
+                Chơi trực tuyến (Online)
+              </Button>
+            )}
             <Button icon="gear" block onClick={onSettings}>
               Cài đặt
             </Button>
           </div>
-          <p class="t-body muted">1–3 bot · Trận chạy trên trình duyệt</p>
+          <p class="t-body muted">1–4 người · Bối cảnh văn phòng</p>
         </div>
       </Panel>
     </section>
+  );
+}
+
+export function OnlineDialog({
+  isOpen,
+  onClose,
+  onCreateRoom,
+  onJoinRoom,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreateRoom: (name: string) => void;
+  onJoinRoom: (name: string, code: string) => void;
+}) {
+  const [name, setName] = useState('Bạn');
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleJoin = () => {
+    const cleanCode = code.trim().toUpperCase();
+    if (cleanCode.length !== 4) {
+      setError('Mã phòng phải có đúng 4 ký tự.');
+      return;
+    }
+    setError('');
+    onJoinRoom(name.trim() || 'Bạn', cleanCode);
+  };
+
+  const handleCreate = () => {
+    setError('');
+    onCreateRoom(name.trim() || 'Bạn');
+  };
+
+  return (
+    <Modal title="Chơi trực tuyến (Online)" onClose={onClose} actions={<Button onClick={onClose}>Đóng</Button>}>
+      <div class="screen-stack">
+        <div class="screen-stack">
+          <label class="t-body" htmlFor="player-name-input">
+            <strong>Tên của bạn</strong>
+          </label>
+          <input
+            id="player-name-input"
+            class="pixel-input"
+            value={name}
+            maxLength={20}
+            onInput={(e) => setName((e.target as HTMLInputElement).value)}
+            placeholder="Nhập tên của bạn"
+          />
+        </div>
+
+        <div class="screen-stack" style={{ borderTop: 'var(--n) solid var(--border)', paddingTop: '12px' }}>
+          <p class="t-body muted">Tạo phòng mới và mời bạn bè tham gia:</p>
+          <Button variant="primary" size="L" block onClick={handleCreate}>
+            Tạo phòng mới
+          </Button>
+        </div>
+
+        <div class="screen-stack" style={{ borderTop: 'var(--n) solid var(--border)', paddingTop: '12px' }}>
+          <p class="t-body muted">Hoặc nhập mã phòng để vào:</p>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input
+              class="pixel-input"
+              style={{ flex: 1, textTransform: 'uppercase' }}
+              value={code}
+              maxLength={4}
+              placeholder="Mã 4 ký tự"
+              onInput={(e) => setCode((e.target as HTMLInputElement).value.toUpperCase())}
+            />
+            <Button size="M" onClick={handleJoin}>
+              Vào phòng
+            </Button>
+          </div>
+          {error && (
+            <p class="t-body" style={{ color: 'var(--danger)' }}>
+              {error}
+            </p>
+          )}
+        </div>
+      </div>
+    </Modal>
   );
 }
 
@@ -194,15 +290,17 @@ export function ResultScreen({
   onReplay: () => void;
   onHome: () => void;
 }) {
-  const rank = report.result.ranking.indexOf(0) + 1;
+  const mySeat = report.playerSeat ?? 0;
+  const rank = report.result.ranking.indexOf(mySeat) + 1;
+  const isWinner = report.result.winner === mySeat;
   return (
     <section class="screen-layer" aria-label="Kết quả trận">
       <Panel class="screen-panel result-screen" title="Báo cáo cuối trận">
         <div class="screen-stack">
           <h1 class="result-heading">
-            <Stamp muted={report.result.winner !== 0}>
+            <Stamp muted={!isWinner}>
               {`Hạng ${rank}`}
-              {report.result.winner === 0 ? ' · Thâu tóm thành công' : ''}
+              {isWinner ? ' · Thâu tóm thành công' : ''}
             </Stamp>
           </h1>
           <p class="t-body muted">
@@ -230,6 +328,7 @@ export function ResultScreen({
                       <span class="screen-player">
                         {index + 1}. <Flag t={TEAMS[id] ?? 'neutral'} />
                         {player.name}
+                        {id === mySeat && <span class="muted"> (Bạn)</span>}
                       </span>
                     </th>
                     <td>{player.rooms}</td>
@@ -249,7 +348,7 @@ export function ResultScreen({
           <div class="screen-actions">
             <Button onClick={onHome}>Trang chủ</Button>
             <Button variant="primary" size="L" icon="play" onClick={onReplay}>
-              Chơi lại
+              {report.isOnline ? 'Tái đấu' : 'Chơi lại'}
             </Button>
           </div>
         </div>

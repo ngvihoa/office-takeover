@@ -28,6 +28,7 @@ import {
   type Command,
   HUMAN_GRACE_TICKS,
   LocalMatch,
+  type PlayerId,
   SEND_PCTS,
   type SeatSetup,
   type SendPct,
@@ -43,13 +44,16 @@ import { DEFAULT_BOTS, matchLayout, type OfflineOptions, PLAYER_NAMES } from '..
 import { readSettings, type Settings, saveSettings, toggleMute } from '../game/settings';
 import { MatchTelemetry } from '../game/telemetry';
 
+import type { RemoteMatch } from '../net/remoteMatch';
+
 const TEAMS: TeamId[] = ['p1', 'p2', 'p3', 'p4'];
 const NAMES = PLAYER_NAMES;
 const tickMs = 1000 / TICKS_PER_SECOND;
 
 export class GameScene extends Phaser.Scene {
-  private match!: LocalMatch;
+  private match!: LocalMatch | RemoteMatch;
   private layout!: ReturnType<typeof matchLayout>;
+  private localSeat: PlayerId = 0;
   private selected = new Set<number>();
   private pct: SendPct = 50;
   private aiming: SkillId | null = null;
@@ -100,19 +104,26 @@ export class GameScene extends Phaser.Scene {
       const hotspot = name === 'default' ? '0 0' : name === 'pointer' ? '4 0' : '5 5';
       this.cursors[name] = `url(${this.textures.getBase64('office', `cursor_${name}`)}) ${hotspot}, auto`;
     }
-    const seed = benchmark ? 7 : newMatchSeed(this.match?.state.seed);
-    this.layout = matchLayout(seed, benchmark);
+    this.localSeat = this.options.remoteMatch?.yourSeat ?? 0;
+    if (this.options.remoteMatch) {
+      this.match = this.options.remoteMatch;
+      const seed = this.match.state.seed;
+      this.layout = matchLayout(seed, false, this.localSeat);
+    } else {
+      const seed = benchmark ? 7 : newMatchSeed(this.match?.state.seed);
+      this.layout = matchLayout(seed, benchmark, this.localSeat);
+      this.match = new LocalMatch(
+        this.layout.world,
+        [
+          benchmark ? { kind: 'bot', level: 'normal' } : { kind: 'human' },
+          ...(benchmark ? DEFAULT_BOTS : (this.options.bots ?? DEFAULT_BOTS)).map(
+            (level): SeatSetup => (level ? { kind: 'bot', level } : { kind: 'empty' }),
+          ),
+        ],
+        seed,
+      );
+    }
     this.feedback = new MatchFeedback(this.layout.world, (cue) => this.play(cue));
-    this.match = new LocalMatch(
-      this.layout.world,
-      [
-        benchmark ? { kind: 'bot', level: 'normal' } : { kind: 'human' },
-        ...(benchmark ? DEFAULT_BOTS : (this.options.bots ?? DEFAULT_BOTS)).map(
-          (level): SeatSetup => (level ? { kind: 'bot', level } : { kind: 'empty' }),
-        ),
-      ],
-      seed,
-    );
     this.selected.clear();
     this.sent.fill(0);
     this.captured.fill(0);
@@ -281,7 +292,7 @@ export class GameScene extends Phaser.Scene {
 
   private skill(skill: SkillId) {
     if (skill === 'deadline') {
-      this.submit({ t: 'skill', player: 0, skill });
+      this.submit({ t: 'skill', player: this.localSeat, skill });
       this.aiming = null;
     } else {
       this.aiming = this.aiming === skill ? null : skill;
@@ -324,23 +335,25 @@ export class GameScene extends Phaser.Scene {
       else if (x < 60) this.skill('coffee');
       else if (x >= 280 && x < 400) this.pct = SEND_PCTS[(SEND_PCTS.indexOf(this.pct) + 1) % 4] as SendPct;
       else if (x >= 466 && x < 540) this.upgrade();
-      else if (x >= 540) this.selected = new Set(this.match.state.towers.filter((t) => t.owner === 0).map((t) => t.id));
+      else if (x >= 540)
+        this.selected = new Set(this.match.state.towers.filter((t) => t.owner === this.localSeat).map((t) => t.id));
       return;
     }
     const id = this.hit(x, y);
     if (pointer.rightButtonDown()) {
       if (this.aiming) this.aiming = null;
-      else if (id !== undefined) this.submit({ t: 'send', player: 0, from: [...this.selected], to: id, pct: this.pct });
+      else if (id !== undefined)
+        this.submit({ t: 'send', player: this.localSeat, from: [...this.selected], to: id, pct: this.pct });
       return;
     }
     if (this.aiming) {
       if (id !== undefined) {
-        this.submit({ t: 'skill', player: 0, skill: this.aiming, target: id });
+        this.submit({ t: 'skill', player: this.localSeat, skill: this.aiming, target: id });
         this.aiming = null;
       }
       return;
     }
-    if (id === undefined || this.match.state.towers[id]?.owner !== 0) {
+    if (id === undefined || this.match.state.towers[id]?.owner !== this.localSeat) {
       this.selected.clear();
       return;
     }
@@ -349,7 +362,7 @@ export class GameScene extends Phaser.Scene {
     if (ctrl && this.selected.has(id)) this.selected.delete(id);
     else this.selected.add(id);
     if (this.time.now - this.lastClick.time < 300 && this.lastClick.id === id)
-      this.submit({ t: 'upgrade', player: 0, tower: id });
+      this.submit({ t: 'upgrade', player: this.localSeat, tower: id });
     this.lastClick = { id, time: this.time.now };
     this.origin = [x, y];
     this.dragging = false;
@@ -361,7 +374,7 @@ export class GameScene extends Phaser.Scene {
     if (Math.hypot(x - this.origin[0], y - this.origin[1]) >= 6) this.dragging = true;
     if (this.dragging) {
       const id = this.hit(this.point(pointer).x, this.point(pointer).y);
-      if (id !== undefined && this.match.state.towers[id]?.owner === 0) this.selected.add(id);
+      if (id !== undefined && this.match.state.towers[id]?.owner === this.localSeat) this.selected.add(id);
     }
   }
 
@@ -369,14 +382,20 @@ export class GameScene extends Phaser.Scene {
     if (this.origin && this.dragging && !this.paused && !this.match.ended) {
       const id = this.hit(this.point(pointer).x, this.point(pointer).y);
       if (id !== undefined)
-        this.submit({ t: 'send', player: 0, from: [...this.selected].filter((n) => n !== id), to: id, pct: this.pct });
+        this.submit({
+          t: 'send',
+          player: this.localSeat,
+          from: [...this.selected].filter((n) => n !== id),
+          to: id,
+          pct: this.pct,
+        });
     }
     this.origin = null;
     this.dragging = false;
   }
 
   private upgrade() {
-    for (const tower of this.selected) this.submit({ t: 'upgrade', player: 0, tower });
+    for (const tower of this.selected) this.submit({ t: 'upgrade', player: this.localSeat, tower });
   }
 
   private key(event: KeyboardEvent) {
@@ -407,7 +426,7 @@ export class GameScene extends Phaser.Scene {
     const n = Number(event.key);
     if (n >= 1 && n <= 4) this.pct = SEND_PCTS[n - 1] as SendPct;
     if (event.code === 'Space')
-      this.selected = new Set(this.match.state.towers.filter((t) => t.owner === 0).map((t) => t.id));
+      this.selected = new Set(this.match.state.towers.filter((t) => t.owner === this.localSeat).map((t) => t.id));
     if (event.code === 'KeyE') this.upgrade();
     if (event.code === 'KeyQ') this.skill('deadline');
     if (event.code === 'KeyW') this.skill('coffee');
@@ -426,7 +445,7 @@ export class GameScene extends Phaser.Scene {
     if (!introducing && !this.paused && !this.match.ended) {
       this.elapsed += Math.min(delta, 250);
       while (this.elapsed >= tickMs && !this.match.ended) {
-        const owned = new Set(this.match.state.towers.filter((t) => t.owner === 0).map((t) => t.id));
+        const owned = new Set(this.match.state.towers.filter((t) => t.owner === this.localSeat).map((t) => t.id));
         const events = this.match.tick();
         this.feedback.consume(events, this.time.now, owned);
         for (const event of events) {
@@ -435,7 +454,7 @@ export class GameScene extends Phaser.Scene {
           if (event.t === 'matchEnded') {
             this.telemetry?.finish(
               event.result.reason === 'last-standing' ? 'elimination' : 'timeout',
-              this.options.benchmark ? null : event.result.ranking.indexOf(0) + 1,
+              this.options.benchmark ? null : event.result.ranking.indexOf(this.localSeat) + 1,
             );
             this.options.onEnd?.({
               seed: this.match.state.seed,
@@ -443,6 +462,8 @@ export class GameScene extends Phaser.Scene {
               startRoom: startRoom.id,
               bots: [...(this.options.benchmark ? DEFAULT_BOTS : (this.options.bots ?? DEFAULT_BOTS))],
               result: event.result,
+              playerSeat: this.localSeat,
+              isOnline: Boolean(this.options.remoteMatch),
               players: event.result.ranking.map((id) => ({
                 id,
                 name: NAMES[id],
@@ -461,7 +482,7 @@ export class GameScene extends Phaser.Scene {
     const state = this.match.state;
     this.registry.set('squads', state.squads.length);
     this.registry.set('matchActive', !this.introMs && !this.paused && !this.match.ended);
-    for (const id of this.selected) if (state.towers[id]?.owner !== 0) this.selected.delete(id);
+    for (const id of this.selected) if (state.towers[id]?.owner !== this.localSeat) this.selected.delete(id);
     const key = state.towers.map((t) => `${t.owner}:${t.level}`).join(',');
     if (key !== this.roomCache) {
       const ctx = this.background.getContext('2d') as CanvasRenderingContext2D;
@@ -512,7 +533,7 @@ export class GameScene extends Phaser.Scene {
       this.paused || state.result
         ? 'pointer'
         : this.aiming
-          ? target !== undefined && state.towers[target]?.owner === 0
+          ? target !== undefined && state.towers[target]?.owner === this.localSeat
             ? 'target'
             : 'no'
           : this.dragging
@@ -538,7 +559,7 @@ export class GameScene extends Phaser.Scene {
           team[tid].main,
           this.settings.reducedMotion ? 0 : Math.floor(this.time.now / 160) % 4,
         );
-      if (target === t.id && t.owner === 0) outline(g, x + 3, y + 12, w - 6, h - 15, p.white);
+      if (target === t.id && t.owner === this.localSeat) outline(g, x + 3, y + 12, w - 6, h - 15, p.white);
       if (target === t.id && this.dragging) outline(g, x - 2, y - 2, w + 4, h + 4, color.accent);
       const bounce = !this.settings.reducedMotion && this.feedback.arrived.has(t.id) ? 1 : 0;
       countPlate(g, x + w - 4, y - 5 - bounce, t.troops, tid, {
@@ -550,7 +571,7 @@ export class GameScene extends Phaser.Scene {
       for (const id of this.selected) {
         const route = world.paths[id]?.[target];
         if (route) {
-          path(g, route.points, 'p1');
+          path(g, route.points, TEAMS[this.localSeat] as TeamId);
           count += Math.floor(((state.towers[id]?.troops ?? 0) * this.pct) / 100);
         }
       }
@@ -567,7 +588,8 @@ export class GameScene extends Phaser.Scene {
     for (const s of state.squads) {
       const route = world.paths[s.from]?.[s.to];
       if (!route) continue;
-      if (s.owner === 0 || state.towers[s.to]?.owner === 0) path(g, route.points, TEAMS[s.owner] as TeamId);
+      if (s.owner === this.localSeat || state.towers[s.to]?.owner === this.localSeat)
+        path(g, route.points, TEAMS[s.owner] as TeamId);
       const boost =
         state.tick < (state.players[s.owner]?.deadlineUntil ?? 0) ? world.config.deadline.speedMultiplier : 1;
       let distance = Math.max(0, s.traveled - world.config.squadSpeed * boost * (1 - this.elapsed / tickMs));
@@ -600,7 +622,7 @@ export class GameScene extends Phaser.Scene {
     this.feedback.draw(g, this.time.now, this.settings);
     if (this.introMs) {
       for (const def of world.map.towers) {
-        if (def.seat === null || def.seat === 0 || !state.players[def.seat]?.active) continue;
+        if (def.seat === null || def.seat === this.localSeat || !state.players[def.seat]?.active) continue;
         const [x, y, w, h] = def.rect;
         notchedBox(g, x + Math.floor(w / 2) - 36, y + h - 19, 72, 15, color.surfacePanel);
         g.text(x + Math.floor(w / 2), y + h - 8, NAMES[def.seat], {
@@ -623,7 +645,7 @@ export class GameScene extends Phaser.Scene {
         TEAMS[i] as TeamId,
         NAMES[i] as string,
         state.towers.filter((t) => t.owner === i).length,
-        { you: i === 0, eliminated: player.eliminatedAt !== null },
+        { you: i === this.localSeat, eliminated: player.eliminatedAt !== null },
       );
     });
     notchedBox(g, 466, 3, 70, 14, p.white);
@@ -631,7 +653,7 @@ export class GameScene extends Phaser.Scene {
     g.text(546, 14, 'Menu', { size: 11, color: p.ink });
     timerChip(g, 582, 3, Math.max(0, Math.ceil((world.config.matchTicks - state.tick) / TICKS_PER_SECOND)));
     for (const [i, skill] of (['deadline', 'coffee'] as const).entries()) {
-      const remaining = Math.max(0, (state.players[0]?.skillReadyAt[skill] ?? 0) - state.tick);
+      const remaining = Math.max(0, (state.players[this.localSeat]?.skillReadyAt[skill] ?? 0) - state.tick);
       skillButton(
         g,
         8 + i * 28,

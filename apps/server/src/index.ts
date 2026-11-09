@@ -1,7 +1,12 @@
+import { generateRoomCode, isValidRoomCode } from '@ot/sim';
 import { TELEMETRY_MAX_BYTES, type TelemetryMatch, validateTelemetry } from '@ot/telemetry';
+import { RoomDO } from './room';
+
+export { RoomDO };
 
 interface Env {
   TELEMETRY_DB: D1Database;
+  ROOM?: DurableObjectNamespace;
   ASSETS: Fetcher;
   EMBED_ALLOWED_ORIGINS?: string;
 }
@@ -22,6 +27,7 @@ function frameAncestors(allowedOrigins = ''): string {
 }
 
 function secureResponse(response: Response, env: Env): Response {
+  if (response.status === 101) return response;
   const secured = new Response(response.body, response);
   secured.headers.set('X-Content-Type-Options', 'nosniff');
   secured.headers.set('Referrer-Policy', 'no-referrer');
@@ -122,6 +128,24 @@ async function route(request: Request, env: Env): Promise<Response> {
     await insertMatch(env.TELEMETRY_DB, match);
     return new Response(null, { status: 204 });
   }
+  if (path === '/api/room/create') {
+    if (request.method !== 'POST') return new Response(null, { status: 405, headers: { Allow: 'POST' } });
+    const code = generateRoomCode();
+    return Response.json({ code });
+  }
+
+  const roomMatch = path.match(/^\/ws\/room\/([A-Za-z0-9]{4})$/);
+  if (roomMatch) {
+    if (!env.ROOM) return new Response('Durable Objects not available', { status: 503 });
+    const rawCode = roomMatch[1];
+    if (!rawCode) return new Response('Invalid room code', { status: 400 });
+    const code = rawCode.toUpperCase();
+    if (!isValidRoomCode(code)) return new Response('Invalid room code', { status: 400 });
+    const id = env.ROOM.idFromName(code);
+    const room = env.ROOM.get(id);
+    return room.fetch(request);
+  }
+
   if (path.startsWith('/api/')) return new Response(null, { status: 404 });
   return env.ASSETS.fetch(request);
 }

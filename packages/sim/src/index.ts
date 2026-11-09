@@ -2,6 +2,7 @@ export * from './bot/bot';
 export * from './config';
 export * from './hash';
 export * from './maps';
+export * from './protocol';
 export * from './rng';
 export * from './rules';
 export * from './simulate';

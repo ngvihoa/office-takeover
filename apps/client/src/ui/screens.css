@@ -111,3 +111,18 @@
 .screen-preview > .scrim.inline {
   height: 100%;
 }
+
+.pixel-input {
+  font-family: inherit;
+  font-size: calc(var(--n) * 14);
+  padding: calc(var(--n) * 6) calc(var(--n) * 8);
+  border: var(--n) solid var(--border);
+  background: var(--bg-panel);
+  color: var(--ink);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.pixel-input:focus {
+  border-color: var(--accent);
+}

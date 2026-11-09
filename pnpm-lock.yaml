@@ -72,6 +72,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@ot/sim':
+        specifier: workspace:*
+        version: link:../../packages/sim
       '@ot/telemetry':
         specifier: workspace:*
         version: link:../../packages/telemetry
