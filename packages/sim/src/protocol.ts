@@ -1,3 +1,4 @@
+import type { BotLevel } from './bot/bot';
 import type { Config, SendPct } from './config';
 import type { Command, GameState, MapDef, MatchResult, PlayerId, SkillId } from './types';
 
@@ -7,7 +8,8 @@ export function isValidRoomCode(code: string): boolean {
   if (typeof code !== 'string' || code.length !== 4) return false;
   const upper = code.toUpperCase();
   for (let i = 0; i < upper.length; i++) {
-    if (!ROOM_CODE_CHARS.includes(upper[i]!)) return false;
+    const char = upper[i];
+    if (!char || !ROOM_CODE_CHARS.includes(char)) return false;
   }
   return true;
 }
@@ -16,12 +18,10 @@ export function generateRoomCode(randomFn: () => number = Math.random): string {
   let code = '';
   for (let i = 0; i < 4; i++) {
     const idx = Math.floor(randomFn() * ROOM_CODE_CHARS.length);
-    code += ROOM_CODE_CHARS[idx]!;
+    code += ROOM_CODE_CHARS[idx] ?? 'A';
   }
   return code;
 }
-
-export type BotLevel = 'easy' | 'normal';
 
 export interface SeatState {
   seat: PlayerId;

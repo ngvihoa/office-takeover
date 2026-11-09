@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  ROOM_CODE_CHARS,
-  generateRoomCode,
-  isValidRoomCode,
-  parseClientMessage,
-} from '../src/protocol';
+import { generateRoomCode, isValidRoomCode, parseClientMessage, ROOM_CODE_CHARS } from '../src/protocol';
 
 describe('multiplayer protocol', () => {
   it('validates and generates valid 4-character room codes', () => {

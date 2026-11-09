@@ -9,6 +9,7 @@ import {
   seatOrder,
   withSeatOrder,
 } from '@ot/sim';
+import type { RemoteMatch } from '../net/remoteMatch';
 import type { Settings } from './settings';
 
 export const PLAYER_NAMES = ['Bạn', 'Bot An', 'Bot Bình', 'Bot Chi'] as const;
@@ -34,6 +35,7 @@ export interface MatchReport {
 export interface OfflineOptions {
   bots?: (BotLevel | null)[];
   benchmark?: boolean;
+  remoteMatch?: RemoteMatch;
   onReady?: () => void;
   onLoadError?: () => void;
   onPause?: () => void;

@@ -43,12 +43,14 @@ import { DEFAULT_BOTS, matchLayout, type OfflineOptions, PLAYER_NAMES } from '..
 import { readSettings, type Settings, saveSettings, toggleMute } from '../game/settings';
 import { MatchTelemetry } from '../game/telemetry';
 
+import type { RemoteMatch } from '../net/remoteMatch';
+
 const TEAMS: TeamId[] = ['p1', 'p2', 'p3', 'p4'];
 const NAMES = PLAYER_NAMES;
 const tickMs = 1000 / TICKS_PER_SECOND;
 
 export class GameScene extends Phaser.Scene {
-  private match!: LocalMatch;
+  private match!: LocalMatch | RemoteMatch;
   private layout!: ReturnType<typeof matchLayout>;
   private selected = new Set<number>();
   private pct: SendPct = 50;
@@ -100,19 +102,25 @@ export class GameScene extends Phaser.Scene {
       const hotspot = name === 'default' ? '0 0' : name === 'pointer' ? '4 0' : '5 5';
       this.cursors[name] = `url(${this.textures.getBase64('office', `cursor_${name}`)}) ${hotspot}, auto`;
     }
-    const seed = benchmark ? 7 : newMatchSeed(this.match?.state.seed);
-    this.layout = matchLayout(seed, benchmark);
+    if (this.options.remoteMatch) {
+      this.match = this.options.remoteMatch;
+      const seed = this.match.state.seed;
+      this.layout = matchLayout(seed);
+    } else {
+      const seed = benchmark ? 7 : newMatchSeed(this.match?.state.seed);
+      this.layout = matchLayout(seed, benchmark);
+      this.match = new LocalMatch(
+        this.layout.world,
+        [
+          benchmark ? { kind: 'bot', level: 'normal' } : { kind: 'human' },
+          ...(benchmark ? DEFAULT_BOTS : (this.options.bots ?? DEFAULT_BOTS)).map(
+            (level): SeatSetup => (level ? { kind: 'bot', level } : { kind: 'empty' }),
+          ),
+        ],
+        seed,
+      );
+    }
     this.feedback = new MatchFeedback(this.layout.world, (cue) => this.play(cue));
-    this.match = new LocalMatch(
-      this.layout.world,
-      [
-        benchmark ? { kind: 'bot', level: 'normal' } : { kind: 'human' },
-        ...(benchmark ? DEFAULT_BOTS : (this.options.bots ?? DEFAULT_BOTS)).map(
-          (level): SeatSetup => (level ? { kind: 'bot', level } : { kind: 'empty' }),
-        ),
-      ],
-      seed,
-    );
     this.selected.clear();
     this.sent.fill(0);
     this.captured.fill(0);
