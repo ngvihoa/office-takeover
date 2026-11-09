@@ -12,6 +12,7 @@
     "db:migrate:remote": "wrangler d1 migrations apply TELEMETRY_DB --remote"
   },
   "dependencies": {
+    "@ot/sim": "workspace:*",
     "@ot/telemetry": "workspace:*"
   },
   "devDependencies": {
