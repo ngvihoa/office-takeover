@@ -180,6 +180,8 @@ export function App() {
     game.current?.events.emit('resume-match');
   };
 
+  const currentSeatRef = useRef<PlayerId>(0);
+
   const setupRoomClient = (code: string, playerName: string) => {
     if (roomClientRef.current) {
       roomClientRef.current.disconnect();
@@ -190,16 +192,21 @@ export function App() {
       {
         onStatusChange: (status) => setConnectionStatus(status),
         onLobby: (msg) => {
+          if (msg.you.seat !== null) {
+            currentSeatRef.current = msg.you.seat;
+          }
           setLobbyData({
             code: msg.code,
             hostId: msg.hostId,
             seats: msg.seats,
             you: { id: msg.you.id, seat: msg.you.seat },
           });
+          setScreen((cur) => (cur === 'match' ? 'lobby' : cur));
+          setReport(null);
         },
         onStart: (msg) => {
           const world = buildWorld(msg.map, msg.config);
-          const yourSeat = lobbyData?.you.seat ?? 0;
+          const yourSeat = currentSeatRef.current;
           const remote = new RemoteMatch(world, msg.seed, yourSeat, client);
           remoteMatchRef.current = remote;
           setReport(null);
@@ -224,6 +231,16 @@ export function App() {
     client.connect();
     setScreen('lobby');
     setOnlineOpen(false);
+  };
+
+  const handleReplay = () => {
+    if (report?.isOnline && roomClientRef.current) {
+      roomClientRef.current.requestRematch();
+      setReport(null);
+      setScreen('lobby');
+    } else {
+      startOffline();
+    }
   };
 
   const handleCreateOnlineRoom = async (playerName: string) => {
@@ -277,7 +294,7 @@ export function App() {
       {paused && !report && !settingsOpen && (
         <PauseMenu onResume={resume} onSettings={() => setSettingsOpen(true)} onHome={home} />
       )}
-      {report && <ResultScreen report={report} onReplay={startOffline} onHome={home} />}
+      {report && <ResultScreen report={report} onReplay={handleReplay} onHome={home} />}
       {settingsOpen && (
         <SettingsDialog settings={settings} onChange={updateSettings} onClose={() => setSettingsOpen(false)} />
       )}

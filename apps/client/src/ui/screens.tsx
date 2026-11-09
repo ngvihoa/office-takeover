@@ -290,15 +290,17 @@ export function ResultScreen({
   onReplay: () => void;
   onHome: () => void;
 }) {
-  const rank = report.result.ranking.indexOf(0) + 1;
+  const mySeat = report.playerSeat ?? 0;
+  const rank = report.result.ranking.indexOf(mySeat) + 1;
+  const isWinner = report.result.winner === mySeat;
   return (
     <section class="screen-layer" aria-label="Kết quả trận">
       <Panel class="screen-panel result-screen" title="Báo cáo cuối trận">
         <div class="screen-stack">
           <h1 class="result-heading">
-            <Stamp muted={report.result.winner !== 0}>
+            <Stamp muted={!isWinner}>
               {`Hạng ${rank}`}
-              {report.result.winner === 0 ? ' · Thâu tóm thành công' : ''}
+              {isWinner ? ' · Thâu tóm thành công' : ''}
             </Stamp>
           </h1>
           <p class="t-body muted">
@@ -326,6 +328,7 @@ export function ResultScreen({
                       <span class="screen-player">
                         {index + 1}. <Flag t={TEAMS[id] ?? 'neutral'} />
                         {player.name}
+                        {id === mySeat && <span class="muted"> (Bạn)</span>}
                       </span>
                     </th>
                     <td>{player.rooms}</td>
@@ -345,7 +348,7 @@ export function ResultScreen({
           <div class="screen-actions">
             <Button onClick={onHome}>Trang chủ</Button>
             <Button variant="primary" size="L" icon="play" onClick={onReplay}>
-              Chơi lại
+              {report.isOnline ? 'Tái đấu' : 'Chơi lại'}
             </Button>
           </div>
         </div>
