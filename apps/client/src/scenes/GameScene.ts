@@ -38,6 +38,7 @@ import {
   HUMAN_GRACE_TICKS,
   interval,
   LocalMatch,
+  MAX_LEVEL,
   type PlayerId,
   pathLength,
   SEND_PCTS,
@@ -736,8 +737,14 @@ export class GameScene extends Phaser.Scene {
         );
       if (target === t.id && t.owner === this.localSeat) outline(g, x + 3, y + 12, w - 6, h - 15, p.white);
       if (target === t.id && this.dragging) outline(g, x - 2, y - 2, w + 4, h + 4, color.accent);
+      const isMine = t.owner === this.localSeat;
+      const upgradeCost = world.config.upgradeCost[t.level - 1] ?? 999;
+      const canUpgrade = isMine && t.level < MAX_LEVEL && t.troops >= upgradeCost;
       const bounce = !this.settings.reducedMotion && this.feedback.arrived.has(t.id) ? 1 : 0;
       countPlate(g, x + w - 4, y - 5 - bounce, t.troops, tid, {
+        level: t.level,
+        canUpgrade,
+        upgradeBlink: this.settings.reducedMotion ? false : Math.floor(this.time.now / 350) % 2 === 0,
         underAttack: state.squads.some((s) => t.owner !== null && s.to === t.id && s.owner !== t.owner),
       });
     }
@@ -939,7 +946,15 @@ export class GameScene extends Phaser.Scene {
                 : def.kind === 'server'
                   ? ' · Tường lửa'
                   : '';
-        statusText = `[${def.name}] ${ownerName} · Cấp ${tower.level} · Quân ${tower.troops}/${cap}${perk}`;
+        const isMine = tower.owner === this.localSeat;
+        const cost = world.config.upgradeCost[tower.level - 1] ?? 999;
+        const canUp = isMine && tower.level < MAX_LEVEL && tower.troops >= cost;
+        const upHint = canUp
+          ? ` · [E/Double-click] Đủ quân lên Cấp ${tower.level + 1}`
+          : isMine && tower.level < MAX_LEVEL
+            ? ` · (Cần ${cost} quân để lên Cấp ${tower.level + 1})`
+            : '';
+        statusText = `[${def.name}] ${ownerName} · Cấp ${tower.level} · Quân ${tower.troops}/${cap}${perk}${upHint}`;
       }
     }
     if (graceSeconds && !this.altDown && target === undefined) graceNotice(g, 68, 353, graceSeconds);
@@ -958,7 +973,19 @@ export class GameScene extends Phaser.Scene {
         },
       );
     sendMeter(g, 288, 343, this.pct);
-    g.text(466, 353, 'Mở rộng E', { size: 11, color: p.ink });
+    const selectedCanUpgrade = Array.from(this.selected).some((id) => {
+      const tw = state.towers[id];
+      return (
+        tw &&
+        tw.owner === this.localSeat &&
+        tw.level < MAX_LEVEL &&
+        tw.troops >= (world.config.upgradeCost[tw.level - 1] ?? 999)
+      );
+    });
+    g.text(466, 353, selectedCanUpgrade ? 'Mở rộng E ▲' : 'Mở rộng E', {
+      size: 11,
+      color: selectedCanUpgrade ? color.accent : p.ink,
+    });
     g.text(548, 353, 'Chọn hết', { size: 11, color: p.ink });
     emoteButton(g, 598, 342, this.emoteMenuOpen);
     if (this.emoteMenuOpen) {
@@ -1033,9 +1060,18 @@ export class GameScene extends Phaser.Scene {
                   : def.kind === 'server'
                     ? ' · Tường lửa'
                     : '';
+          const cost = world.config.upgradeCost[tower.level - 1] ?? 999;
+          const canUp = isMine && tower.level < MAX_LEVEL && tower.troops >= cost;
+          const tipAction = isMine
+            ? canUp
+              ? `Double-click / phím E: Lên Cấp ${tower.level + 1} (${cost} quân)`
+              : tower.level < MAX_LEVEL
+                ? `Click: chọn · Cần ${cost} quân để lên Cấp ${tower.level + 1}`
+                : 'Cấp tối đa (Level 3)'
+            : 'Click phải: điều quân tới đây';
           const tipLines = [
             `${def.name} (${ownerName}) · Cấp ${tower.level} · Quân ${tower.troops}/${cap}${perk}`,
-            isMine ? 'Click: chọn · Double-click: nâng cấp' : 'Click phải: điều quân tới đây',
+            tipAction,
           ];
           tooltip(g, def.rect[0] + Math.floor(def.rect[2] / 2), def.rect[1] + def.rect[3], tipLines, 150);
         }

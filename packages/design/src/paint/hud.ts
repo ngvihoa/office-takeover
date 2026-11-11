@@ -19,6 +19,9 @@ export interface PlateState {
   underAttack?: boolean;
   locked?: boolean;
   hidden?: boolean;
+  level?: number;
+  canUpgrade?: boolean;
+  upgradeBlink?: boolean;
 }
 
 /** Door-sign count plate. Anchored by its top-right corner. Returns the plate width. */
@@ -37,6 +40,36 @@ export function countPlate(g: Painter, right: number, top: number, n: number, t:
     g.rect(x - 6, top + 5, 1, 3, p.white);
     g.rect(x - 6, top + 9, 1, 1, p.white);
   }
+
+  // Upgradeable indicator: animated green chevron box [▲]
+  if (s.canUpgrade) {
+    const uy = top + 3 + (s.upgradeBlink ? -1 : 0);
+    const ux = s.underAttack ? x - 18 : x - 10;
+    notchedBox(g, ux, uy, 8, 8, p.green500, p.ink);
+    g.rect(ux + 3, uy + 1, 2, 1, p.white);
+    g.rect(ux + 2, uy + 2, 4, 1, p.white);
+    g.rect(ux + 1, uy + 3, 6, 1, p.white);
+    g.rect(ux + 3, uy + 4, 2, 2, p.white);
+  }
+
+  // Level star pips on the top roof tab of the count plate
+  if (s.level !== undefined && s.level > 0) {
+    const lvl = Math.min(3, Math.max(1, s.level));
+    const pw = 15;
+    const px = x + Math.floor((w - pw) / 2);
+    // Dark tab attached to top border
+    g.rect(px - 1, top - 3, pw + 2, 4, p.ink);
+    g.rect(px, top - 3, pw, 1, frame);
+    for (let i = 0; i < 3; i++) {
+      const active = i < lvl;
+      const c = active ? p.yellow : p.gray700;
+      const sx = px + 1 + i * 5;
+      // 3x3 pixel star/diamond
+      g.rect(sx + 1, top - 3, 1, 3, c);
+      g.rect(sx, top - 2, 3, 1, c);
+    }
+  }
+
   return w;
 }
 
