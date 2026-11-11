@@ -162,6 +162,7 @@ export function OfflineSetup({
     { value: 'office-01', label: 'Tầng 1' },
     { value: 'office-02', label: 'Ngã tư' },
     { value: 'office-03', label: 'Văn phòng Mở' },
+    { value: 'office-04', label: 'Hai Cánh' },
   ] as const;
 
   return (
