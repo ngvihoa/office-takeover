@@ -45,6 +45,7 @@ Tiêu chí hoàn thành:
 - Tháp Phòng họp, Server room, Phòng sếp. Kỹ năng Họp đột xuất và Reply All, chọn 2 kỹ năng trong lobby.
 - Sự kiện: Bánh sinh nhật, Dọn dẹp, Pizza. Tuyến tiếp tế. Bot Khó.
 - Hồ sơ và avatar pixel ghép. Replay.
+- Cập nhật lại toàn diện flow hướng dẫn chơi (tutorial) tích hợp sự kiện văn phòng, tuyến tiếp tế, và giới thiệu các phòng chức năng mới.
 - **Kết nối virtual office** theo [06-embed-contract.md](06-embed-contract.md).
 - **Bố cục ngẫu nhiên mức 1 + 2** (GDD mục 2.2):
   - Thêm 2 map vẽ tay (tổng 3 map trong bộ). Mỗi trận chọn ngẫu nhiên 1 map theo seed.

@@ -1,10 +1,12 @@
 import office01 from '../maps/office-01.json';
+import tutorial01 from '../maps/tutorial-01.json';
 import { deriveSeed, Rng } from './rng';
 import type { MapDef, PlayerId } from './types';
 
 /** Bundled maps. JSON imports widen tuples to arrays, so they are asserted here once (buildWorld validates the graph). */
 export const MAPS: Record<string, MapDef> = {
   'office-01': office01 as unknown as MapDef,
+  'tutorial-01': tutorial01 as unknown as MapDef,
 };
 
 /**

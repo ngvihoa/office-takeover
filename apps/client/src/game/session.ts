@@ -1,6 +1,7 @@
 import {
   type BotLevel,
   buildWorld,
+  DEFAULT_CONFIG,
   MAPS,
   type MapDef,
   type MapTowerDef,
@@ -16,9 +17,13 @@ export const PLAYER_NAMES = ['Bạn', 'Bot An', 'Bot Bình', 'Bot Chi'] as const
 export const DEFAULT_BOTS: (BotLevel | null)[] = ['easy', 'normal', 'easy'];
 
 /** Keep the map, human highlight and downloadable report on the same seeded layout. */
-export function matchLayout(seed: number, controlled = false, playerSeat: PlayerId = 0) {
-  const order: PlayerId[] = controlled ? [0, 1, 2, 3] : seatOrder(seed);
-  const world = buildWorld(withSeatOrder(MAPS['office-01'] as MapDef, order));
+export function matchLayout(seed: number, controlled = false, playerSeat: PlayerId = 0, isTutorial = false) {
+  const mapKey = isTutorial ? 'tutorial-01' : 'office-01';
+  const order: PlayerId[] = controlled || isTutorial ? [0, 1, 2, 3] : seatOrder(seed);
+  const world = buildWorld(
+    withSeatOrder(MAPS[mapKey] as MapDef, order),
+    isTutorial ? { ...DEFAULT_CONFIG, skillWarmup: 0 } : DEFAULT_CONFIG,
+  );
   const startRoom = (world.map.towers.find((tower) => tower.seat === playerSeat) ?? world.map.towers[0]) as MapTowerDef;
   return { world, startRoom, order };
 }

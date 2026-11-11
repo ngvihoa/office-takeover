@@ -32,6 +32,7 @@ import {
   tutorialBanner,
 } from '@ot/design';
 import {
+  type BotLevel,
   type Command,
   capacity,
   HUMAN_GRACE_TICKS,
@@ -127,14 +128,14 @@ export class GameScene extends Phaser.Scene {
       const seed = this.match.state.seed;
       this.layout = matchLayout(seed, false, this.localSeat);
     } else {
-      const seed = benchmark ? 7 : newMatchSeed(this.match?.state.seed);
-      this.layout = matchLayout(seed, benchmark, this.localSeat);
       const isTutorial = this.options.tutorial ?? false;
+      const seed = benchmark ? 7 : newMatchSeed(this.match?.state.seed);
+      this.layout = matchLayout(seed, benchmark || isTutorial, this.localSeat, isTutorial);
       this.match = new LocalMatch(
         this.layout.world,
         [
           benchmark ? { kind: 'bot', level: 'normal' } : { kind: 'human' },
-          ...(benchmark ? DEFAULT_BOTS : isTutorial ? [null, null, null] : (this.options.bots ?? DEFAULT_BOTS)).map(
+          ...(benchmark ? DEFAULT_BOTS : isTutorial ? (['easy', null, null] as (BotLevel | null)[]) : (this.options.bots ?? DEFAULT_BOTS)).map(
             (level): SeatSetup => (level ? { kind: 'bot', level } : { kind: 'empty' }),
           ),
         ],
@@ -590,7 +591,12 @@ export class GameScene extends Phaser.Scene {
         this.feedback.consume(events, this.time.now, owned);
         for (const event of events) {
           if (event.t === 'squadSpawned') this.sent[event.owner] = (this.sent[event.owner] ?? 0) + event.count;
-          if (event.t === 'captured') this.captured[event.to] = (this.captured[event.to] ?? 0) + 1;
+          if (event.t === 'captured') {
+            this.captured[event.to] = (this.captured[event.to] ?? 0) + 1;
+            if (this.options.tutorial && this.tutorialStep === 4 && event.to === this.localSeat && event.tower === 3) {
+              this.tutorialStep = 5;
+            }
+          }
           if (event.t === 'matchEnded') {
             this.telemetry?.finish(
               event.result.reason === 'last-standing' ? 'elimination' : 'timeout',
@@ -828,12 +834,14 @@ export class GameScene extends Phaser.Scene {
     if (this.introMs || this.startFlashMs) introCountdown(g, Math.ceil(this.introMs / 1000));
     if (this.options.tutorial) {
       const bannerTexts: Record<number, string> = {
-        1: 'Kéo từ phòng của bạn sang phòng khác để điều quân',
-        2: 'Double-click phòng của bạn hoặc bấm phím E để nâng cấp',
-        3: 'Bấm phím Q (Deadline) hoặc W (Coffee Break) để dùng kỹ năng',
+        1: 'Kéo từ TEAM DEV sang KHO TÀI LIỆU để chiếm phòng trống (phím 1-4 chọn % quân)',
+        2: 'Double-click phòng của bạn hoặc bấm phím E để mở rộng phòng lên Cấp 2',
+        3: 'Bấm phím Q (Deadline: x2 tốc độ) hoặc W (Coffee Break: +15 lính) để dùng kỹ năng',
+        4: 'Chiếm PANTRY để tăng tốc sinh quân và đánh bại BOT ĐỐI THỦ ở MARKETING!',
       };
-      const txt = bannerTexts[this.tutorialStep] ?? 'Xuất sắc! Hãy chiếm hết các phòng hoặc bấm Menu';
-      tutorialBanner(g, this.tutorialStep, 3, txt);
+      const txt =
+        bannerTexts[this.tutorialStep] ?? 'Xuất sắc! Bạn đã làm chủ văn phòng. Hãy vào Đấu tự do hoặc bấm Menu!';
+      tutorialBanner(g, this.tutorialStep, 4, txt);
     }
     g.rect(0, 0, 640, 20, p.gray100);
     g.rect(0, 340, 640, 20, p.gray100);
