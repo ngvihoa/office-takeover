@@ -5,7 +5,7 @@ import type { MatchReport } from '../game/session';
 import type { Settings } from '../game/settings';
 import { Modal } from './components/composite';
 import { Segmented, Slider, Toggle } from './components/controls';
-import { Badge, Button, Flag, Panel, Stamp } from './components/primitives';
+import { Badge, Button, Flag, Logo, Panel, Stamp } from './components/primitives';
 import './screens.css';
 
 const TEAMS: TeamId[] = ['p1', 'p2', 'p3', 'p4'];
@@ -30,8 +30,7 @@ export function HomeScreen({
     <section class="screen-layer" aria-label="Trang chủ">
       <Panel class="screen-panel home-screen" title="Văn phòng của bạn">
         <div class="screen-stack home-content">
-          <h1 class="t-hero">OFFICE TAKEOVER</h1>
-          <p class="t-label muted">Thâu tóm văn phòng, từng phòng một</p>
+          <Logo scale={2.5} />
           <div class="screen-stack home-buttons">
             <Button variant="primary" size="L" icon="play" block onClick={onPlay}>
               Chơi với bot
