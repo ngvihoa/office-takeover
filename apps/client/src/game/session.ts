@@ -37,6 +37,7 @@ export interface MatchReport {
 export interface OfflineOptions {
   bots?: (BotLevel | null)[];
   benchmark?: boolean;
+  tutorial?: boolean;
   remoteMatch?: RemoteMatch;
   onReady?: () => void;
   onLoadError?: () => void;

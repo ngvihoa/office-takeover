@@ -64,6 +64,7 @@ export function App() {
   const host = useRef<HTMLDivElement>(null);
   const game = useRef<Phaser.Game | null>(null);
   const matchBots = useRef([...DEFAULT_BOTS]);
+  const isTutorialRef = useRef(false);
 
   useEffect(() => {
     const resize = () => setScale(scaleFor(innerWidth, innerHeight));
@@ -104,6 +105,7 @@ export function App() {
         if (cancelled) return;
         const instance = await startGame(parent, {
           bots: matchBots.current,
+          tutorial: isTutorialRef.current,
           remoteMatch: remoteMatchRef.current ?? undefined,
           onReady: () => {
             if (!cancelled) setLoading(false);
@@ -153,8 +155,19 @@ export function App() {
   };
 
   const startOffline = () => {
+    isTutorialRef.current = false;
     remoteMatchRef.current = null;
     matchBots.current = [...bots];
+    setReport(null);
+    setPaused(false);
+    setSession((n) => n + 1);
+    setScreen('match');
+  };
+
+  const startTutorial = () => {
+    isTutorialRef.current = true;
+    remoteMatchRef.current = null;
+    matchBots.current = [null, null, null];
     setReport(null);
     setPaused(false);
     setSession((n) => n + 1);
@@ -231,6 +244,7 @@ export function App() {
     );
 
     roomClientRef.current = client;
+    isTutorialRef.current = false;
     client.connect();
     setScreen('lobby');
     setOnlineOpen(false);
@@ -268,6 +282,7 @@ export function App() {
       {screen === 'home' && (
         <HomeScreen
           onPlay={() => setScreen('setup')}
+          onTutorial={startTutorial}
           onOnline={() => setOnlineOpen(true)}
           onSettings={() => setSettingsOpen(true)}
         />
