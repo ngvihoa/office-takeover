@@ -4,6 +4,9 @@ import {
   countPlate,
   dashedOutline,
   dither,
+  emoteBubble,
+  emoteButton,
+  emoteWheel,
   flag,
   graceNotice,
   homeRoomMarker,
@@ -67,6 +70,8 @@ export class GameScene extends Phaser.Scene {
   private boxSelectOrigin: [number, number] | null = null;
   private boxSelecting = false;
   private boxSelectInitial = new Set<number>();
+  private emoteMenuOpen = false;
+  private activeEmotes: Array<{ seat: PlayerId; id: number; startedAt: number }> = [];
   private lastClick = { id: -1, time: -1000 };
   private texture!: Phaser.Textures.CanvasTexture;
   private background!: HTMLCanvasElement;
@@ -232,8 +237,28 @@ export class GameScene extends Phaser.Scene {
     };
     this.events.once('shutdown', stopTelemetry);
     this.events.once('destroy', stopTelemetry);
+    const handleRemoteEmote = ({ seat, id }: { seat: PlayerId; id: number }) => {
+      if (seat !== this.localSeat) {
+        this.activeEmotes.push({ seat, id, startedAt: this.time.now });
+        this.play('click');
+      }
+    };
+    this.game.events.on('remote-emote', handleRemoteEmote);
+    this.events.once('shutdown', () => {
+      this.game.events.off('remote-emote', handleRemoteEmote);
+    });
     if (!benchmark) this.play('countdown');
     this.options.onReady?.();
+  }
+
+  public sendEmote(id: number) {
+    if (id < 1 || id > 6) return;
+    this.activeEmotes.push({ seat: this.localSeat, id, startedAt: this.time.now });
+    if (this.options.remoteMatch && 'sendEmote' in this.options.remoteMatch) {
+      (this.options.remoteMatch as { sendEmote(id: number): void }).sendEmote(id);
+    }
+    this.play('click');
+    this.emoteMenuOpen = false;
   }
 
   private finishIntro() {
@@ -244,6 +269,7 @@ export class GameScene extends Phaser.Scene {
     this.dragging = false;
     this.boxSelectOrigin = null;
     this.boxSelecting = false;
+    this.emoteMenuOpen = false;
     this.selected.clear();
     this.aiming = null;
     this.play('countdown');
@@ -258,6 +284,7 @@ export class GameScene extends Phaser.Scene {
     this.dragging = false;
     this.boxSelectOrigin = null;
     this.boxSelecting = false;
+    this.emoteMenuOpen = false;
     this.aiming = null;
     this.options.onPause?.();
   }
@@ -340,13 +367,22 @@ export class GameScene extends Phaser.Scene {
       this.pauseMatch();
       return;
     }
+    if (this.emoteMenuOpen) {
+      const slot = Math.floor((x - 478) / 25);
+      if (slot >= 0 && slot < 6 && y >= 306 && y <= 334) {
+        this.sendEmote(slot + 1);
+        return;
+      }
+      this.emoteMenuOpen = false;
+    }
     if (y >= 340) {
       if (x < 32) this.skill('deadline');
       else if (x < 60) this.skill('coffee');
       else if (x >= 280 && x < 400) this.pct = SEND_PCTS[(SEND_PCTS.indexOf(this.pct) + 1) % 4] as SendPct;
       else if (x >= 466 && x < 540) this.upgrade();
-      else if (x >= 540)
+      else if (x >= 540 && x < 596)
         this.selected = new Set(this.match.state.towers.filter((t) => t.owner === this.localSeat).map((t) => t.id));
+      else if (x >= 596) this.emoteMenuOpen = !this.emoteMenuOpen;
       return;
     }
     const id = this.hit(x, y);
@@ -442,10 +478,33 @@ export class GameScene extends Phaser.Scene {
       if (!event.repeat && ['Space', 'Enter'].includes(event.code)) this.finishIntro();
       return;
     }
-    if (['Space', 'Escape', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'KeyQ', 'KeyW', 'KeyE'].includes(event.code))
+    if (
+      [
+        'Space',
+        'Escape',
+        'Digit1',
+        'Digit2',
+        'Digit3',
+        'Digit4',
+        'Digit5',
+        'Digit6',
+        'KeyQ',
+        'KeyW',
+        'KeyE',
+        'KeyT',
+      ].includes(event.code)
+    )
       event.preventDefault();
     if (event.repeat) return;
+    if (event.code === 'KeyT') {
+      this.emoteMenuOpen = !this.emoteMenuOpen;
+      return;
+    }
     if (event.code === 'Escape') {
+      if (this.emoteMenuOpen) {
+        this.emoteMenuOpen = false;
+        return;
+      }
       if (this.aiming || this.origin || this.boxSelectOrigin) {
         this.aiming = null;
         this.origin = null;
@@ -463,6 +522,13 @@ export class GameScene extends Phaser.Scene {
     }
     if (this.paused || this.match.ended) return;
     const n = Number(event.key);
+    if (this.emoteMenuOpen) {
+      if (n >= 1 && n <= 6) {
+        this.sendEmote(n);
+        return;
+      }
+      this.emoteMenuOpen = false;
+    }
     if (n >= 1 && n <= 4) this.pct = SEND_PCTS[n - 1] as SendPct;
     if (event.code === 'Space')
       this.selected = new Set(this.match.state.towers.filter((t) => t.owner === this.localSeat).map((t) => t.id));
@@ -676,6 +742,23 @@ export class GameScene extends Phaser.Scene {
       );
     }
     this.feedback.draw(g, this.time.now, this.settings);
+    this.activeEmotes = this.activeEmotes.filter((e) => this.time.now - e.startedAt < 2500);
+    for (const emote of this.activeEmotes) {
+      const roomDef =
+        world.map.towers.find((t) => t.seat === emote.seat) ??
+        world.map.towers.find((t) => state.towers[t.id]?.owner === emote.seat);
+      if (roomDef) {
+        const [rx, ry, rw] = roomDef.rect;
+        emoteBubble(
+          g,
+          rx + Math.floor(rw / 2),
+          ry,
+          emote.id,
+          this.time.now - emote.startedAt,
+          this.settings.reducedMotion,
+        );
+      }
+    }
     if (this.introMs) {
       for (const def of world.map.towers) {
         if (def.seat === null || def.seat === this.localSeat || !state.players[def.seat]?.active) continue;
@@ -732,6 +815,14 @@ export class GameScene extends Phaser.Scene {
     sendMeter(g, 288, 343, this.pct);
     g.text(466, 353, 'Mở rộng E', { size: 11, color: p.ink });
     g.text(548, 353, 'Chọn hết', { size: 11, color: p.ink });
+    emoteButton(g, 598, 342, this.emoteMenuOpen);
+    if (this.emoteMenuOpen) {
+      const p = this.point(pointer);
+      let hovered = -1;
+      const slot = Math.floor((p.x - 478) / 25);
+      if (slot >= 0 && slot < 6 && p.y >= 306 && p.y <= 334) hovered = slot + 1;
+      emoteWheel(g, 553, 340, hovered);
+    }
     if ((this.paused && !this.options.onPause) || (state.result && !this.options.onEnd)) this.overlay();
     this.game.canvas.setAttribute('role', 'img');
     this.game.canvas.setAttribute(

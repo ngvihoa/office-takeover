@@ -220,6 +220,9 @@ export function App() {
         onSync: (msg) => {
           remoteMatchRef.current?.onServerSync(msg.tick, msg.hash, msg.snapshot);
         },
+        onEmote: (msg) => {
+          game.current?.events.emit('remote-emote', { seat: msg.seat, id: msg.id });
+        },
         onEnd: () => {
           // Handled via simulation event in GameScene
         },

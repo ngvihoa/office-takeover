@@ -1,4 +1,4 @@
-import { FLAG_FOR_TEAM } from '../icons';
+import { EMOTE_ICONS, FLAG_FOR_TEAM } from '../icons';
 import { color, primitive as p, type TeamId, team } from '../tokens';
 import { digits, digitsWidth, dither, icon, notchedBox, outline, type Painter } from './painter';
 
@@ -176,4 +176,75 @@ export function introCountdown(g: Painter, seconds: number): void {
 
 export function graceNotice(g: Painter, x: number, baseline: number, seconds: number): void {
   if (seconds > 0) g.text(x, baseline, `Bot chưa tấn công bạn: ${seconds}s`, { size: 11, color: color.textPrimary });
+}
+
+export function emoteBubble(
+  g: Painter,
+  cx: number,
+  topY: number,
+  emoteId: number,
+  ageMs: number,
+  reducedMotion = false,
+): void {
+  const iconName = EMOTE_ICONS[emoteId - 1];
+  if (!iconName) return;
+  const floatY = reducedMotion ? 0 : Math.min(6, Math.floor(ageMs / 400));
+  const bounceY = !reducedMotion && ageMs < 150 ? (150 - ageMs) / 50 : 0;
+  const y = Math.round(topY - 20 - floatY + bounceY);
+  const x = cx - 10;
+  notchedBox(g, x, y, 20, 18, color.surfacePanel);
+  shadow(g, x, y, 20, 18, 1);
+  g.rect(cx - 1, y + 18, 3, 1, p.ink);
+  g.rect(cx, y + 19, 1, 1, p.ink);
+  icon(g, iconName, x + 4, y + 3);
+}
+
+export function emoteWheel(
+  g: Painter,
+  anchorX: number,
+  anchorY: number,
+  hoveredIndex = -1,
+): {
+  bounds: [x: number, y: number, w: number, h: number];
+  slots: Array<{ id: number; rect: [number, number, number, number] }>;
+} {
+  const w = 158;
+  const h = 32;
+  const x = Math.max(8, Math.min(640 - w - 8, anchorX - Math.floor(w / 2)));
+  const y = anchorY - h - 6;
+  notchedBox(g, x, y, w, h, color.surfacePanel);
+  shadow(g, x, y, w, h, 2);
+  const slots: Array<{ id: number; rect: [number, number, number, number] }> = [];
+  for (let i = 0; i < 6; i++) {
+    const slotX = x + 4 + i * 25;
+    const slotY = y + 4;
+    const slotW = 24;
+    const slotH = 24;
+    const isHovered = hoveredIndex === i + 1;
+    notchedBox(
+      g,
+      slotX,
+      slotY,
+      slotW,
+      slotH,
+      isHovered ? color.surfaceWall : color.surfacePanel,
+      isHovered ? color.accent : p.ink,
+    );
+    const iconName = EMOTE_ICONS[i];
+    if (iconName) icon(g, iconName, slotX + 6, slotY + 2);
+    g.text(slotX + 12, slotY + 22, String(i + 1), {
+      size: 11,
+      color: isHovered ? color.accent : color.textMuted,
+      align: 'center',
+    });
+    slots.push({ id: i + 1, rect: [slotX, slotY, slotW, slotH] });
+  }
+  return { bounds: [x, y, w, h], slots };
+}
+
+export function emoteButton(g: Painter, x: number, y: number, open: boolean): void {
+  notchedBox(g, x, y, 36, 16, open ? color.accent : color.surfacePanel, open ? color.accent : p.ink);
+  shadow(g, x, y, 36, 16, 1);
+  icon(g, 'emoteCoffee', x + 3, y + 2);
+  g.text(x + 24, y + 12, 'T', { size: 11, color: open ? p.white : p.ink, align: 'center' });
 }

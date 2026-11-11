@@ -52,6 +52,10 @@ export class RemoteMatch {
     this.client.sendCommand(cmd);
   }
 
+  sendEmote(id: number): void {
+    this.client.sendEmote(id);
+  }
+
   tick(): GameEvent[] {
     const nextTick = this.state.tick;
     const cmds = this.tickBuffer.get(nextTick);
