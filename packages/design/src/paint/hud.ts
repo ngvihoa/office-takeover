@@ -52,21 +52,38 @@ export function countPlate(g: Painter, right: number, top: number, n: number, t:
     g.rect(ux + 3, uy + 4, 2, 2, p.white);
   }
 
-  // Level star pips on the top roof tab of the count plate
+  // Level star pips on bottom tab of the count plate
   if (s.level !== undefined && s.level > 0) {
     const lvl = Math.min(3, Math.max(1, s.level));
-    const pw = 15;
-    const px = x + Math.floor((w - pw) / 2);
-    // Dark tab attached to top border
-    g.rect(px - 1, top - 3, pw + 2, 4, p.ink);
-    g.rect(px, top - 3, pw, 1, frame);
+    const tabY = top + 14;
+    const tabH = 7;
+    // Shelf background attached to bottom of countPlate
+    g.rect(x + 1, tabY, w - 2, tabH, p.ink);
+    g.rect(x, tabY, 1, tabH, frame);
+    g.rect(x + w - 1, tabY, 1, tabH, frame);
+    g.rect(x, tabY + tabH - 1, w, 1, frame);
+
+    // 3 stars (each 5x5, 1px gap = 17px total)
+    const startX = x + Math.floor((w - 17) / 2);
     for (let i = 0; i < 3; i++) {
       const active = i < lvl;
       const c = active ? p.yellow : p.gray700;
-      const sx = px + 1 + i * 5;
-      // 3x3 pixel star/diamond
-      g.rect(sx + 1, top - 3, 1, 3, c);
-      g.rect(sx, top - 2, 3, 1, c);
+      const sx = startX + i * 6;
+      const sy = tabY + 1;
+      // Row 0: center tip (1px)
+      g.rect(sx + 2, sy, 1, 1, c);
+      // Row 1: horizontal arms (5px)
+      g.rect(sx, sy + 1, 5, 1, c);
+      // Row 2: body (3px)
+      g.rect(sx + 1, sy + 2, 3, 1, c);
+      // Row 3: legs (2px)
+      g.rect(sx + 1, sy + 3, 1, 1, c);
+      g.rect(sx + 3, sy + 3, 1, 1, c);
+      // Row 4: feet (2px)
+      g.rect(sx, sy + 4, 1, 1, c);
+      g.rect(sx + 4, sy + 4, 1, 1, c);
+      // Center twinkle sparkle
+      if (active) g.rect(sx + 2, sy + 2, 1, 1, p.white);
     }
   }
 
