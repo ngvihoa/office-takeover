@@ -248,3 +248,21 @@ export function emoteButton(g: Painter, x: number, y: number, open: boolean): vo
   icon(g, 'emoteCoffee', x + 3, y + 2);
   g.text(x + 24, y + 12, 'T', { size: 11, color: open ? p.white : p.ink, align: 'center' });
 }
+
+export function statBadge(g: Painter, cx: number, cy: number, lines: string[]): void {
+  const lineH = 12;
+  const h = lines.length * lineH + 6;
+  let maxW = 0;
+  for (const line of lines) {
+    const w = line.length * 6;
+    if (w > maxW) maxW = w;
+  }
+  const w = Math.max(68, maxW + 12);
+  const x = Math.round(cx - w / 2);
+  const y = Math.round(cy - h / 2);
+  notchedBox(g, x, y, w, h, color.surfacePanel, color.accent);
+  shadow(g, x, y, w, h, 2);
+  lines.forEach((line, i) => {
+    g.text(cx, y + 10 + i * lineH, line, { size: 11, color: color.textPrimary, align: 'center' });
+  });
+}

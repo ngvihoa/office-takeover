@@ -24,15 +24,19 @@ import {
   sendMeter,
   skillButton,
   squad,
+  statBadge,
   type TeamId,
   team,
   timerChip,
 } from '@ot/design';
 import {
   type Command,
+  capacity,
   HUMAN_GRACE_TICKS,
+  interval,
   LocalMatch,
   type PlayerId,
+  pathLength,
   SEND_PCTS,
   type SeatSetup,
   type SendPct,
@@ -72,6 +76,7 @@ export class GameScene extends Phaser.Scene {
   private boxSelectInitial = new Set<number>();
   private emoteMenuOpen = false;
   private activeEmotes: Array<{ seat: PlayerId; id: number; startedAt: number }> = [];
+  private altDown = false;
   private lastClick = { id: -1, time: -1000 };
   private texture!: Phaser.Textures.CanvasTexture;
   private background!: HTMLCanvasElement;
@@ -187,9 +192,14 @@ export class GameScene extends Phaser.Scene {
       if (!this.introMs && !this.paused && !this.match.ended) this.pct = wheelRatio(this.pct, dy);
     });
     this.input.keyboard?.on('keydown', (event: KeyboardEvent) => this.key(event));
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Alt') this.altDown = false;
+    };
+    this.input.keyboard?.on('keyup', onKeyUp);
     const resume = () => {
       this.paused = false;
       this.elapsed = 0;
+      this.altDown = false;
     };
     const changeSettings = (settings: Settings) => {
       this.settings = { ...settings };
@@ -199,10 +209,14 @@ export class GameScene extends Phaser.Scene {
     };
     this.game.events.on('resume-match', resume);
     this.game.events.on('settings-change', changeSettings);
-    const blur = () => this.pauseMatch();
+    const blur = () => {
+      this.altDown = false;
+      this.pauseMatch();
+    };
     window.addEventListener('blur', blur);
     this.events.once('shutdown', () => {
       window.removeEventListener('blur', blur);
+      this.input.keyboard?.off('keyup', onKeyUp);
       this.game.events.off('resume-match', resume);
       this.game.events.off('settings-change', changeSettings);
       this.sound.removeByKey('sfx');
@@ -492,9 +506,16 @@ export class GameScene extends Phaser.Scene {
         'KeyW',
         'KeyE',
         'KeyT',
-      ].includes(event.code)
+        'AltLeft',
+        'AltRight',
+      ].includes(event.code) ||
+      event.key === 'Alt'
     )
       event.preventDefault();
+    if (event.key === 'Alt' || event.code.startsWith('Alt')) {
+      this.altDown = true;
+      return;
+    }
     if (event.repeat) return;
     if (event.code === 'KeyT') {
       this.emoteMenuOpen = !this.emoteMenuOpen;
@@ -759,6 +780,25 @@ export class GameScene extends Phaser.Scene {
         );
       }
     }
+    if (this.altDown && !this.introMs) {
+      const fromId = [...this.selected][0];
+      for (const t of world.map.towers) {
+        const tower = state.towers[t.id];
+        if (!tower) continue;
+        const cap = capacity(world, tower.level);
+        const rate =
+          tower.owner === null
+            ? 'Sinh: 0/s'
+            : `Sinh: +${(TICKS_PER_SECOND / interval(world, t.id, tower.level)).toFixed(1)}/s`;
+        const lines = [`Cấp ${tower.level} · Max ${cap}`, rate];
+        if (fromId !== undefined && fromId !== t.id) {
+          const len = pathLength(world, fromId, t.id);
+          const secs = (len / (world.config.squadSpeed * TICKS_PER_SECOND)).toFixed(1);
+          lines.push(`Cách: ${len}px (${secs}s)`);
+        }
+        statBadge(g, t.rect[0] + Math.floor(t.rect[2] / 2), t.rect[1] + Math.floor(t.rect[3] / 2), lines);
+      }
+    }
     if (this.introMs) {
       for (const def of world.map.towers) {
         if (def.seat === null || def.seat === this.localSeat || !state.players[def.seat]?.active) continue;
@@ -806,12 +846,21 @@ export class GameScene extends Phaser.Scene {
     const graceSeconds = this.options.benchmark
       ? 0
       : Math.max(0, Math.ceil((HUMAN_GRACE_TICKS - state.tick) / TICKS_PER_SECOND));
-    if (graceSeconds) graceNotice(g, 68, 353, graceSeconds);
+    if (graceSeconds && !this.altDown) graceNotice(g, 68, 353, graceSeconds);
     else
-      g.text(68, 353, this.aiming ? 'Chọn phòng để uống cà phê' : 'Q Deadline · W Coffee Break', {
-        size: 11,
-        color: p.ink,
-      });
+      g.text(
+        68,
+        353,
+        this.altDown
+          ? 'Q Deadline: 2x tốc độ 5s (Hồi 40s) · W Coffee: +15 nv (Hồi 60s)'
+          : this.aiming
+            ? 'Chọn phòng để uống cà phê'
+            : 'Q Deadline · W Coffee Break',
+        {
+          size: 11,
+          color: p.ink,
+        },
+      );
     sendMeter(g, 288, 343, this.pct);
     g.text(466, 353, 'Mở rộng E', { size: 11, color: p.ink });
     g.text(548, 353, 'Chọn hết', { size: 11, color: p.ink });

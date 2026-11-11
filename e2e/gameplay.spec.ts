@@ -435,5 +435,17 @@ for (const scale of [1, 2]) {
       await click(page, scale, 540, 320);
       await page.clock.runFor(200);
     });
+
+    test('holding Alt displays room stat badges and skill cooldown info', async ({ page }, info) => {
+      await start(page, scale);
+      await click(page, scale, 76, 75);
+      await page.keyboard.down('Alt');
+      await page.clock.runFor(100);
+      const path = info.outputPath(`alt-stats-s${scale}.png`);
+      await page.screenshot({ path });
+      await info.attach(`Alt stats S${scale}`, { path, contentType: 'image/png' });
+      await page.keyboard.up('Alt');
+      await page.clock.runFor(100);
+    });
   });
 }
