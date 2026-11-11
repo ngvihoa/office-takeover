@@ -14,7 +14,7 @@ export interface Painter {
     x: number,
     y: number,
     str: string,
-    opts: { size: number; color: string; align?: 'left' | 'center' | 'right' },
+    opts: { size: number; color: string; align?: 'left' | 'center' | 'right'; maxWidth?: number },
   ): void;
 }
 

@@ -42,12 +42,16 @@ export function canvasPainter(ctx: CanvasRenderingContext2D, scale: number, atla
       ctx.fillStyle = color;
       ctx.fillRect(Math.round(x * scale), Math.round(y * scale), Math.round(w * scale), Math.round(h * scale));
     },
-    text(x, y, text, { size, color, align = 'left' }) {
+    text(x, y, text, { size, color, align = 'left', maxWidth }) {
       ctx.font = `${size * scale}px ${FONT_FAMILY}`;
       ctx.fillStyle = color;
       ctx.textAlign = align;
       ctx.textBaseline = 'alphabetic';
-      ctx.fillText(text, Math.round(x * scale), Math.round(y * scale));
+      if (maxWidth !== undefined) {
+        ctx.fillText(text, Math.round(x * scale), Math.round(y * scale), Math.round(maxWidth * scale));
+      } else {
+        ctx.fillText(text, Math.round(x * scale), Math.round(y * scale));
+      }
     },
   };
 }

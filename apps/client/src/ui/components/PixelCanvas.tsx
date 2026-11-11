@@ -9,12 +9,16 @@ function canvasPainter(ctx: CanvasRenderingContext2D, s: number): Painter {
       ctx.fillStyle = color;
       ctx.fillRect(Math.round(x * s), Math.round(y * s), Math.round(w * s), Math.round(h * s));
     },
-    text(x, y, str, { size, color, align = 'left' }) {
+    text(x, y, str, { size, color, align = 'left', maxWidth }) {
       ctx.fillStyle = color;
       ctx.font = `${size * s}px ${FONT_FAMILY}`;
       ctx.textAlign = align;
       ctx.textBaseline = 'alphabetic';
-      ctx.fillText(str, Math.round(x * s), Math.round(y * s));
+      if (maxWidth !== undefined) {
+        ctx.fillText(str, Math.round(x * s), Math.round(y * s), Math.round(maxWidth * s));
+      } else {
+        ctx.fillText(str, Math.round(x * s), Math.round(y * s));
+      }
     },
   };
 }

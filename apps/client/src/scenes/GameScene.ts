@@ -88,7 +88,7 @@ export class GameScene extends Phaser.Scene {
   private background!: HTMLCanvasElement;
   private g!: Painter;
   private renderScale = 1;
-  private status = 'Kéo từ phòng của bạn đến phòng khác để điều nhân viên.';
+  private status = 'Kéo giữa các phòng để điều quân.';
   private roomCache = '';
   private settings: Settings = readSettings();
   private feedback!: MatchFeedback;
@@ -322,7 +322,7 @@ export class GameScene extends Phaser.Scene {
   private submit(command: Command) {
     if (this.options.benchmark || this.introMs) return;
     if (!validate(this.layout.world, this.match.state, command)) {
-      this.status = 'Chưa thể thực hiện. Kiểm tra nhân viên hoặc thời gian hồi.';
+      this.status = 'Chưa đủ quân hoặc đang hồi chiêu.';
       return;
     }
     this.match.submit(command);
@@ -340,9 +340,9 @@ export class GameScene extends Phaser.Scene {
     }
     this.status =
       command.t === 'send'
-        ? 'Đã điều nhân viên theo hành lang.'
+        ? 'Đã điều quân theo hành lang.'
         : command.t === 'upgrade'
-          ? 'Đã yêu cầu mở rộng phòng.'
+          ? 'Đã nâng cấp phòng.'
           : 'Đã dùng kỹ năng.';
   }
 
@@ -368,7 +368,7 @@ export class GameScene extends Phaser.Scene {
       this.aiming = null;
     } else {
       this.aiming = this.aiming === skill ? null : skill;
-      this.status = 'Coffee Break: chọn một phòng của bạn.';
+      this.status = 'Coffee Break: chọn phòng của bạn.';
     }
   }
 
@@ -413,7 +413,7 @@ export class GameScene extends Phaser.Scene {
     if (y >= 340) {
       if (x < 32) this.skill('deadline');
       else if (x < 60) this.skill('coffee');
-      else if (x >= 280 && x < 400) this.pct = SEND_PCTS[(SEND_PCTS.indexOf(this.pct) + 1) % 4] as SendPct;
+      else if (x >= 340 && x < 448) this.pct = SEND_PCTS[(SEND_PCTS.indexOf(this.pct) + 1) % 4] as SendPct;
       else if (x >= 466 && x < 540) this.upgrade();
       else if (x >= 540 && x < 596)
         this.selected = new Set(this.match.state.towers.filter((t) => t.owner === this.localSeat).map((t) => t.id));
@@ -938,23 +938,27 @@ export class GameScene extends Phaser.Scene {
         const cap = capacity(world, tower.level, def.id);
         const perk =
           def.kind === 'pantry'
-            ? ' · Hồi quân x2'
+            ? ' · Hồi x2'
             : def.kind === 'meeting'
-              ? ' · Thủ (-25% st)'
+              ? ' · Thủ -25%'
               : def.kind === 'boss'
-                ? ' · Tốc độ quân +20%'
+                ? ' · Tốc +20%'
                 : def.kind === 'server'
-                  ? ' · Tường lửa'
+                  ? ' · Firewall'
                   : '';
         const isMine = tower.owner === this.localSeat;
         const cost = world.config.upgradeCost[tower.level - 1] ?? 999;
         const canUp = isMine && tower.level < MAX_LEVEL && tower.troops >= cost;
-        const upHint = canUp
-          ? ` · [E/Double-click] Đủ quân lên Cấp ${tower.level + 1}`
-          : isMine && tower.level < MAX_LEVEL
-            ? ` · (Cần ${cost} quân để lên Cấp ${tower.level + 1})`
-            : '';
-        statusText = `[${def.name}] ${ownerName} · Cấp ${tower.level} · Quân ${tower.troops}/${cap}${perk}${upHint}`;
+        if (isMine) {
+          const upInfo = canUp
+            ? ` · Đủ lên C${tower.level + 1} [E]`
+            : tower.level < MAX_LEVEL
+              ? ` · Cần ${cost}q lên C${tower.level + 1}`
+              : ' · Cấp tối đa';
+          statusText = `[${def.name}] C${tower.level} (${tower.troops}/${cap})${upInfo}${perk}`;
+        } else {
+          statusText = `[${def.name}] ${ownerName} · C${tower.level} · Quân ${tower.troops}/${cap}${perk}`;
+        }
       }
     }
     if (graceSeconds && !this.altDown && target === undefined) graceNotice(g, 68, 353, graceSeconds);
@@ -963,16 +967,17 @@ export class GameScene extends Phaser.Scene {
         68,
         353,
         this.altDown
-          ? 'Q Deadline: 2x tốc độ 5s (Hồi 40s) · W Coffee: +15 nv (Hồi 60s)'
+          ? 'Q: Deadline (2x tốc độ) · W: Coffee (+15 quân)'
           : this.aiming
-            ? 'Chọn phòng để uống cà phê'
+            ? 'Coffee: Click chọn phòng của bạn'
             : statusText,
         {
           size: 11,
           color: p.ink,
+          maxWidth: 266,
         },
       );
-    sendMeter(g, 288, 343, this.pct);
+    sendMeter(g, 340, 343, this.pct);
     const selectedCanUpgrade = Array.from(this.selected).some((id) => {
       const tw = state.towers[id];
       return (
@@ -1034,8 +1039,8 @@ export class GameScene extends Phaser.Scene {
             ],
             170,
           );
-        } else if (p.x >= 280 && p.x < 400) {
-          tooltip(g, 340, 338, [`Tỉ lệ gửi quân: ${this.pct}%`, 'Cuộn chuột hoặc bấm phím 1–4 để đổi tỉ lệ'], 150);
+        } else if (p.x >= 340 && p.x < 448) {
+          tooltip(g, 393, 338, [`Tỉ lệ gửi quân: ${this.pct}%`, 'Cuộn chuột hoặc bấm phím 1–4 để đổi tỉ lệ'], 150);
         } else if (p.x >= 466 && p.x < 540) {
           tooltip(g, 503, 338, ['Phím E: Mở rộng phòng', 'Tốn nhân viên để tăng cấp, sức chứa và tốc độ sinh'], 160);
         } else if (p.x >= 540 && p.x < 596) {
