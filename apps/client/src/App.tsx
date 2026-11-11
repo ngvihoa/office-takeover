@@ -65,6 +65,7 @@ export function App() {
   const game = useRef<Phaser.Game | null>(null);
   const matchBots = useRef([...DEFAULT_BOTS]);
   const isTutorialRef = useRef(false);
+  const tutorialStageRef = useRef(1);
 
   useEffect(() => {
     const resize = () => setScale(scaleFor(innerWidth, innerHeight));
@@ -106,6 +107,7 @@ export function App() {
         const instance = await startGame(parent, {
           bots: matchBots.current,
           tutorial: isTutorialRef.current,
+          tutorialStage: tutorialStageRef.current,
           remoteMatch: remoteMatchRef.current ?? undefined,
           onReady: () => {
             if (!cancelled) setLoading(false);
@@ -164,14 +166,19 @@ export function App() {
     setScreen('match');
   };
 
-  const startTutorial = () => {
+  const startTutorialStage = (stage: number) => {
     isTutorialRef.current = true;
+    tutorialStageRef.current = stage;
     remoteMatchRef.current = null;
     matchBots.current = [null, null, null];
     setReport(null);
     setPaused(false);
     setSession((n) => n + 1);
     setScreen('match');
+  };
+
+  const startTutorial = () => {
+    startTutorialStage(1);
   };
 
   const home = () => {
@@ -255,6 +262,8 @@ export function App() {
       roomClientRef.current.requestRematch();
       setReport(null);
       setScreen('lobby');
+    } else if (isTutorialRef.current) {
+      startTutorialStage(tutorialStageRef.current);
     } else {
       startOffline();
     }
@@ -312,7 +321,18 @@ export function App() {
       {paused && !report && !settingsOpen && (
         <PauseMenu onResume={resume} onSettings={() => setSettingsOpen(true)} onHome={home} />
       )}
-      {report && <ResultScreen report={report} onReplay={handleReplay} onHome={home} />}
+      {report && (
+        <ResultScreen
+          report={report}
+          onReplay={handleReplay}
+          onHome={home}
+          onNextTutorialStage={
+            isTutorialRef.current && (report.tutorialStage ?? tutorialStageRef.current) < 3
+              ? () => startTutorialStage((report.tutorialStage ?? tutorialStageRef.current) + 1)
+              : undefined
+          }
+        />
+      )}
       {settingsOpen && (
         <SettingsDialog settings={settings} onChange={updateSettings} onClose={() => setSettingsOpen(false)} />
       )}
