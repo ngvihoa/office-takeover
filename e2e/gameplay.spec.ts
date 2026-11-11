@@ -419,5 +419,21 @@ for (const scale of [1, 2]) {
         await info.attach(`Skills S${scale}: ${skills}`, { path, contentType: 'image/png' });
       });
     }
+
+    test('keyboard and HUD trigger emote wheel and display emote bubble', async ({ page }, info) => {
+      await start(page, scale);
+      await page.keyboard.press('t');
+      await page.clock.runFor(50);
+      await page.keyboard.press('1');
+      await page.clock.runFor(100);
+      const path = info.outputPath(`emote-s${scale}.png`);
+      await page.screenshot({ path });
+      await info.attach(`Emote S${scale}`, { path, contentType: 'image/png' });
+
+      await click(page, scale, 616, 350);
+      await page.clock.runFor(50);
+      await click(page, scale, 540, 320);
+      await page.clock.runFor(200);
+    });
   });
 }

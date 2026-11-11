@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { contrast } from '../src/contrast';
-import { ICONS, INK_MAP } from '../src/icons';
+import { EMOTE_ICONS, ICONS, INK_MAP } from '../src/icons';
 import { color, DERIVED, map, PALETTE, primitive, scaleFor, TEAM_IDS, TEXT_PAIRS, team } from '../src/tokens';
 
 const allowed = new Set<string>([...PALETTE, ...DERIVED]);
@@ -44,6 +44,14 @@ describe('icons', () => {
         expect(row.length, name).toBe(w);
         for (const ch of row) expect(ch === '.' || ch === 'o' || ch in INK_MAP, `${name}: ${ch}`).toBe(true);
       }
+    }
+  });
+
+  it('defines 6 pixel emote icons with 12x12 dimensions', () => {
+    expect(EMOTE_ICONS.length).toBe(6);
+    for (const name of EMOTE_ICONS) {
+      expect(ICONS[name]?.length).toBe(12);
+      expect(ICONS[name]?.[0]?.length).toBe(12);
     }
   });
 });
