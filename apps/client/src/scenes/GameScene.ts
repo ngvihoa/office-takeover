@@ -3,6 +3,7 @@ import {
   corridor,
   countPlate,
   dashedOutline,
+  dither,
   flag,
   graceNotice,
   homeRoomMarker,
@@ -37,7 +38,7 @@ import {
   validate,
 } from '@ot/sim';
 import Phaser from 'phaser';
-import { logicalPoint, newMatchSeed, wheelRatio } from '../game/controls';
+import { boxFromPoints, boxIntersects, logicalPoint, newMatchSeed, wheelRatio } from '../game/controls';
 import { MatchFeedback } from '../game/feedback';
 import { canvasPainter } from '../game/painter';
 import { DEFAULT_BOTS, matchLayout, type OfflineOptions, PLAYER_NAMES } from '../game/session';
@@ -63,6 +64,9 @@ export class GameScene extends Phaser.Scene {
   private startFlashMs = 0;
   private dragging = false;
   private origin: [number, number] | null = null;
+  private boxSelectOrigin: [number, number] | null = null;
+  private boxSelecting = false;
+  private boxSelectInitial = new Set<number>();
   private lastClick = { id: -1, time: -1000 };
   private texture!: Phaser.Textures.CanvasTexture;
   private background!: HTMLCanvasElement;
@@ -171,6 +175,8 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointerupoutside', () => {
       this.origin = null;
       this.dragging = false;
+      this.boxSelectOrigin = null;
+      this.boxSelecting = false;
     });
     this.input.on('wheel', (_pointer: unknown, _objects: unknown, _dx: number, dy: number) => {
       if (!this.introMs && !this.paused && !this.match.ended) this.pct = wheelRatio(this.pct, dy);
@@ -236,6 +242,8 @@ export class GameScene extends Phaser.Scene {
     this.elapsed = 0;
     this.origin = null;
     this.dragging = false;
+    this.boxSelectOrigin = null;
+    this.boxSelecting = false;
     this.selected.clear();
     this.aiming = null;
     this.play('countdown');
@@ -248,6 +256,8 @@ export class GameScene extends Phaser.Scene {
     this.elapsed = 0;
     this.origin = null;
     this.dragging = false;
+    this.boxSelectOrigin = null;
+    this.boxSelecting = false;
     this.aiming = null;
     this.options.onPause?.();
   }
@@ -354,7 +364,11 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (id === undefined || this.match.state.towers[id]?.owner !== this.localSeat) {
-      this.selected.clear();
+      const ctrl = pointer.event.ctrlKey || pointer.event.shiftKey;
+      if (!ctrl) this.selected.clear();
+      this.boxSelectOrigin = [x, y];
+      this.boxSelectInitial = new Set(this.selected);
+      this.boxSelecting = false;
       return;
     }
     const ctrl = pointer.event.ctrlKey;
@@ -369,16 +383,39 @@ export class GameScene extends Phaser.Scene {
   }
 
   private move(pointer: Phaser.Input.Pointer) {
-    if (!this.origin || this.paused || this.match.ended) return;
+    if (this.paused || this.match.ended) return;
     const { x, y } = this.point(pointer);
+    if (this.boxSelectOrigin) {
+      if (Math.hypot(x - this.boxSelectOrigin[0], y - this.boxSelectOrigin[1]) >= 6) {
+        this.boxSelecting = true;
+      }
+      if (this.boxSelecting) {
+        const box = boxFromPoints(this.boxSelectOrigin[0], this.boxSelectOrigin[1], x, y);
+        const next = new Set(this.boxSelectInitial);
+        for (const t of this.layout.world.map.towers) {
+          if (this.match.state.towers[t.id]?.owner === this.localSeat && boxIntersects(box, t.rect)) {
+            next.add(t.id);
+          }
+        }
+        this.selected = next;
+      }
+      return;
+    }
+    if (!this.origin) return;
     if (Math.hypot(x - this.origin[0], y - this.origin[1]) >= 6) this.dragging = true;
     if (this.dragging) {
-      const id = this.hit(this.point(pointer).x, this.point(pointer).y);
+      const id = this.hit(x, y);
       if (id !== undefined && this.match.state.towers[id]?.owner === this.localSeat) this.selected.add(id);
     }
   }
 
   private up(pointer: Phaser.Input.Pointer) {
+    if (this.boxSelectOrigin) {
+      if (this.boxSelecting && this.selected.size > 0) this.play('click');
+      this.boxSelectOrigin = null;
+      this.boxSelecting = false;
+      return;
+    }
     if (this.origin && this.dragging && !this.paused && !this.match.ended) {
       const id = this.hit(this.point(pointer).x, this.point(pointer).y);
       if (id !== undefined)
@@ -409,10 +446,12 @@ export class GameScene extends Phaser.Scene {
       event.preventDefault();
     if (event.repeat) return;
     if (event.code === 'Escape') {
-      if (this.aiming || this.origin) {
+      if (this.aiming || this.origin || this.boxSelectOrigin) {
         this.aiming = null;
         this.origin = null;
         this.dragging = false;
+        this.boxSelectOrigin = null;
+        this.boxSelecting = false;
       } else if (this.selected.size) this.selected.clear();
       else {
         if (this.paused) {
@@ -584,6 +623,23 @@ export class GameScene extends Phaser.Scene {
           color: p.ink,
         },
       );
+    }
+    if (this.boxSelecting && this.boxSelectOrigin) {
+      const p = this.point(pointer);
+      const [bx, by, bw, bh] = boxFromPoints(this.boxSelectOrigin[0], this.boxSelectOrigin[1], p.x, p.y);
+      if (bw > 0 && bh > 0) {
+        const tid = TEAMS[this.localSeat] as TeamId;
+        dither(g, bx, by, bw, bh, team[tid].light);
+        dashedOutline(
+          g,
+          bx,
+          by,
+          bw,
+          bh,
+          team[tid].main,
+          this.settings.reducedMotion ? 0 : Math.floor(this.time.now / 160) % 4,
+        );
+      }
     }
     for (const s of state.squads) {
       const route = world.paths[s.from]?.[s.to];
