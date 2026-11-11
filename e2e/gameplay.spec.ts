@@ -447,5 +447,24 @@ for (const scale of [1, 2]) {
       await page.keyboard.up('Alt');
       await page.clock.runFor(100);
     });
+
+    test('hovering over rooms and HUD buttons displays contextual tooltips', async ({ page }, info) => {
+      await start(page, scale);
+      // Hover over home room
+      const roomPos = await point(page, scale, 76, 75);
+      await page.mouse.move(roomPos.x, roomPos.y);
+      await page.clock.runFor(100);
+      const pathRoom = info.outputPath(`tooltip-room-s${scale}.png`);
+      await page.screenshot({ path: pathRoom });
+      await info.attach(`Tooltip Room S${scale}`, { path: pathRoom, contentType: 'image/png' });
+
+      // Hover over Deadline skill button on bottom bar
+      const skillPos = await point(page, scale, 16, 350);
+      await page.mouse.move(skillPos.x, skillPos.y);
+      await page.clock.runFor(100);
+      const pathSkill = info.outputPath(`tooltip-skill-s${scale}.png`);
+      await page.screenshot({ path: pathSkill });
+      await info.attach(`Tooltip Skill S${scale}`, { path: pathSkill, contentType: 'image/png' });
+    });
   });
 }
