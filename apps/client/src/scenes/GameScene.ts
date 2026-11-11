@@ -130,18 +130,17 @@ export class GameScene extends Phaser.Scene {
       this.layout = matchLayout(seed, false, this.localSeat);
     } else {
       const isTutorial = this.options.tutorial ?? false;
+      const stage = this.options.tutorialStage ?? 1;
       const seed = benchmark ? 7 : newMatchSeed(this.match?.state.seed);
-      this.layout = matchLayout(seed, benchmark || isTutorial, this.localSeat, isTutorial);
+      this.layout = matchLayout(seed, benchmark || isTutorial, this.localSeat, isTutorial, stage);
+      const tutorialBots: (BotLevel | null)[] = stage === 3 ? ['easy', null, null] : [null, null, null];
       this.match = new LocalMatch(
         this.layout.world,
         [
           benchmark ? { kind: 'bot', level: 'normal' } : { kind: 'human' },
-          ...(benchmark
-            ? DEFAULT_BOTS
-            : isTutorial
-              ? (['easy', null, null] as (BotLevel | null)[])
-              : (this.options.bots ?? DEFAULT_BOTS)
-          ).map((level): SeatSetup => (level ? { kind: 'bot', level } : { kind: 'empty' })),
+          ...(benchmark ? DEFAULT_BOTS : isTutorial ? tutorialBots : (this.options.bots ?? DEFAULT_BOTS)).map(
+            (level): SeatSetup => (level ? { kind: 'bot', level } : { kind: 'empty' }),
+          ),
         ],
         seed,
       );
@@ -328,12 +327,14 @@ export class GameScene extends Phaser.Scene {
     this.match.submit(command);
     this.commands++;
     if (this.options.tutorial) {
-      if (this.tutorialStep === 1 && command.t === 'send') {
-        this.tutorialStep = 2;
-      } else if (this.tutorialStep === 2 && command.t === 'upgrade') {
-        this.tutorialStep = 3;
-      } else if (this.tutorialStep === 3 && command.t === 'skill') {
-        this.tutorialStep = 4;
+      const stage = this.options.tutorialStage ?? 1;
+      if (stage === 1) {
+        if (this.tutorialStep === 1 && command.t === 'send') this.tutorialStep = 2;
+      } else if (stage === 2) {
+        if (this.tutorialStep === 1 && command.t === 'upgrade') this.tutorialStep = 2;
+        else if (this.tutorialStep === 2 && command.t === 'skill') this.tutorialStep = 3;
+      } else if (stage === 3) {
+        if (this.tutorialStep === 1 && (command.t === 'send' || command.t === 'skill')) this.tutorialStep = 2;
       }
     }
     this.status =
@@ -597,8 +598,31 @@ export class GameScene extends Phaser.Scene {
           if (event.t === 'squadSpawned') this.sent[event.owner] = (this.sent[event.owner] ?? 0) + event.count;
           if (event.t === 'captured') {
             this.captured[event.to] = (this.captured[event.to] ?? 0) + 1;
-            if (this.options.tutorial && this.tutorialStep === 4 && event.to === this.localSeat && event.tower === 3) {
-              this.tutorialStep = 5;
+            if (this.options.tutorial && event.to === this.localSeat) {
+              const stage = this.options.tutorialStage ?? 1;
+              if (stage === 1 && event.tower === 1) {
+                // Stage 1 goal: Captured Kho Tai Lieu
+                this.tutorialStep = 3;
+                this.match.state.result = {
+                  ranking: [this.localSeat],
+                  winner: this.localSeat,
+                  reason: 'last-standing',
+                  endTick: this.match.state.tick,
+                };
+                events.push({ t: 'matchEnded', result: this.match.state.result });
+              } else if (stage === 2 && event.tower === 1) {
+                // Stage 2 goal: Captured Pantry
+                this.tutorialStep = 4;
+                this.match.state.result = {
+                  ranking: [this.localSeat],
+                  winner: this.localSeat,
+                  reason: 'last-standing',
+                  endTick: this.match.state.tick,
+                };
+                events.push({ t: 'matchEnded', result: this.match.state.result });
+              } else if (stage === 3 && event.tower === 3) {
+                this.tutorialStep = 3;
+              }
             }
           }
           if (event.t === 'matchEnded') {
@@ -614,6 +638,7 @@ export class GameScene extends Phaser.Scene {
               result: event.result,
               playerSeat: this.localSeat,
               isOnline: Boolean(this.options.remoteMatch),
+              tutorialStage: this.options.tutorial ? (this.options.tutorialStage ?? 1) : undefined,
               players: event.result.ranking.map((id) => ({
                 id,
                 name: NAMES[id],
@@ -840,15 +865,28 @@ export class GameScene extends Phaser.Scene {
     }
     if (this.introMs || this.startFlashMs) introCountdown(g, Math.ceil(this.introMs / 1000));
     if (this.options.tutorial) {
-      const bannerTexts: Record<number, string> = {
-        1: 'Kéo từ TEAM DEV sang KHO TÀI LIỆU để chiếm phòng trống (phím 1-4 chọn % quân)',
-        2: 'Double-click phòng của bạn hoặc bấm phím E để mở rộng phòng lên Cấp 2',
-        3: 'Bấm phím Q (Deadline: x2 tốc độ) hoặc W (Coffee Break: +15 lính) để dùng kỹ năng',
-        4: 'Chiếm PANTRY để tăng tốc sinh quân và đánh bại BOT ĐỐI THỦ ở MARKETING!',
-      };
-      const txt =
-        bannerTexts[this.tutorialStep] ?? 'Xuất sắc! Bạn đã làm chủ văn phòng. Hãy vào Đấu tự do hoặc bấm Menu!';
-      tutorialBanner(g, this.tutorialStep, 4, txt);
+      const stage = this.options.tutorialStage ?? 1;
+      let stageTitle = 'BÀI 1: TẬP ĐIỀU QUÂN';
+      let totalSteps = 2;
+      let txt = '';
+      if (stage === 1) {
+        stageTitle = 'BÀI 1: TẬP ĐIỀU QUÂN';
+        totalSteps = 2;
+        if (this.tutorialStep === 1) txt = 'Kéo từ TEAM DEV sang KHO TÀI LIỆU (phím 1-4 chọn % quân)';
+        else txt = 'Đang điều quân chiếm phòng... Hãy chờ lính đến nơi!';
+      } else if (stage === 2) {
+        stageTitle = 'BÀI 2: QUẢN LÝ & BUFF';
+        totalSteps = 3;
+        if (this.tutorialStep === 1) txt = 'Double-click phòng của bạn hoặc bấm phím E để mở rộng phòng lên Cấp 2';
+        else if (this.tutorialStep === 2) txt = 'Bấm phím Q (Deadline) hoặc phím W (Coffee Break) để dùng kỹ năng';
+        else txt = 'Chiếm PANTRY ở giữa để nhận đặc tính tăng gấp đôi tốc độ hồi lính!';
+      } else {
+        stageTitle = 'BÀI 3: ĐẤU VỚI ĐỒNG NGHIỆP';
+        totalSteps = 2;
+        if (this.tutorialStep === 1) txt = 'Vận dụng kỹ năng & mở rộng phòng để điều quân chiếm MARKETING!';
+        else txt = 'Chiếm toàn bộ các phòng và đánh bại Bot An để thâu tóm văn phòng!';
+      }
+      tutorialBanner(g, Math.min(this.tutorialStep, totalSteps), totalSteps, txt, stageTitle);
     }
     g.rect(0, 0, 640, 20, p.gray100);
     g.rect(0, 340, 640, 20, p.gray100);
@@ -884,7 +922,27 @@ export class GameScene extends Phaser.Scene {
     const graceSeconds = this.options.benchmark
       ? 0
       : Math.max(0, Math.ceil((HUMAN_GRACE_TICKS - state.tick) / TICKS_PER_SECOND));
-    if (graceSeconds && !this.altDown) graceNotice(g, 68, 353, graceSeconds);
+    let statusText = this.status;
+    if (target !== undefined && !this.dragging && !this.boxSelecting) {
+      const def = world.map.towers[target];
+      const tower = state.towers[target];
+      if (def && tower) {
+        const ownerName = tower.owner === null ? 'Trung lập' : NAMES[tower.owner];
+        const cap = capacity(world, tower.level, def.id);
+        const perk =
+          def.kind === 'pantry'
+            ? ' · Hồi quân x2'
+            : def.kind === 'meeting'
+              ? ' · Thủ (-25% st)'
+              : def.kind === 'boss'
+                ? ' · Tốc độ quân +20%'
+                : def.kind === 'server'
+                  ? ' · Tường lửa'
+                  : '';
+        statusText = `[${def.name}] ${ownerName} · Cấp ${tower.level} · Quân ${tower.troops}/${cap}${perk}`;
+      }
+    }
+    if (graceSeconds && !this.altDown && target === undefined) graceNotice(g, 68, 353, graceSeconds);
     else
       g.text(
         68,
@@ -893,7 +951,7 @@ export class GameScene extends Phaser.Scene {
           ? 'Q Deadline: 2x tốc độ 5s (Hồi 40s) · W Coffee: +15 nv (Hồi 60s)'
           : this.aiming
             ? 'Chọn phòng để uống cà phê'
-            : 'Q Deadline · W Coffee Break',
+            : statusText,
         {
           size: 11,
           color: p.ink,
@@ -965,16 +1023,20 @@ export class GameScene extends Phaser.Scene {
           const isMine = tower.owner === this.localSeat;
           const ownerName = tower.owner === null ? 'Trung lập' : NAMES[tower.owner];
           const cap = capacity(world, tower.level, def.id);
-          const rate =
-            tower.owner === null
-              ? 'Tốc độ: 0/s'
-              : `Tốc độ: +${(TICKS_PER_SECOND / interval(world, def.id, tower.level)).toFixed(1)}/s`;
-          const tipLines = [`${def.name} · ${ownerName}`, `Cấp ${tower.level} · Quân: ${tower.troops}/${cap}`, rate];
-          if (def.kind === 'pantry') tipLines.push('Đặc tính: Tốc độ hồi quân x2');
-          else if (def.kind === 'meeting') tipLines.push('Đặc tính: Giảm 25% sát thương nhận vào');
-          else if (def.kind === 'boss') tipLines.push('Đặc tính: +20% tốc độ di chuyển toàn quân');
-          else if (def.kind === 'server') tipLines.push('Đặc tính: Tường lửa tự động tỉa quân địch');
-          tipLines.push(isMine ? 'Click: chọn · Double-click: nâng cấp' : 'Click phải: điều quân tới đây');
+          const perk =
+            def.kind === 'pantry'
+              ? ' · Hồi quân x2'
+              : def.kind === 'meeting'
+                ? ' · Thủ (-25% st)'
+                : def.kind === 'boss'
+                  ? ' · Tốc độ quân +20%'
+                  : def.kind === 'server'
+                    ? ' · Tường lửa'
+                    : '';
+          const tipLines = [
+            `${def.name} (${ownerName}) · Cấp ${tower.level} · Quân ${tower.troops}/${cap}${perk}`,
+            isMine ? 'Click: chọn · Double-click: nâng cấp' : 'Click phải: điều quân tới đây',
+          ];
           tooltip(g, def.rect[0] + Math.floor(def.rect[2] / 2), def.rect[1] + def.rect[3], tipLines, 150);
         }
       }

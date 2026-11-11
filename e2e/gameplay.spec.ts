@@ -507,21 +507,38 @@ for (const scale of [1, 2]) {
       await page.screenshot({ path: path2 });
       await info.attach(`Tutorial Step 2 S${scale}`, { path: path2, contentType: 'image/png' });
 
-      // Step 2: Upgrade home room
-      await page.clock.runFor(2000); // Wait for troops to reach upgrade cost (10)
+      // Wait for troops to reach and capture neutral room (Kho Tai Lieu)
+      await page.clock.runFor(4000);
+      await expect(page.getByText('Hoàn thành Bài 1!')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Sang Bài 2' })).toBeVisible();
+      const pathResult1 = info.outputPath(`tutorial-complete-stage1-s${scale}.png`);
+      await page.screenshot({ path: pathResult1 });
+      await info.attach(`Tutorial Complete Stage 1 S${scale}`, { path: pathResult1, contentType: 'image/png' });
+
+      // Click to proceed to Stage 2
+      await page.getByRole('button', { name: 'Sang Bài 2' }).click();
+      await expect
+        .poll(async () => {
+          await page.clock.runFor(16);
+          return (
+            (await page.locator('.game-host canvas').count()) === 1 &&
+            (await page.locator('.app-loading').count()) === 0
+          );
+        })
+        .toBe(true);
+
+      // In Stage 2: Upgrade home room
+      await page.clock.runFor(200);
       await click(page, scale, 76, 75);
       await page.keyboard.press('e');
       await page.clock.runFor(200);
-      const path3 = info.outputPath(`tutorial-step3-s${scale}.png`);
-      await page.screenshot({ path: path3 });
-      await info.attach(`Tutorial Step 3 S${scale}`, { path: path3, contentType: 'image/png' });
+      const pathStage2 = info.outputPath(`tutorial-stage2-upgraded-s${scale}.png`);
+      await page.screenshot({ path: pathStage2 });
+      await info.attach(`Tutorial Stage 2 Upgraded S${scale}`, { path: pathStage2, contentType: 'image/png' });
 
-      // Step 3: Skill (Q)
+      // Skill (Q)
       await page.keyboard.press('q');
       await page.clock.runFor(200);
-      const path4 = info.outputPath(`tutorial-step4-s${scale}.png`);
-      await page.screenshot({ path: path4 });
-      await info.attach(`Tutorial Step 4 S${scale}`, { path: path4, contentType: 'image/png' });
     });
   });
 }

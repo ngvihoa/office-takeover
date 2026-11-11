@@ -282,13 +282,19 @@ export function statBadge(g: Painter, cx: number, cy: number, lines: string[]): 
   });
 }
 
-export function tutorialBanner(g: Painter, step: number, totalSteps: number, text: string): void {
-  const w = 460;
-  const h = 22;
-  const x = Math.round(320 - w / 2);
-  const y = 24;
+export function tutorialBanner(
+  g: Painter,
+  step: number,
+  totalSteps: number,
+  text: string,
+  stageTitle = 'HƯỚNG DẪN',
+): void {
+  const w = 420;
+  const h = 26;
+  const x = 10;
+  const y = 308;
   notchedBox(g, x, y, w, h, color.surfacePanel, color.accent);
   shadow(g, x, y, w, h, 2);
-  const stepLabel = step <= totalSteps ? `[Bước ${step}/${totalSteps}] ` : '[Hoàn tất] ';
-  g.text(320, y + 15, `${stepLabel}${text}`, { size: 11, color: color.textPrimary, align: 'center' });
+  const stepLabel = step <= totalSteps ? `[${stageTitle} · ${step}/${totalSteps}] ` : `[${stageTitle} · XONG] `;
+  g.text(x + 8, y + 17, `${stepLabel}${text}`, { size: 11, color: color.textPrimary, align: 'left' });
 }

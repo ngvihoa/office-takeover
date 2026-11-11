@@ -291,28 +291,41 @@ export function ResultScreen({
   report,
   onReplay,
   onHome,
+  onNextTutorialStage,
 }: {
   report: MatchReport;
   onReplay: () => void;
   onHome: () => void;
+  onNextTutorialStage?: () => void;
 }) {
   const mySeat = report.playerSeat ?? 0;
   const rank = report.result.ranking.indexOf(mySeat) + 1;
   const isWinner = report.result.winner === mySeat;
+  const isTutorial = report.tutorialStage !== undefined;
+  const nextStage = (report.tutorialStage ?? 1) + 1;
   return (
     <section class="screen-layer" aria-label="Kết quả trận">
       <Panel class="screen-panel result-screen" title="Báo cáo cuối trận">
         <div class="screen-stack">
           <h1 class="result-heading">
             <Stamp muted={!isWinner}>
-              {`Hạng ${rank}`}
-              {isWinner ? ' · Thâu tóm thành công' : ''}
+              {isTutorial
+                ? isWinner
+                  ? `Hoàn thành Bài ${report.tutorialStage}!`
+                  : `Chưa hoàn thành Bài ${report.tutorialStage}`
+                : `Hạng ${rank}${isWinner ? ' · Thâu tóm thành công' : ''}`}
             </Stamp>
           </h1>
           <p class="t-body muted">
-            {report.result.winner === null && 'Không có phe thắng chung cuộc. '}
-            {report.result.reason === 'time-limit' ? 'Hết giờ làm việc' : 'Chỉ còn một phe trụ lại'} · Thời gian:{' '}
-            {report.result.endTick / 10} giây
+            {isTutorial
+              ? isWinner
+                ? nextStage <= 3
+                  ? `Xuất sắc! Bạn đã nắm vững kiến thức bài này. Hãy sang bài ${nextStage}.`
+                  : 'Chúc mừng! Bạn đã hoàn thành toàn bộ khóa thử việc và sẵn sàng thi đấu.'
+                : 'Hãy thử lại bài này để nắm chắc thao tác nhé!'
+              : `${report.result.winner === null ? 'Không có phe thắng chung cuộc. ' : ''}${
+                  report.result.reason === 'time-limit' ? 'Hết giờ làm việc' : 'Chỉ còn một phe trụ lại'
+                } · Thời gian: ${report.result.endTick / 10} giây`}
           </p>
           <table class="result-table t-body">
             <caption class="t-body">Thứ hạng và thống kê từng phe</caption>
@@ -353,9 +366,15 @@ export function ResultScreen({
           </div>
           <div class="screen-actions">
             <Button onClick={onHome}>Trang chủ</Button>
-            <Button variant="primary" size="L" icon="play" onClick={onReplay}>
-              {report.isOnline ? 'Tái đấu' : 'Chơi lại'}
-            </Button>
+            {isTutorial && isWinner && nextStage <= 3 && onNextTutorialStage ? (
+              <Button variant="primary" size="L" icon="play" onClick={onNextTutorialStage}>
+                Sang Bài {nextStage}
+              </Button>
+            ) : (
+              <Button variant="primary" size="L" icon="play" onClick={onReplay}>
+                {report.isOnline ? 'Tái đấu' : isTutorial ? 'Chơi lại bài này' : 'Chơi lại'}
+              </Button>
+            )}
           </div>
         </div>
       </Panel>
