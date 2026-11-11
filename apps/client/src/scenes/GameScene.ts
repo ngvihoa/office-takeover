@@ -39,6 +39,7 @@ import {
   interval,
   LocalMatch,
   MAX_LEVEL,
+  type MapTowerDef,
   type PlayerId,
   pathLength,
   SEND_PCTS,
@@ -127,13 +128,15 @@ export class GameScene extends Phaser.Scene {
     this.localSeat = this.options.remoteMatch?.yourSeat ?? 0;
     if (this.options.remoteMatch) {
       this.match = this.options.remoteMatch;
-      const seed = this.match.state.seed;
-      this.layout = matchLayout(seed, false, this.localSeat);
+      const world = this.options.remoteMatch.world;
+      const startRoom = (world.map.towers.find((tower) => tower.seat === this.localSeat) ??
+        world.map.towers[0]) as MapTowerDef;
+      this.layout = { world, startRoom, order: [0, 1, 2, 3] };
     } else {
       const isTutorial = this.options.tutorial ?? false;
       const stage = this.options.tutorialStage ?? 1;
       const seed = benchmark ? 7 : newMatchSeed(this.match?.state.seed);
-      this.layout = matchLayout(seed, benchmark || isTutorial, this.localSeat, isTutorial, stage);
+      this.layout = matchLayout(seed, benchmark || isTutorial, this.localSeat, isTutorial, stage, this.options.mapId);
       const tutorialBots: (BotLevel | null)[] = stage === 3 ? ['easy', null, null] : [null, null, null];
       this.match = new LocalMatch(
         this.layout.world,
