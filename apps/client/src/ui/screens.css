@@ -258,5 +258,5 @@
 }
 
 .map-selected-hint strong {
-  color: var(--c-yellow);
+  color: var(--text-primary);
 }
