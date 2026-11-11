@@ -34,7 +34,7 @@ Tiêu chí hoàn thành:
 - [x] Room DO: lobby 4 ghế, mã phòng và link mời, thêm/bớt bot, sẵn sàng, bắt đầu, tái đấu.
 - [x] Netcode (Technical design mục 5), vào lại khi mất kết nối, bot thay ghế khi mất kết nối.
 - [ ] Cloudflare Access, bảng `users`, `matches`, `match_players`. Lịch sử trận cá nhân.
-- [ ] Chọn bằng khung, tooltip, `Alt` hiện thông số, emote, trận hướng dẫn, logo.
+- [x] Chọn bằng khung, tooltip, `Alt` hiện thông số, emote, trận hướng dẫn, logo.
 
 Tiêu chí hoàn thành:
 - [ ] 4 người trên 4 máy chơi trọn trận, không lệch hash (hoặc tự sửa lệch không ai nhận ra).

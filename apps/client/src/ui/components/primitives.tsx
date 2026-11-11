@@ -39,6 +39,23 @@ export function Flag({ t }: { t: TeamId }) {
   return <Icon name={FLAG_FOR_TEAM[t]} tint={team[t].main} />;
 }
 
+export function Logo({ scale = 2 }: { scale?: number }) {
+  return (
+    <div class="game-logo" role="img" aria-label="Office Takeover Logo">
+      <div class="logo-emblem">
+        <Icon name="logo" scale={scale} />
+      </div>
+      <div class="logo-text">
+        <h1 class="t-hero logo-title">OFFICE TAKEOVER</h1>
+        <div class="logo-tagline">
+          <span class="logo-badge">V1</span>
+          <span class="t-label muted">Thâu tóm văn phòng, từng phòng một</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 /** Forced visual state, used by /dev/ui to show states that normally need a pointer. */
 type ForcedState = 'hover' | 'pressed' | 'focus' | 'disabled';
