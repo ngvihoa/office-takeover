@@ -316,9 +316,8 @@ export function room(g: Painter, r: RoomView, s: RoomState = {}) {
     R(g, cx - DOOR / 2, y + h - 3, DOOR, 3, tc.main);
   } else R(g, x, y + h - 3, w, 3, m.wall);
 
-  // name on the wall face + level stars
-  const stars = r.level && r.level > 1 ? ` ${'*'.repeat(r.level - 1)}` : '';
-  g.text(x + 6, y + 11, r.name + stars, { size: 9, color: p.ink });
+  // name on the wall face
+  g.text(x + 6, y + 11, r.name, { size: 9, color: p.ink });
 
   // interaction states (drawn before the plate so the plate stays on top)
   if (s.hoverOwn) outline(g, x + 3, y + WALL_FACE, w - 6, h - WALL_FACE - 3, p.white);
