@@ -40,6 +40,7 @@ function OfficeBackground() {
 export function App() {
   const [screen, setScreen] = useState<'home' | 'setup' | 'lobby' | 'match'>('home');
   const [bots, setBots] = useState([...DEFAULT_BOTS]);
+  const [selectedMapId, setSelectedMapId] = useState('office-01');
   const [settings, setSettings] = useState(readSettings);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [onlineOpen, setOnlineOpen] = useState(false);
@@ -108,6 +109,7 @@ export function App() {
           bots: matchBots.current,
           tutorial: isTutorialRef.current,
           tutorialStage: tutorialStageRef.current,
+          mapId: selectedMapId,
           remoteMatch: remoteMatchRef.current ?? undefined,
           onReady: () => {
             if (!cancelled) setLoading(false);
@@ -296,7 +298,16 @@ export function App() {
           onSettings={() => setSettingsOpen(true)}
         />
       )}
-      {screen === 'setup' && <OfflineSetup bots={bots} onChange={setBots} onStart={startOffline} onBack={home} />}
+      {screen === 'setup' && (
+        <OfflineSetup
+          bots={bots}
+          mapId={selectedMapId}
+          onChange={setBots}
+          onMapChange={setSelectedMapId}
+          onStart={startOffline}
+          onBack={home}
+        />
+      )}
       {screen === 'lobby' && lobbyData && roomClientRef.current && (
         <LobbyScreen
           code={lobbyData.code}

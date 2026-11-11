@@ -140,12 +140,16 @@ export function OnlineDialog({
 
 export function OfflineSetup({
   bots,
+  mapId = 'office-01',
   onChange,
+  onMapChange,
   onStart,
   onBack,
 }: {
   bots: (BotLevel | null)[];
+  mapId?: string;
   onChange: (bots: (BotLevel | null)[]) => void;
+  onMapChange?: (mapId: string) => void;
   onStart: () => void;
   onBack: () => void;
 }) {
@@ -154,6 +158,11 @@ export function OfflineSetup({
     if (value === null && active <= 1) return;
     onChange(bots.map((bot, i) => (i === index ? value : bot)));
   };
+  const MAP_OPTIONS = [
+    { value: 'office-01', label: 'Tầng 1 (Cơ bản)' },
+    { value: 'office-02', label: 'Ngã tư (Crossroad)' },
+  ] as const;
+
   return (
     <section class="screen-layer" aria-label="Thiết lập trận offline">
       <Panel class="screen-panel setup-screen" title="Phòng tập" icon="bot">
@@ -199,9 +208,23 @@ export function OfflineSetup({
             ))}
           </div>
           {active <= 1 && <p class="t-body muted">Cần ít nhất 1 bot để bắt đầu.</p>}
-          <div class="screen-map t-body">
-            <span class="upper">Bản đồ: Tầng 1</span>
-            <span class="muted">office-01 · Bản đồ duy nhất hiện có</span>
+          <div class="screen-stack" style={{ gap: '6px' }}>
+            <span class="t-body" style={{ fontWeight: 600 }}>
+              Chọn bản đồ:
+            </span>
+            {onMapChange ? (
+              <Segmented label="Bản đồ" value={mapId} options={MAP_OPTIONS} onChange={onMapChange} />
+            ) : (
+              <div class="screen-map t-body">
+                <span class="upper">Bản đồ: {mapId === 'office-02' ? 'Ngã tư' : 'Tầng 1'}</span>
+                <span class="muted">{mapId}</span>
+              </div>
+            )}
+            <p class="t-body muted" style={{ fontSize: '13px' }}>
+              {mapId === 'office-02'
+                ? 'Hành lang chữ thập rộng, tranh chấp Phòng Sếp ở tâm ngã tư và 2 Server Room.'
+                : 'Bản đồ cân bằng cơ bản, Pantry trung tâm và 4 góc đối xứng.'}
+            </p>
           </div>
           <div class="screen-actions">
             <Button icon="back" onClick={onBack}>

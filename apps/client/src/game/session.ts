@@ -23,8 +23,9 @@ export function matchLayout(
   playerSeat: PlayerId = 0,
   isTutorial = false,
   tutorialStage = 1,
+  mapId = 'office-01',
 ) {
-  const mapKey = isTutorial ? (tutorialStage === 2 ? 'tutorial-02' : 'tutorial-01') : 'office-01';
+  const mapKey = isTutorial ? (tutorialStage === 2 ? 'tutorial-02' : 'tutorial-01') : MAPS[mapId] ? mapId : 'office-01';
   const order: PlayerId[] = controlled || isTutorial ? [0, 1, 2, 3] : seatOrder(seed);
   const world = buildWorld(
     withSeatOrder(MAPS[mapKey] as MapDef, order),
@@ -51,6 +52,7 @@ export interface OfflineOptions {
   benchmark?: boolean;
   tutorial?: boolean;
   tutorialStage?: number;
+  mapId?: string;
   remoteMatch?: RemoteMatch;
   onReady?: () => void;
   onLoadError?: () => void;
