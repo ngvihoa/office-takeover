@@ -28,6 +28,7 @@ import {
   type TeamId,
   team,
   timerChip,
+  tooltip,
 } from '@ot/design';
 import {
   type Command,
@@ -871,6 +872,75 @@ export class GameScene extends Phaser.Scene {
       const slot = Math.floor((p.x - 478) / 25);
       if (slot >= 0 && slot < 6 && p.y >= 306 && p.y <= 334) hovered = slot + 1;
       emoteWheel(g, 553, 340, hovered);
+    }
+    const canShowTooltip =
+      !this.dragging &&
+      !this.boxSelecting &&
+      !this.altDown &&
+      !this.introMs &&
+      !this.paused &&
+      !state.result &&
+      !this.emoteMenuOpen;
+    if (canShowTooltip) {
+      const p = this.point(pointer);
+      if (p.y >= 340) {
+        if (p.x < 32) {
+          const cd = Math.max(0, (state.players[this.localSeat]?.skillReadyAt.deadline ?? 0) - state.tick);
+          const cdSec = Math.ceil(cd / TICKS_PER_SECOND);
+          tooltip(
+            g,
+            20,
+            338,
+            [
+              'Phím Q: Kỹ năng Deadline',
+              'Nhân đôi tốc độ di chuyển toàn quân trong 5 giây',
+              cdSec > 0 ? `Đang hồi chiêu: còn ${cdSec}s` : 'Sẵn sàng kích hoạt',
+            ],
+            170,
+          );
+        } else if (p.x < 60) {
+          const cd = Math.max(0, (state.players[this.localSeat]?.skillReadyAt.coffee ?? 0) - state.tick);
+          const cdSec = Math.ceil(cd / TICKS_PER_SECOND);
+          tooltip(
+            g,
+            48,
+            338,
+            [
+              'Phím W: Coffee Break',
+              '+15 nhân viên ngay lập tức cho 1 phòng bạn chọn',
+              cdSec > 0 ? `Đang hồi chiêu: còn ${cdSec}s` : 'Sẵn sàng kích hoạt',
+            ],
+            170,
+          );
+        } else if (p.x >= 280 && p.x < 400) {
+          tooltip(g, 340, 338, [`Tỉ lệ gửi quân: ${this.pct}%`, 'Cuộn chuột hoặc bấm phím 1–4 để đổi tỉ lệ'], 150);
+        } else if (p.x >= 466 && p.x < 540) {
+          tooltip(g, 503, 338, ['Phím E: Mở rộng phòng', 'Tốn nhân viên để tăng cấp, sức chứa và tốc độ sinh'], 160);
+        } else if (p.x >= 540 && p.x < 596) {
+          tooltip(g, 568, 338, ['Phím Space: Chọn tất cả phòng', 'Gom toàn bộ các phòng của bạn để điều quân'], 150);
+        } else if (p.x >= 596) {
+          tooltip(g, 614, 338, ['Phím T: Vòng xoay biểu cảm', 'Bấm phím 1–6 để gửi biểu cảm pixel'], 140);
+        }
+      } else if (target !== undefined) {
+        const def = world.map.towers[target];
+        const tower = state.towers[target];
+        if (def && tower) {
+          const isMine = tower.owner === this.localSeat;
+          const ownerName = tower.owner === null ? 'Trung lập' : NAMES[tower.owner];
+          const cap = capacity(world, tower.level);
+          const rate =
+            tower.owner === null
+              ? 'Tốc độ: 0/s'
+              : `Tốc độ: +${(TICKS_PER_SECOND / interval(world, def.id, tower.level)).toFixed(1)}/s`;
+          const tipLines = [
+            `${def.name} · ${ownerName}`,
+            `Cấp ${tower.level} · Quân: ${tower.troops}/${cap}`,
+            rate,
+            isMine ? 'Click: chọn · Double-click: nâng cấp' : 'Click phải: điều quân tới đây',
+          ];
+          tooltip(g, def.rect[0] + Math.floor(def.rect[2] / 2), def.rect[1], tipLines, 140);
+        }
+      }
     }
     if ((this.paused && !this.options.onPause) || (state.result && !this.options.onEnd)) this.overlay();
     this.game.canvas.setAttribute('role', 'img');

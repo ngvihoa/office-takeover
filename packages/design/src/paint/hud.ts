@@ -125,16 +125,25 @@ export function timerChip(g: Painter, x: number, y: number, secs: number, blinkO
   if (!blink) digits(g, x + w - 4, y + 4, `${mm}:${ss}`, color.textPrimary, 'right');
 }
 
-/** Small ink tooltip anchored by its bottom-centre arrow tip. Lines are drawn as static text. */
+/** Small ink tooltip anchored by its arrow tip. Lines are drawn as static text. */
 export function tooltip(g: Painter, cx: number, tipY: number, lines: string[], w = 110): void {
   const h = lines.length * 12 + 6;
-  const x = cx - Math.floor(w / 2);
-  const y = tipY - 3 - h;
-  notchedBox(g, x, y, w, h, p.ink, p.ink);
-  shadow(g, x, y, w, h, 1);
-  for (let i = 0; i < 3; i++) g.rect(cx - 2 + i, y + h + i, 5 - 2 * i, 1, p.ink);
+  let maxLine = 0;
+  for (const line of lines) if (line.length > maxLine) maxLine = line.length;
+  const clampedW = Math.max(w, maxLine * 6 + 14);
+  const x = Math.max(6, Math.min(640 - clampedW - 6, cx - Math.floor(clampedW / 2)));
+  const flip = tipY - 3 - h < 22;
+  const y = flip ? tipY + 4 : tipY - 3 - h;
+  notchedBox(g, x, y, clampedW, h, p.ink, p.ink);
+  shadow(g, x, y, clampedW, h, 1);
+  const arrowX = Math.max(x + 4, Math.min(x + clampedW - 4, cx));
+  if (!flip) {
+    for (let i = 0; i < 3; i++) g.rect(arrowX - 2 + i, y + h + i, 5 - 2 * i, 1, p.ink);
+  } else {
+    for (let i = 0; i < 3; i++) g.rect(arrowX - i, y - 1 - i, 2 * i + 1, 1, p.ink);
+  }
   lines.forEach((line, i) => {
-    g.text(x + 4, y + 13 + i * 12, line, { size: 11, color: p.white });
+    g.text(x + 6, y + 13 + i * 12, line, { size: 11, color: p.white });
   });
 }
 
