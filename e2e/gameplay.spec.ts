@@ -363,7 +363,7 @@ for (const scale of [1, 2]) {
       await expect(page.getByRole('region', { name: 'Trang chủ', exact: true })).toBeVisible();
     });
 
-    for (const group of ['Control', 'drag-through', 'Space', 'HUD'] as const) {
+    for (const group of ['Control', 'drag-through', 'Space', 'HUD', 'box'] as const) {
       test(`${group} groups two owned rooms for one dispatch`, async ({ page }) => {
         await start(page, scale);
         await page.keyboard.press('4');
@@ -380,6 +380,11 @@ for (const scale of [1, 2]) {
           await page.clock.runFor(200);
         } else if (group === 'drag-through') {
           await drag(page, scale, [76, 75], [320, 75]);
+        } else if (group === 'box') {
+          await click(page, scale, 320, 120);
+          await drag(page, scale, [10, 10], [250, 120]);
+          await click(page, scale, 320, 75, 'right');
+          await page.clock.runFor(200);
         } else {
           await click(page, scale, 320, 120);
           if (group === 'Space') await page.keyboard.press('Space');

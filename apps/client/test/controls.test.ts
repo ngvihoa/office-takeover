@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { logicalPoint, newMatchSeed, wheelRatio } from '../src/game/controls';
+import { boxFromPoints, boxIntersects, logicalPoint, newMatchSeed, wheelRatio } from '../src/game/controls';
 
 describe('match input at integer display scales', () => {
   it.each([1, 2, 3])('keeps room and HUD coordinates in logical pixels at scale %i', (scale) => {
@@ -14,6 +14,12 @@ describe('match input at integer display scales', () => {
   });
   it('ignores horizontal-only scrolling', () => {
     expect(wheelRatio(50, 0)).toBe(50);
+  });
+  it('computes box geometry and tests intersection', () => {
+    expect(boxFromPoints(100, 80, 20, 30)).toEqual([20, 30, 80, 50]);
+    expect(boxIntersects([20, 30, 80, 50], [50, 40, 20, 20])).toBe(true);
+    expect(boxIntersects([20, 30, 80, 50], [150, 40, 20, 20])).toBe(false);
+    expect(boxIntersects([20, 30, 80, 50], [20, 80, 10, 10])).toBe(false); // Touching border without overlap
   });
 });
 
