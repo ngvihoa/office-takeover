@@ -250,48 +250,13 @@
   font-weight: bold;
 }
 
-.map-info-banner {
-  background: var(--surface-sunken);
-  border: var(--n) solid var(--border);
-  padding: calc(var(--n) * 6) calc(var(--n) * 8);
+.map-selected-hint {
+  margin: calc(var(--n) * 2) 0 0;
   font-size: calc(var(--n) * 11);
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--n) * 4);
-}
-
-.map-info-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: calc(var(--n) * 6);
-}
-
-.map-info-title {
-  font-weight: bold;
-  color: var(--c-yellow);
-}
-
-.map-info-badge {
-  font-size: calc(var(--n) * 9);
-  background: var(--c-plum);
-  color: var(--text-inverse);
-  padding: 0 calc(var(--n) * 5);
-  line-height: calc(var(--n) * 14);
-  border-radius: calc(var(--n) * 2);
-  font-weight: bold;
-}
-
-.map-info-desc {
-  color: var(--c-gray100);
   line-height: 1.35;
+  color: var(--text-muted);
 }
 
-.map-info-traits {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: calc(var(--n) * 8);
-  font-size: calc(var(--n) * 10);
-  color: var(--text-muted);
+.map-selected-hint strong {
+  color: var(--c-yellow);
 }

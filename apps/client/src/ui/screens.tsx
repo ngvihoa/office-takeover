@@ -286,21 +286,9 @@ export function OfflineSetup({
             </div>
 
             {selectedDetail && (
-              <div class="map-info-banner">
-                <div class="map-info-meta">
-                  <span class="map-info-title">{selectedDetail.name}</span>
-                  <span class="map-info-badge">{selectedDetail.tag}</span>
-                </div>
-                <p class="map-info-desc">{selectedDetail.desc}</p>
-                <div class="map-info-traits">
-                  {selectedDetail.traits.map((trait, i) => (
-                    <span key={i}>
-                      {i > 0 && <span style={{ marginRight: '6px' }}>•</span>}
-                      {trait}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <p class="map-selected-hint">
+                <strong>{selectedDetail.name}</strong> ({selectedDetail.tag}) — {selectedDetail.desc}
+              </p>
             )}
           </div>
           <div class="screen-actions">
