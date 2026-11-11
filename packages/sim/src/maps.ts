@@ -1,6 +1,7 @@
 import office01 from '../maps/office-01.json';
 import office02 from '../maps/office-02.json';
 import office03 from '../maps/office-03.json';
+import office04 from '../maps/office-04.json';
 import tutorial01 from '../maps/tutorial-01.json';
 import tutorial02 from '../maps/tutorial-02.json';
 import { deriveSeed, Rng } from './rng';
@@ -11,6 +12,7 @@ export const MAPS: Record<string, MapDef> = {
   'office-01': office01 as unknown as MapDef,
   'office-02': office02 as unknown as MapDef,
   'office-03': office03 as unknown as MapDef,
+  'office-04': office04 as unknown as MapDef,
   'tutorial-01': tutorial01 as unknown as MapDef,
   'tutorial-02': tutorial02 as unknown as MapDef,
 };
