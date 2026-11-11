@@ -199,12 +199,18 @@ export function emoteBubble(
   if (!iconName) return;
   const floatY = reducedMotion ? 0 : Math.min(6, Math.floor(ageMs / 400));
   const bounceY = !reducedMotion && ageMs < 150 ? (150 - ageMs) / 50 : 0;
-  const y = Math.round(topY - 20 - floatY + bounceY);
+  const flip = topY - 22 < 22;
+  const y = flip ? Math.round(topY + 6 + floatY - bounceY) : Math.round(topY - 20 - floatY + bounceY);
   const x = cx - 10;
   notchedBox(g, x, y, 20, 18, color.surfacePanel);
   shadow(g, x, y, 20, 18, 1);
-  g.rect(cx - 1, y + 18, 3, 1, p.ink);
-  g.rect(cx, y + 19, 1, 1, p.ink);
+  if (!flip) {
+    g.rect(cx - 1, y + 18, 3, 1, p.ink);
+    g.rect(cx, y + 19, 1, 1, p.ink);
+  } else {
+    g.rect(cx, y - 2, 1, 1, p.ink);
+    g.rect(cx - 1, y - 1, 3, 1, p.ink);
+  }
   icon(g, iconName, x + 4, y + 3);
 }
 
