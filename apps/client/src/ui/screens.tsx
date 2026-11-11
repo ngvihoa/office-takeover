@@ -1,10 +1,11 @@
 import type { TeamId } from '@ot/design';
-import { type BotLevel, SEND_PCTS } from '@ot/sim';
+import { type BotLevel, MAPS, type MapDef, SEND_PCTS } from '@ot/sim';
 import { useState } from 'preact/hooks';
 import type { MatchReport } from '../game/session';
 import type { Settings } from '../game/settings';
 import { Modal } from './components/composite';
 import { Segmented, Slider, Toggle } from './components/controls';
+import { MapThumbnail } from './components/MapThumbnail';
 import { Badge, Button, Flag, Logo, Panel, Stamp } from './components/primitives';
 import './screens.css';
 
@@ -14,6 +15,53 @@ const LEVELS = [
   { value: 'easy', label: 'Dễ' },
   { value: 'normal', label: 'Thường' },
 ] as const;
+
+export const MAP_IDS = ['office-01', 'office-02', 'office-03', 'office-04'] as const;
+export type MapKey = (typeof MAP_IDS)[number];
+
+export interface MapDetail {
+  id: MapKey;
+  name: string;
+  badge: string;
+  tag: string;
+  desc: string;
+  traits: string[];
+}
+
+export const MAP_DETAILS: Record<MapKey, MapDetail> = {
+  'office-01': {
+    id: 'office-01',
+    name: 'Tầng 1',
+    badge: 'Cơ bản',
+    tag: 'Cân bằng cổ điển',
+    desc: 'Bố cục văn phòng chuẩn với 4 phòng ban ở 4 góc đối xứng và Pantry trung tâm tiếp sức hồi quân x2.',
+    traits: ['☕ 1 Pantry hồi x2', '📅 2 Họp sườn', '🏢 4 Góc đối xứng'],
+  },
+  'office-02': {
+    id: 'office-02',
+    name: 'Ngã tư',
+    badge: 'Crossroad',
+    tag: 'Tranh chấp trung tâm',
+    desc: 'Hành lang chữ thập cực rộng. Phòng Sếp ở tâm ngã tư mang lại buff tốc độ +20%, hai bên sườn là 2 Server Room Firewall ngăn lính vượt ngang.',
+    traits: ['👑 Sếp (+20% tốc)', '🖥️ 2 Server Firewall', '☕ 2 Pantry'],
+  },
+  'office-03': {
+    id: 'office-03',
+    name: 'Văn phòng Mở',
+    badge: 'The Ring',
+    tag: 'Cơ động & Bọc hậu',
+    desc: 'Hành lang khép kín bao quanh Giếng trời cây xanh không thể đi xuyên. Cơ động cao, đánh bọc hậu 2 gọng kìm và chốt chặn phòng họp.',
+    traits: ['🌿 Giếng trời Atrium', '📅 2 Chốt chặn Họp', '☕ 2 Pantry'],
+  },
+  'office-04': {
+    id: 'office-04',
+    name: 'Hai Cánh',
+    badge: 'Twin Wings',
+    tag: 'Chokepoint vượt cầu',
+    desc: 'Tòa nhà chia đôi cánh Đông - Tây kết nối bằng 2 cầu kính hẹp Bắc - Nam và Sky Lounge trên cao. Giai đoạn 1 nội chiến, giai đoạn 2 vượt cầu.',
+    traits: ['🌉 2 Cầu kính Skybridge', '👑 Sky Lounge', '☕ 4 Pantry'],
+  },
+};
 
 export function HomeScreen({
   onPlay,
@@ -158,12 +206,7 @@ export function OfflineSetup({
     if (value === null && active <= 1) return;
     onChange(bots.map((bot, i) => (i === index ? value : bot)));
   };
-  const MAP_OPTIONS = [
-    { value: 'office-01', label: 'Tầng 1' },
-    { value: 'office-02', label: 'Ngã tư' },
-    { value: 'office-03', label: 'Văn phòng Mở' },
-    { value: 'office-04', label: 'Hai Cánh' },
-  ] as const;
+  const selectedDetail = MAP_DETAILS[mapId as MapKey] ?? MAP_DETAILS['office-01'];
 
   return (
     <section class="screen-layer" aria-label="Thiết lập trận offline">
@@ -210,23 +253,55 @@ export function OfflineSetup({
             ))}
           </div>
           {active <= 1 && <p class="t-body muted">Cần ít nhất 1 bot để bắt đầu.</p>}
-          <div class="screen-stack" style={{ gap: '6px' }}>
-            <span class="t-body" style={{ fontWeight: 600 }}>
-              Chọn bản đồ:
-            </span>
-            {onMapChange ? (
-              <Segmented label="Bản đồ" value={mapId} options={MAP_OPTIONS} onChange={onMapChange} />
-            ) : (
-              <div class="screen-map t-body">
-                <span class="upper">Bản đồ: {mapId === 'office-02' ? 'Ngã tư' : 'Tầng 1'}</span>
-                <span class="muted">{mapId}</span>
+          <div class="map-selection-section">
+            <div class="map-selection-header">
+              <span class="t-body" style={{ fontWeight: 600 }}>
+                Chọn bản đồ:
+              </span>
+              <span class="muted" style={{ fontSize: '11px' }}>
+                {MAP_IDS.length} Bản đồ
+              </span>
+            </div>
+
+            <div class="map-grid">
+              {MAP_IDS.map((id) => {
+                const info = MAP_DETAILS[id];
+                const mapDef = MAPS[id] as MapDef | undefined;
+                const isSelected = mapId === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={isSelected}
+                    class="map-card-button"
+                    onClick={() => onMapChange?.(id)}
+                    title={`${info.name} (${info.badge})`}
+                  >
+                    <div class="map-card-thumb">{mapDef && <MapThumbnail map={mapDef} />}</div>
+                    <span class="map-card-name">{info.name}</span>
+                    <span class="map-card-tag">{info.badge}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {selectedDetail && (
+              <div class="map-info-banner">
+                <div class="map-info-meta">
+                  <span class="map-info-title">{selectedDetail.name}</span>
+                  <span class="map-info-badge">{selectedDetail.tag}</span>
+                </div>
+                <p class="map-info-desc">{selectedDetail.desc}</p>
+                <div class="map-info-traits">
+                  {selectedDetail.traits.map((trait, i) => (
+                    <span key={i}>
+                      {i > 0 && <span style={{ marginRight: '6px' }}>•</span>}
+                      {trait}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
-            <p class="t-body muted" style={{ fontSize: '13px' }}>
-              {mapId === 'office-02'
-                ? 'Hành lang chữ thập rộng, tranh chấp Phòng Sếp ở tâm ngã tư và 2 Server Room.'
-                : 'Bản đồ cân bằng cơ bản, Pantry trung tâm và 4 góc đối xứng.'}
-            </p>
           </div>
           <div class="screen-actions">
             <Button icon="back" onClick={onBack}>
