@@ -159,8 +159,9 @@ export function OfflineSetup({
     onChange(bots.map((bot, i) => (i === index ? value : bot)));
   };
   const MAP_OPTIONS = [
-    { value: 'office-01', label: 'Tầng 1 (Cơ bản)' },
-    { value: 'office-02', label: 'Ngã tư (Crossroad)' },
+    { value: 'office-01', label: 'Tầng 1' },
+    { value: 'office-02', label: 'Ngã tư' },
+    { value: 'office-03', label: 'Văn phòng Mở' },
   ] as const;
 
   return (
