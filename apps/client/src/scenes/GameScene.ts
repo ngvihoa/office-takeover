@@ -44,6 +44,7 @@ import {
   type SeatSetup,
   type SendPct,
   type SkillId,
+  squadSpeed,
   TICKS_PER_SECOND,
   validate,
 } from '@ot/sim';
@@ -135,9 +136,12 @@ export class GameScene extends Phaser.Scene {
         this.layout.world,
         [
           benchmark ? { kind: 'bot', level: 'normal' } : { kind: 'human' },
-          ...(benchmark ? DEFAULT_BOTS : isTutorial ? (['easy', null, null] as (BotLevel | null)[]) : (this.options.bots ?? DEFAULT_BOTS)).map(
-            (level): SeatSetup => (level ? { kind: 'bot', level } : { kind: 'empty' }),
-          ),
+          ...(benchmark
+            ? DEFAULT_BOTS
+            : isTutorial
+              ? (['easy', null, null] as (BotLevel | null)[])
+              : (this.options.bots ?? DEFAULT_BOTS)
+          ).map((level): SeatSetup => (level ? { kind: 'bot', level } : { kind: 'empty' })),
         ],
         seed,
       );
@@ -753,9 +757,8 @@ export class GameScene extends Phaser.Scene {
       if (!route) continue;
       if (s.owner === this.localSeat || state.towers[s.to]?.owner === this.localSeat)
         path(g, route.points, TEAMS[s.owner] as TeamId);
-      const boost =
-        state.tick < (state.players[s.owner]?.deadlineUntil ?? 0) ? world.config.deadline.speedMultiplier : 1;
-      let distance = Math.max(0, s.traveled - world.config.squadSpeed * boost * (1 - this.elapsed / tickMs));
+      const speed = squadSpeed(world, state, s.owner);
+      let distance = Math.max(0, s.traveled - speed * (1 - this.elapsed / tickMs));
       let point = route.points[0] as [number, number];
       let direction = 'down';
       for (let i = 1; i < route.points.length; i++) {
@@ -805,12 +808,16 @@ export class GameScene extends Phaser.Scene {
       for (const t of world.map.towers) {
         const tower = state.towers[t.id];
         if (!tower) continue;
-        const cap = capacity(world, tower.level);
+        const cap = capacity(world, tower.level, t.id);
         const rate =
           tower.owner === null
             ? 'Sinh: 0/s'
             : `Sinh: +${(TICKS_PER_SECOND / interval(world, t.id, tower.level)).toFixed(1)}/s`;
         const lines = [`Cấp ${tower.level} · Max ${cap}`, rate];
+        if (t.kind === 'pantry') lines.push('Buff: Hồi lính x2');
+        else if (t.kind === 'meeting') lines.push('Buff: Thủ (-25% sát thương)');
+        else if (t.kind === 'boss') lines.push('Buff: Sếp (+20% tốc độ)');
+        else if (t.kind === 'server') lines.push('Buff: Tường lửa (Bắn tỉa)');
         if (fromId !== undefined && fromId !== t.id) {
           const len = pathLength(world, fromId, t.id);
           const secs = (len / (world.config.squadSpeed * TICKS_PER_SECOND)).toFixed(1);
@@ -957,18 +964,18 @@ export class GameScene extends Phaser.Scene {
         if (def && tower) {
           const isMine = tower.owner === this.localSeat;
           const ownerName = tower.owner === null ? 'Trung lập' : NAMES[tower.owner];
-          const cap = capacity(world, tower.level);
+          const cap = capacity(world, tower.level, def.id);
           const rate =
             tower.owner === null
               ? 'Tốc độ: 0/s'
               : `Tốc độ: +${(TICKS_PER_SECOND / interval(world, def.id, tower.level)).toFixed(1)}/s`;
-          const tipLines = [
-            `${def.name} · ${ownerName}`,
-            `Cấp ${tower.level} · Quân: ${tower.troops}/${cap}`,
-            rate,
-            isMine ? 'Click: chọn · Double-click: nâng cấp' : 'Click phải: điều quân tới đây',
-          ];
-          tooltip(g, def.rect[0] + Math.floor(def.rect[2] / 2), def.rect[1] + def.rect[3], tipLines, 140);
+          const tipLines = [`${def.name} · ${ownerName}`, `Cấp ${tower.level} · Quân: ${tower.troops}/${cap}`, rate];
+          if (def.kind === 'pantry') tipLines.push('Đặc tính: Tốc độ hồi quân x2');
+          else if (def.kind === 'meeting') tipLines.push('Đặc tính: Giảm 25% sát thương nhận vào');
+          else if (def.kind === 'boss') tipLines.push('Đặc tính: +20% tốc độ di chuyển toàn quân');
+          else if (def.kind === 'server') tipLines.push('Đặc tính: Tường lửa tự động tỉa quân địch');
+          tipLines.push(isMine ? 'Click: chọn · Double-click: nâng cấp' : 'Click phải: điều quân tới đây');
+          tooltip(g, def.rect[0] + Math.floor(def.rect[2] / 2), def.rect[1] + def.rect[3], tipLines, 150);
         }
       }
     }

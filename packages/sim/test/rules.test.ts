@@ -218,6 +218,48 @@ describe('end of match', () => {
   });
 });
 
+describe('special rooms', () => {
+  it('owning Boss room boosts squad speed by 20%', () => {
+    const s = setup();
+    const boss = s.towers[6];
+    if (!boss) throw new Error();
+    // Initially not owned
+    expect(s.towers[6]?.owner).toBeNull();
+    // Send squad from Dev
+    step(world, s, [{ t: 'send', player: 0, from: [DEV], to: ACC, pct: 50 }]);
+    expect(s.squads[0]?.traveled).toBe(5);
+
+    // Give Boss room to player 0
+    boss.owner = 0;
+    step(world, s, []);
+    // With Boss room: 5 * 1.2 = 6px per tick
+    expect(s.squads[0]?.traveled).toBe(5 + 6);
+  });
+
+  it('defended Meeting room reduces enemy attack damage by 25% and has 25% higher capacity', () => {
+    const s = setup();
+    const meetA = s.towers[5];
+    if (!meetA) throw new Error();
+    meetA.owner = 0;
+    meetA.troops = 20;
+
+    // Enemy attacks with 10 troops
+    // With 25% defense: dmg = round(10 * 0.75) = 8
+    s.squads.push({
+      id: 99,
+      owner: 1,
+      from: DESIGN,
+      to: 5,
+      count: 10,
+      dist: 10,
+      traveled: 10,
+      spawnTick: 0,
+    });
+    step(world, s, []);
+    expect(meetA.troops).toBe(12); // 20 - 8 = 12, instead of 20 - 10 = 10
+  });
+});
+
 describe('determinism', () => {
   it('same commands produce the same hash; clones are independent', () => {
     const script = (s: GameState) => {

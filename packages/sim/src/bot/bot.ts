@@ -100,7 +100,16 @@ function value(world: World, s: GameState, me: PlayerId, target: number): number
   const def = world.map.towers[target];
   const t = s.towers[target];
   if (!def || !t) return 0;
-  let v = def.kind === 'pantry' ? 3 : def.kind === 'boss' ? 2 : def.kind === 'team' ? 1.4 : 1;
+  let v =
+    def.kind === 'pantry'
+      ? 3
+      : def.kind === 'boss'
+        ? 2.2
+        : def.kind === 'meeting' || def.kind === 'server'
+          ? 1.8
+          : def.kind === 'team'
+            ? 1.4
+            : 1;
   if (t.owner !== null && t.owner !== me) {
     v += 0.4;
     // Do not pile on: a room another player is already attacking is worth less to us.

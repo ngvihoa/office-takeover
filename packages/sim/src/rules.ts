@@ -58,8 +58,12 @@ export function interval(world: World, towerId: number, level: number): number {
   return world.map.towers[towerId]?.kind === 'pantry' ? Math.max(1, Math.floor(base / 2)) : base;
 }
 
-export function capacity(world: World, level: number): number {
-  return world.config.capacity[level - 1] as number;
+export function capacity(world: World, level: number, towerId?: number): number {
+  const base = world.config.capacity[level - 1] as number;
+  if (towerId !== undefined && world.map.towers[towerId]?.kind === 'meeting') {
+    return Math.round(base * 1.25);
+  }
+  return base;
 }
 
 export function isAlive(s: GameState, p: PlayerId): boolean {
@@ -69,7 +73,9 @@ export function isAlive(s: GameState, p: PlayerId): boolean {
 
 export function squadSpeed(world: World, s: GameState, owner: PlayerId): number {
   const boosted = (s.players[owner]?.deadlineUntil ?? 0) > s.tick;
-  return world.config.squadSpeed * (boosted ? world.config.deadline.speedMultiplier : 1);
+  const speed = world.config.squadSpeed * (boosted ? world.config.deadline.speedMultiplier : 1);
+  const ownsBoss = s.towers.some((t) => t.owner === owner && world.map.towers[t.id]?.kind === 'boss');
+  return ownsBoss ? Math.round(speed * 1.2) : speed;
 }
 
 // ---------- commands ----------
@@ -166,7 +172,9 @@ export function step(world: World, s: GameState, commands: readonly Command[]): 
         t.troops += q.count;
         continue;
       }
-      t.troops -= q.count;
+      const isDefendedMeeting = t.owner !== null && world.map.towers[t.id]?.kind === 'meeting';
+      const dmg = isDefendedMeeting ? Math.max(1, Math.round(q.count * 0.75)) : q.count;
+      t.troops -= dmg;
       if (t.troops < 0) {
         const prev = t.owner;
         t.owner = q.owner;
@@ -177,9 +185,20 @@ export function step(world: World, s: GameState, commands: readonly Command[]): 
     }
   }
 
+  // Server room: firewall pulse every 10 ticks zaps 1 troop from enemy squads touching this room
+  if (s.tick % 10 === 0) {
+    for (const t of s.towers) {
+      if (t.owner === null || world.map.towers[t.id]?.kind !== 'server') continue;
+      const enemySquad = s.squads.find((q) => q.owner !== t.owner && (q.from === t.id || q.to === t.id) && q.count > 1);
+      if (enemySquad) {
+        enemySquad.count -= 1;
+      }
+    }
+  }
+
   for (const t of s.towers) {
     if (t.owner === null) continue;
-    if (t.troops >= capacity(world, t.level)) {
+    if (t.troops >= capacity(world, t.level, t.id)) {
       t.prodTimer = interval(world, t.id, t.level);
       continue;
     }
