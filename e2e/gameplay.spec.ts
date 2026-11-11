@@ -466,5 +466,46 @@ for (const scale of [1, 2]) {
       await page.screenshot({ path: pathSkill });
       await info.attach(`Tooltip Skill S${scale}`, { path: pathSkill, contentType: 'image/png' });
     });
+
+    test('entering tutorial match shows tutorial banner and advances steps', async ({ page }, info) => {
+      await page.setViewportSize({ width: 640 * scale, height: 360 * scale });
+      await page.addInitScript(() => {
+        localStorage.setItem('office-settings', JSON.stringify({ volume: 0, telemetry: false, reducedMotion: true }));
+        Object.defineProperty(crypto, 'getRandomValues', {
+          value: (array: Uint32Array) => {
+            array.fill(2);
+            return array;
+          },
+        });
+      });
+      await page.goto('/');
+      await page.clock.install({ time: 0 });
+      await page.clock.pauseAt(1000);
+      await expect(page.getByRole('button', { name: 'Hướng dẫn chơi', exact: true })).toBeVisible();
+      await page.getByRole('button', { name: 'Hướng dẫn chơi', exact: true }).click();
+      await expect
+        .poll(async () => {
+          await page.clock.runFor(16);
+          return (
+            (await page.locator('.game-host canvas').count()) === 1 &&
+            (await page.locator('.app-loading').count()) === 0
+          );
+        })
+        .toBe(true);
+      await expect(page.locator('.game-host canvas')).toBeVisible();
+
+      // Step 1: Send troops
+      await page.clock.runFor(200);
+      const path1 = info.outputPath(`tutorial-step1-s${scale}.png`);
+      await page.screenshot({ path: path1 });
+      await info.attach(`Tutorial Step 1 S${scale}`, { path: path1, contentType: 'image/png' });
+
+      // Drag from home room (76, 75) to neutral room (200, 75)
+      await drag(page, scale, [76, 75], [200, 75]);
+      await page.clock.runFor(200);
+      const path2 = info.outputPath(`tutorial-step2-s${scale}.png`);
+      await page.screenshot({ path: path2 });
+      await info.attach(`Tutorial Step 2 S${scale}`, { path: path2, contentType: 'image/png' });
+    });
   });
 }

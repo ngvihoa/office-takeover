@@ -17,10 +17,12 @@ const LEVELS = [
 
 export function HomeScreen({
   onPlay,
+  onTutorial,
   onOnline,
   onSettings,
 }: {
   onPlay: () => void;
+  onTutorial?: () => void;
   onOnline?: () => void;
   onSettings: () => void;
 }) {
@@ -34,6 +36,11 @@ export function HomeScreen({
             <Button variant="primary" size="L" icon="play" block onClick={onPlay}>
               Chơi với bot
             </Button>
+            {onTutorial && (
+              <Button size="L" icon="book" block onClick={onTutorial}>
+                Hướng dẫn chơi
+              </Button>
+            )}
             {onOnline && (
               <Button size="L" icon="person" block onClick={onOnline}>
                 Chơi trực tuyến (Online)

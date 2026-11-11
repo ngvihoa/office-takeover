@@ -29,6 +29,7 @@ import {
   team,
   timerChip,
   tooltip,
+  tutorialBanner,
 } from '@ot/design';
 import {
   type Command,
@@ -78,6 +79,7 @@ export class GameScene extends Phaser.Scene {
   private emoteMenuOpen = false;
   private activeEmotes: Array<{ seat: PlayerId; id: number; startedAt: number }> = [];
   private altDown = false;
+  private tutorialStep = 1;
   private lastClick = { id: -1, time: -1000 };
   private texture!: Phaser.Textures.CanvasTexture;
   private background!: HTMLCanvasElement;
@@ -127,11 +129,12 @@ export class GameScene extends Phaser.Scene {
     } else {
       const seed = benchmark ? 7 : newMatchSeed(this.match?.state.seed);
       this.layout = matchLayout(seed, benchmark, this.localSeat);
+      const isTutorial = this.options.tutorial ?? false;
       this.match = new LocalMatch(
         this.layout.world,
         [
           benchmark ? { kind: 'bot', level: 'normal' } : { kind: 'human' },
-          ...(benchmark ? DEFAULT_BOTS : (this.options.bots ?? DEFAULT_BOTS)).map(
+          ...(benchmark ? DEFAULT_BOTS : isTutorial ? [null, null, null] : (this.options.bots ?? DEFAULT_BOTS)).map(
             (level): SeatSetup => (level ? { kind: 'bot', level } : { kind: 'empty' }),
           ),
         ],
@@ -145,8 +148,9 @@ export class GameScene extends Phaser.Scene {
     this.commands = 0;
     this.paused = false;
     this.elapsed = 0;
-    this.introMs = benchmark ? 0 : 3000;
+    this.introMs = benchmark || this.options.tutorial ? 0 : 3000;
     this.startFlashMs = 0;
+    this.tutorialStep = 1;
     this.aiming = null;
     this.origin = null;
     this.dragging = false;
@@ -318,6 +322,15 @@ export class GameScene extends Phaser.Scene {
     }
     this.match.submit(command);
     this.commands++;
+    if (this.options.tutorial) {
+      if (this.tutorialStep === 1 && command.t === 'send') {
+        this.tutorialStep = 2;
+      } else if (this.tutorialStep === 2 && command.t === 'upgrade') {
+        this.tutorialStep = 3;
+      } else if (this.tutorialStep === 3 && command.t === 'skill') {
+        this.tutorialStep = 4;
+      }
+    }
     this.status =
       command.t === 'send'
         ? 'Đã điều nhân viên theo hành lang.'
@@ -813,6 +826,15 @@ export class GameScene extends Phaser.Scene {
       }
     }
     if (this.introMs || this.startFlashMs) introCountdown(g, Math.ceil(this.introMs / 1000));
+    if (this.options.tutorial) {
+      const bannerTexts: Record<number, string> = {
+        1: 'Kéo từ phòng của bạn sang phòng khác để điều quân',
+        2: 'Double-click phòng của bạn hoặc bấm phím E để nâng cấp',
+        3: 'Bấm phím Q (Deadline) hoặc W (Coffee Break) để dùng kỹ năng',
+      };
+      const txt = bannerTexts[this.tutorialStep] ?? 'Xuất sắc! Hãy chiếm hết các phòng hoặc bấm Menu';
+      tutorialBanner(g, this.tutorialStep, 3, txt);
+    }
     g.rect(0, 0, 640, 20, p.gray100);
     g.rect(0, 340, 640, 20, p.gray100);
     state.players.forEach((player, i) => {
@@ -938,7 +960,7 @@ export class GameScene extends Phaser.Scene {
             rate,
             isMine ? 'Click: chọn · Double-click: nâng cấp' : 'Click phải: điều quân tới đây',
           ];
-          tooltip(g, def.rect[0] + Math.floor(def.rect[2] / 2), def.rect[1], tipLines, 140);
+          tooltip(g, def.rect[0] + Math.floor(def.rect[2] / 2), def.rect[1] + def.rect[3], tipLines, 140);
         }
       }
     }
