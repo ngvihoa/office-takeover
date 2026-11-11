@@ -90,6 +90,32 @@ describe('world', () => {
     expect(profile02(3)).toEqual(profile02(0));
   });
 
+  it('office-03 (The Ring) connects every pair and is 4-way symmetric', () => {
+    const map03 = MAPS['office-03'] as MapDef;
+    const world03 = buildWorld(map03);
+    for (const a of map03.towers)
+      for (const b of map03.towers) {
+        if (a.id === b.id) continue;
+        const p = world03.paths[a.id]?.[b.id];
+        expect(p, `${a.name} -> ${b.name}`).toBeDefined();
+        expect(Number.isInteger(p?.length)).toBe(true);
+        expect(p?.length).toBeGreaterThan(0);
+        expect(pathLength(world03, a.id, b.id)).toBe(pathLength(world03, b.id, a.id));
+      }
+
+    const profile03 = (seat: number) => {
+      const home = map03.towers.find((t) => t.seat === seat);
+      if (!home) throw new Error('missing seat');
+      return map03.towers
+        .filter((t) => t.id !== home.id)
+        .map((t) => `${t.kind}:${t.troops}:${pathLength(world03, home.id, t.id)}`)
+        .sort();
+    };
+    expect(profile03(1)).toEqual(profile03(0));
+    expect(profile03(2)).toEqual(profile03(0));
+    expect(profile03(3)).toEqual(profile03(0));
+  });
+
   it('dev -> accounting walks the corridor, not a straight line', () => {
     expect(pathLength(world, DEV, ACC)).toBe(7 + 124 + 7);
     expect(world.paths[DEV]?.[ACC]?.points).toEqual([
