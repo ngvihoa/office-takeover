@@ -127,11 +127,110 @@ describe('multiplayer room api and durable object', () => {
     // Should receive start message with map and seed
     const startMsg = messages.find((m) => (m as { k: string }).k === 'start') as {
       k: string;
-      map: unknown;
+      map: { id: string };
       seed: number;
+      seats: { seat: number; kind: string }[];
     };
     expect(startMsg).toBeDefined();
     expect(startMsg.seed).toBeDefined();
+    expect(startMsg.seats.length).toBe(4);
+
+    ws.close();
+  });
+
+  it('supports 2-player duel room configuration and start', async () => {
+    const codeRes = await worker.dispatchFetch('https://game.example/api/room/create', {
+      method: 'POST',
+    });
+    const { code } = (await codeRes.json()) as { code: string };
+
+    const wsResponse = await worker.dispatchFetch(`https://game.example/ws/room/${code}`, {
+      headers: { Upgrade: 'websocket' },
+    });
+    const ws = wsResponse.webSocket;
+    if (!ws) throw new Error('No websocket returned');
+    ws.accept();
+
+    const messages: unknown[] = [];
+    ws.addEventListener('message', (event) => {
+      messages.push(JSON.parse(event.data as string));
+    });
+
+    ws.send(JSON.stringify({ k: 'join', name: 'Bob' }));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Change room config to 2 seats
+    ws.send(JSON.stringify({ k: 'roomConfig', maxSeats: 2 }));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const cfgLobby = messages[messages.length - 1] as {
+      k: string;
+      maxSeats: number;
+      mapId: string;
+      seats: { seat: number; kind: string }[];
+    };
+    expect(cfgLobby.k).toBe('lobby');
+    expect(cfgLobby.maxSeats).toBe(2);
+    expect(cfgLobby.mapId).toBe('duel-01');
+    expect(cfgLobby.seats.length).toBe(2);
+
+    // Ready and start
+    ws.send(JSON.stringify({ k: 'ready', ready: true }));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    ws.send(JSON.stringify({ k: 'start' }));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const startMsg = messages.find((m) => (m as { k: string }).k === 'start') as {
+      k: string;
+      map: { id: string };
+      seed: number;
+      seats: { seat: number; kind: string }[];
+    };
+    expect(startMsg).toBeDefined();
+    expect(startMsg.map.id).toBe('duel-01');
+    expect(startMsg.seats.length).toBe(2);
+    // Seat 0 was Bob (human), Seat 1 was auto-filled with easy bot
+    expect(startMsg.seats[0]?.kind).toBe('human');
+    expect(startMsg.seats[1]?.kind).toBe('bot');
+
+    ws.close();
+  });
+
+  it('supports 3-player trio room configuration', async () => {
+    const codeRes = await worker.dispatchFetch('https://game.example/api/room/create', {
+      method: 'POST',
+    });
+    const { code } = (await codeRes.json()) as { code: string };
+
+    const wsResponse = await worker.dispatchFetch(`https://game.example/ws/room/${code}`, {
+      headers: { Upgrade: 'websocket' },
+    });
+    const ws = wsResponse.webSocket;
+    if (!ws) throw new Error('No websocket returned');
+    ws.accept();
+
+    const messages: unknown[] = [];
+    ws.addEventListener('message', (event) => {
+      messages.push(JSON.parse(event.data as string));
+    });
+
+    ws.send(JSON.stringify({ k: 'join', name: 'Charlie' }));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    ws.send(JSON.stringify({ k: 'roomConfig', maxSeats: 3 }));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const cfgLobby = messages[messages.length - 1] as {
+      k: string;
+      maxSeats: number;
+      mapId: string;
+      seats: { seat: number; kind: string }[];
+    };
+    expect(cfgLobby.k).toBe('lobby');
+    expect(cfgLobby.maxSeats).toBe(3);
+    expect(cfgLobby.mapId).toBe('trio-01');
+    expect(cfgLobby.seats.length).toBe(3);
 
     ws.close();
   });

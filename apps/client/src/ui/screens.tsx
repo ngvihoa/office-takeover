@@ -286,7 +286,7 @@ export function OfflineSetup({
           <div class="screen-row">
             <h1 class="t-title">Thiết lập trận</h1>
             <Badge>
-              {Number(mode)} Người chơi ({active} bot)
+              {active} / {Number(mode) - 1} bot
             </Badge>
           </div>
 

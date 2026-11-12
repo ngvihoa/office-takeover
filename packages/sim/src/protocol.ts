@@ -48,7 +48,8 @@ export type ClientMessage =
   | { k: 'cmd'; cmd: ClientCommand }
   | { k: 'emote'; id: number }
   | { k: 'resync' }
-  | { k: 'rematch' };
+  | { k: 'rematch' }
+  | { k: 'roomConfig'; maxSeats?: 2 | 3 | 4; mapId?: string };
 
 // ---------- Server → Client Messages ----------
 export type ServerMessage =
@@ -56,6 +57,8 @@ export type ServerMessage =
       k: 'lobby';
       code: string;
       hostId: string;
+      maxSeats: 2 | 3 | 4;
+      mapId: string;
       seats: SeatState[];
       you: { id: string; seatToken: string; seat: PlayerId | null };
     }
@@ -170,6 +173,16 @@ export function parseClientMessage(raw: unknown): ClientMessage | null {
 
   if (k === 'rematch') {
     return { k: 'rematch' };
+  }
+
+  if (k === 'roomConfig') {
+    let maxSeats: 2 | 3 | 4 | undefined;
+    if (msg.maxSeats === 2 || msg.maxSeats === 3 || msg.maxSeats === 4) {
+      maxSeats = msg.maxSeats;
+    }
+    const mapId = typeof msg.mapId === 'string' && msg.mapId.length <= 32 ? msg.mapId : undefined;
+    if (maxSeats === undefined && mapId === undefined) return null;
+    return { k: 'roomConfig', maxSeats, mapId };
   }
 
   return null;

@@ -1,23 +1,34 @@
 import type { TeamId } from '@ot/design';
-import type { BotLevel, PlayerId, SeatState } from '@ot/sim';
+import { type BotLevel, MAPS, type PlayerId, type SeatState } from '@ot/sim';
 import { useState } from 'preact/hooks';
 import type { ConnectionStatus, RoomClient } from '../net/roomClient';
+import { Segmented } from './components/controls';
+import { MapThumbnail } from './components/MapThumbnail';
 import { Badge, Button, Flag, Panel } from './components/primitives';
+import { MAP_DETAILS, type MapKey } from './screens';
 import './screens.css';
 
 const TEAMS: TeamId[] = ['p1', 'p2', 'p3', 'p4'];
+
+const PLAYER_MODES = [
+  { value: '2', label: '⚔️ 2 Người (1v1)' },
+  { value: '3', label: '🔺 3 Người' },
+  { value: '4', label: '🛡️ 4 Người' },
+] as const;
 
 interface LobbyScreenProps {
   code: string;
   client: RoomClient;
   status: ConnectionStatus;
   hostId: string;
+  maxSeats: 2 | 3 | 4;
+  mapId: string;
   seats: SeatState[];
   you: { id: string; seat: PlayerId | null };
   onLeave: () => void;
 }
 
-export function LobbyScreen({ code, client, status, hostId, seats, you, onLeave }: LobbyScreenProps) {
+export function LobbyScreen({ code, client, status, hostId, maxSeats, mapId, seats, you, onLeave }: LobbyScreenProps) {
   const [copied, setCopied] = useState(false);
   const isHost = you.id === hostId;
   const mySeat = you.seat;
@@ -31,8 +42,23 @@ export function LobbyScreen({ code, client, status, hostId, seats, you, onLeave 
     });
   };
 
-  const humanSeats = seats.filter((s) => s.kind === 'human');
+  const humanSeats = seats.slice(0, maxSeats).filter((s) => s.kind === 'human');
   const allReady = humanSeats.length > 0 && humanSeats.every((s) => s.ready);
+
+  const fallbackDefaultMap = maxSeats === 2 ? 'duel-01' : maxSeats === 3 ? 'trio-01' : 'office-01';
+  const effectiveMapId = (mapId in MAPS ? mapId : fallbackDefaultMap) as MapKey;
+  const currentMap = MAPS[effectiveMapId] ?? MAPS[fallbackDefaultMap];
+  const mapDetail = MAP_DETAILS[effectiveMapId] ?? MAP_DETAILS[fallbackDefaultMap as MapKey];
+  const matchingMaps = Object.values(MAP_DETAILS).filter((m) => m.seats === maxSeats);
+
+  const handleModeChange = (val: string) => {
+    const count = Number(val) as 2 | 3 | 4;
+    client.setRoomConfig({ maxSeats: count });
+  };
+
+  const handleSelectMap = (id: string) => {
+    client.setRoomConfig({ mapId: id });
+  };
 
   return (
     <section class="screen-layer" aria-label="Phòng chờ online">
@@ -52,10 +78,78 @@ export function LobbyScreen({ code, client, status, hostId, seats, you, onLeave 
             </Button>
           </div>
 
-          <p class="t-body muted">Tối đa 4 người chơi. Ghế trống sẽ được tự động bù bot khi trận bắt đầu.</p>
+          <div class="setup-mode-row">
+            <span class="t-body" style={{ fontWeight: 600 }}>
+              Quy mô trận đấu:
+            </span>
+            {isHost ? (
+              <Segmented
+                label="Chọn số lượng người chơi"
+                value={String(maxSeats)}
+                options={PLAYER_MODES}
+                onChange={handleModeChange}
+              />
+            ) : (
+              <Badge ok>{maxSeats === 2 ? '⚔️ 2 Người (1v1)' : maxSeats === 3 ? '🔺 3 Người' : '🛡️ 4 Người'}</Badge>
+            )}
+          </div>
+
+          <div class="screen-stack" style={{ gap: '6px' }}>
+            <div class="screen-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <span class="t-body" style={{ fontWeight: 600 }}>
+                Bản đồ thi đấu:
+              </span>
+              {isHost && matchingMaps.length > 1 && (
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {matchingMaps.map((m) => (
+                    <Button
+                      key={m.id}
+                      size="M"
+                      variant={effectiveMapId === m.id ? 'primary' : 'secondary'}
+                      onClick={() => handleSelectMap(m.id)}
+                    >
+                      {m.name}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div class="lobby-map-preview">
+              {currentMap && (
+                <div class="lobby-map-thumb">
+                  <MapThumbnail map={currentMap} />
+                </div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <strong>{mapDetail.name}</strong>
+                  <span class="map-card-badge" style={{ fontSize: '10px', padding: '1px 5px' }}>
+                    {mapDetail.badge}
+                  </span>
+                  <span class="muted" style={{ fontSize: '12px' }}>
+                    ({mapDetail.tag})
+                  </span>
+                </div>
+                <span
+                  class="t-body muted"
+                  style={{
+                    fontSize: '11px',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {mapDetail.desc}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <p class="t-body muted">Tối đa {maxSeats} người chơi. Ghế trống sẽ được tự động bù bot khi trận bắt đầu.</p>
 
           <div class="screen-stack bot-list">
-            {seats.map((seatInfo, idx) => {
+            {seats.slice(0, maxSeats).map((seatInfo, idx) => {
               const tid = TEAMS[idx] ?? 'neutral';
               const isMine = mySeat === idx;
 

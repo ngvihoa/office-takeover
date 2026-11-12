@@ -56,6 +56,8 @@ export function App() {
   const [lobbyData, setLobbyData] = useState<{
     code: string;
     hostId: string;
+    maxSeats: 2 | 3 | 4;
+    mapId: string;
     seats: SeatState[];
     you: { id: string; seat: PlayerId | null };
   } | null>(null);
@@ -220,6 +222,8 @@ export function App() {
           setLobbyData({
             code: msg.code,
             hostId: msg.hostId,
+            maxSeats: msg.maxSeats ?? 4,
+            mapId: msg.mapId ?? 'office-01',
             seats: msg.seats,
             you: { id: msg.you.id, seat: msg.you.seat },
           });
@@ -229,7 +233,14 @@ export function App() {
         onStart: (msg) => {
           const world = buildWorld(msg.map, msg.config);
           const yourSeat = currentSeatRef.current;
-          const remote = new RemoteMatch(world, msg.seed, yourSeat, client);
+          const remote = new RemoteMatch(
+            world,
+            msg.seed,
+            yourSeat,
+            client,
+            undefined,
+            msg.seats.map((s) => s.kind),
+          );
           remoteMatchRef.current = remote;
           setReport(null);
           setPaused(false);
@@ -314,6 +325,8 @@ export function App() {
           client={roomClientRef.current}
           status={connectionStatus}
           hostId={lobbyData.hostId}
+          maxSeats={lobbyData.maxSeats}
+          mapId={lobbyData.mapId}
           seats={lobbyData.seats}
           you={lobbyData.you}
           onLeave={home}

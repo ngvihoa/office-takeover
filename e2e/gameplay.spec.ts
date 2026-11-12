@@ -99,7 +99,7 @@ async function troops(page: Page, scale: number, expected: number, right = 132) 
 
 async function percentage(page: Page, scale: number, expected: number) {
   const text = `${expected}%`;
-  await expectDigits(page, scale, text, 390 - digitsWidth(text), 347, false);
+  await expectDigits(page, scale, text, 442 - digitsWidth(text), 347, false);
 }
 
 async function pixel(page: Page, scale: number, x: number, y: number) {
@@ -189,7 +189,7 @@ for (const scale of [1, 2]) {
       await page.clock.runFor(44000);
       await expectLabel(page, scale, 'Bot chưa tấn công bạn: 1s', 68, 353);
       await page.clock.runFor(1100);
-      await expectLabel(page, scale, 'Q Deadline · W Coffee Break', 68, 353);
+      await expectLabel(page, scale, 'Kéo giữa các phòng để điều quân.', 68, 353);
     });
 
     for (const [key, remaining] of [
