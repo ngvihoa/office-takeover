@@ -15,7 +15,7 @@ import type { RemoteMatch } from '../net/remoteMatch';
 import type { Settings } from './settings';
 
 export const PLAYER_NAMES = ['Bạn', 'Bot An', 'Bot Bình', 'Bot Chi'] as const;
-export const DEFAULT_BOTS: (BotLevel | null)[] = ['easy', 'normal', 'easy'];
+export const DEFAULT_BOTS: (BotLevel | null)[] = ['easy', 'easy', 'easy'];
 
 /** Keep the map, human highlight and downloadable report on the same seeded layout. */
 export function matchLayout(

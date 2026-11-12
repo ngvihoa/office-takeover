@@ -237,17 +237,17 @@ export function OfflineSetup({
   const handleModeChange = (newMode: '2' | '3' | '4') => {
     setMode(newMode);
     if (newMode === '2') {
-      onChange([bots[0] ?? 'normal']);
+      onChange([bots[0] ?? 'easy']);
       if (MAP_DETAILS[mapId as MapKey]?.seats !== 2) {
         onMapChange?.('duel-01');
       }
     } else if (newMode === '3') {
-      onChange([bots[0] ?? 'normal', bots[1] ?? 'normal']);
+      onChange([bots[0] ?? 'easy', bots[1] ?? 'easy']);
       if (MAP_DETAILS[mapId as MapKey]?.seats !== 3) {
         onMapChange?.('trio-01');
       }
     } else {
-      onChange([bots[0] ?? 'normal', bots[1] ?? 'normal', bots[2] ?? 'normal']);
+      onChange([bots[0] ?? 'easy', bots[1] ?? 'easy', bots[2] ?? 'easy']);
       if (MAP_DETAILS[mapId as MapKey]?.seats !== 4) {
         onMapChange?.('office-01');
       }
@@ -260,11 +260,11 @@ export function OfflineSetup({
     if (String(targetSeats) !== mode) {
       setMode(String(targetSeats) as '2' | '3' | '4');
       if (targetSeats === 2) {
-        onChange([bots[0] ?? 'normal']);
+        onChange([bots[0] ?? 'easy']);
       } else if (targetSeats === 3) {
-        onChange([bots[0] ?? 'normal', bots[1] ?? 'normal']);
+        onChange([bots[0] ?? 'easy', bots[1] ?? 'easy']);
       } else {
-        onChange([bots[0] ?? 'normal', bots[1] ?? 'normal', bots[2] ?? 'normal']);
+        onChange([bots[0] ?? 'easy', bots[1] ?? 'easy', bots[2] ?? 'easy']);
       }
     }
   };
