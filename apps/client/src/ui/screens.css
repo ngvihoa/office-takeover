@@ -259,7 +259,7 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   background: var(--c-ink);
-  border: var(--n) solid rgba(0, 0, 0, 0.4);
+  border: var(--n) solid var(--border);
   border-radius: calc(var(--n) * 2);
   margin-bottom: calc(var(--n) * 4);
   overflow: hidden;
@@ -269,27 +269,27 @@
   position: absolute;
   top: calc(var(--n) * 2);
   left: calc(var(--n) * 2);
-  color: #ffffff;
+  color: var(--text-inverse);
   font-size: calc(var(--n) * 8);
   line-height: calc(var(--n) * 11);
   padding: 0 calc(var(--n) * 4);
   border-radius: calc(var(--n) * 2);
   font-weight: bold;
   z-index: 2;
-  box-shadow: 0 var(--n) 0 rgba(0, 0, 0, 0.6);
+  box-shadow: 0 var(--n) 0 var(--border);
   pointer-events: none;
 }
 
 .map-badge-2 {
-  background: #0099db;
+  background: var(--team-p1);
 }
 
 .map-badge-3 {
-  background: #3e8948;
+  background: var(--team-p3);
 }
 
 .map-badge-4 {
-  background: #68386c;
+  background: var(--accent);
 }
 
 .map-card-thumb svg {
