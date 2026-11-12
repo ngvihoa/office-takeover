@@ -6,6 +6,7 @@ import {
   type GameState,
   hashState,
   type PlayerId,
+  type SeatKind,
   step,
   type World,
 } from '@ot/sim';
@@ -22,10 +23,11 @@ export class RemoteMatch {
     readonly yourSeat: PlayerId,
     private readonly client: RoomClient,
     initialState?: GameState,
+    seatKinds?: readonly SeatKind[],
   ) {
     this.state = initialState
       ? cloneState(initialState)
-      : createMatch(world, ['human', 'human', 'human', 'human'], seed);
+      : createMatch(world, seatKinds ?? ['human', 'human', 'human', 'human'], seed);
   }
 
   onServerTick(tick: number, cmds: Command[]): void {

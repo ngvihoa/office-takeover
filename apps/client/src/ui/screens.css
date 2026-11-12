@@ -330,3 +330,22 @@
 .map-selected-hint strong {
   color: var(--text-primary);
 }
+
+.lobby-map-preview {
+  display: flex;
+  gap: calc(var(--n) * 6);
+  align-items: center;
+  background: var(--surface-sunken);
+  border: var(--n) solid var(--border);
+  padding: calc(var(--n) * 4) calc(var(--n) * 6);
+  border-radius: calc(var(--n) * 3);
+}
+
+.lobby-map-thumb {
+  width: calc(var(--n) * 42);
+  height: calc(var(--n) * 24);
+  flex-shrink: 0;
+  border-radius: calc(var(--n) * 2);
+  overflow: hidden;
+  border: var(--n) solid var(--border);
+}

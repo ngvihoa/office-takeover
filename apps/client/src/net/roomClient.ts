@@ -175,6 +175,10 @@ export class RoomClient {
     this.send({ k: 'ready', ready });
   }
 
+  setRoomConfig(config: { maxSeats?: 2 | 3 | 4; mapId?: string }): void {
+    this.send({ k: 'roomConfig', ...config });
+  }
+
   startMatch(): void {
     this.send({ k: 'start' });
   }

@@ -12,6 +12,7 @@ import {
   MAPS,
   type MapDef,
   type MatchResult,
+  mapSeats,
   type PlayerId,
   parseClientMessage,
   type SeatState,
@@ -48,6 +49,8 @@ export class RoomDO {
   private code = '';
   private phase: RoomPhase = 'lobby';
   private hostId = '';
+  private maxSeats: 2 | 3 | 4 = 4;
+  private mapId = 'office-01';
   private sessions = new Map<WebSocket, ClientSession>();
   private seats: SeatState[] = [
     { seat: 0, kind: 'empty', name: 'Ghế 1', ready: false, connected: false },
@@ -95,6 +98,8 @@ export class RoomDO {
       return Response.json({
         code: this.code,
         phase: this.phase,
+        maxSeats: this.maxSeats,
+        mapId: this.mapId,
         seats: this.seats,
         players: this.sessions.size,
       });
@@ -169,6 +174,8 @@ export class RoomDO {
         k: 'lobby',
         code: this.code,
         hostId: this.hostId,
+        maxSeats: this.maxSeats,
+        mapId: this.mapId,
         seats: this.seats,
         you: { id: session.id, seatToken: session.seatToken, seat: session.seat },
       });
@@ -272,7 +279,7 @@ export class RoomDO {
       }
 
       // Claim new seat
-      if (targetSeat !== null) {
+      if (targetSeat !== null && targetSeat < this.maxSeats) {
         const dest = this.seats[targetSeat];
         if (dest && dest.kind === 'empty') {
           dest.kind = 'human';
@@ -292,6 +299,7 @@ export class RoomDO {
     if (msg.k === 'bot') {
       if (this.phase !== 'lobby') return;
       if (session.id !== this.hostId) return; // Only host sets bots
+      if (msg.seat >= this.maxSeats) return;
 
       const targetSeat = this.seats[msg.seat];
       if (!targetSeat || targetSeat.kind === 'human') return;
@@ -331,6 +339,24 @@ export class RoomDO {
       return;
     }
 
+    if (msg.k === 'roomConfig') {
+      if (this.phase !== 'lobby') return;
+      if (session.id !== this.hostId) return;
+
+      if (msg.maxSeats !== undefined) {
+        this.setMaxSeats(msg.maxSeats);
+      }
+      if (msg.mapId !== undefined && MAPS[msg.mapId]) {
+        const candidateMap = MAPS[msg.mapId];
+        if (candidateMap && mapSeats(candidateMap).length === this.maxSeats) {
+          this.mapId = msg.mapId;
+        }
+      }
+
+      this.broadcastLobby();
+      return;
+    }
+
     if (msg.k === 'start') {
       if (this.phase !== 'lobby') return;
       if (session.id !== this.hostId) return;
@@ -341,7 +367,7 @@ export class RoomDO {
       if (!humanSeats.every((s) => s.ready)) return;
 
       // Auto-fill empty seats with Easy bot
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < this.maxSeats; i++) {
         const s = this.seats[i];
         if (s && s.kind === 'empty') {
           this.seats[i] = {
@@ -465,14 +491,51 @@ export class RoomDO {
     this.hostId = next ? next.id : '';
   }
 
+  private setMaxSeats(newMax: 2 | 3 | 4): void {
+    if (newMax === this.maxSeats) return;
+    this.maxSeats = newMax;
+
+    // Reset mapId to default for this player count if current map has wrong seats
+    const curMap = MAPS[this.mapId];
+    if (!curMap || mapSeats(curMap).length !== newMax) {
+      this.mapId = newMax === 2 ? 'duel-01' : newMax === 3 ? 'trio-01' : 'office-01';
+    }
+
+    // Shrink seats if needed
+    while (this.seats.length > newMax) {
+      const removed = this.seats.pop();
+      if (removed) {
+        this.seatTokens.delete(removed.seat);
+        for (const session of this.sessions.values()) {
+          if (session.seat === removed.seat) {
+            session.seat = null;
+          }
+        }
+      }
+    }
+
+    // Expand seats if needed
+    while (this.seats.length < newMax) {
+      const idx = this.seats.length as PlayerId;
+      this.seats.push({
+        seat: idx,
+        kind: 'empty',
+        name: `Ghế ${idx + 1}`,
+        ready: false,
+        connected: false,
+      });
+    }
+  }
+
   private startMatch(): void {
     this.phase = 'countdown';
     this.seed = (crypto.getRandomValues(new Uint32Array(1))[0] ?? Math.floor(Math.random() * 0xffffffff)) >>> 0;
 
-    const baseMap = MAPS['office-01'];
-    if (!baseMap) throw new Error('Base map office-01 not found');
+    const defaultMapId = this.maxSeats === 2 ? 'duel-01' : this.maxSeats === 3 ? 'trio-01' : 'office-01';
+    const baseMap = MAPS[this.mapId] ?? MAPS[defaultMapId];
+    if (!baseMap) throw new Error(`Base map ${this.mapId} not found`);
 
-    const shuffledMap = withSeatOrder(baseMap, seatOrder(this.seed));
+    const shuffledMap = withSeatOrder(baseMap, seatOrder(this.seed, this.maxSeats));
     this.mapDef = shuffledMap;
     this.world = buildWorld(shuffledMap, DEFAULT_CONFIG);
 
