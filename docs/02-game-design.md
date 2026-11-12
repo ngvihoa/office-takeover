@@ -12,7 +12,7 @@ trong một file config của package `sim` và sẽ chỉnh sau playtest.
 1. Mỗi tháp mình sở hữu **tự sinh lính** theo thời gian, đến khi đầy.
 2. Người chơi gửi một phần lính từ tháp mình sang tháp khác. Lính đi **theo hành lang** (qua cửa phòng) và mọi người đều nhìn thấy.
 3. Lính đến tháp **của mình** thì cộng vào. Đến tháp **địch hoặc trung lập** thì trừ lính thủ 1:1.
-   Lính thủ về dưới 0 thì tháp **đổi chủ**, số lính dư ở lại giữ tháp.
+   Lính thủ về dưới 0 thì tháp **đổi chủ**, số lính dư ở lại giữ tháp. Khi bị chiếm, tháp bị thiệt hại hạ tầng và **giảm 1 cấp độ** (cấp 3 về cấp 2, cấp 2 về cấp 1, tối thiểu cấp 1).
 4. Có nhiều tháp thì sinh nhiều lính hơn, nên phải tranh tháp đặc biệt và chọn đúng thời điểm.
 
 ## 2. Bối cảnh và bản đồ

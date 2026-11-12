@@ -257,6 +257,41 @@ describe('sending and capturing', () => {
     step(world, s, []);
     expect(s.towers[ACC]?.owner).toBe(0);
     expect(s.towers[ACC]?.troops).toBe(10 - 5);
+    expect(s.towers[ACC]?.level).toBe(1);
+  });
+
+  it('downgrades tower level by 1 when captured (min 1)', () => {
+    const s = setup();
+    const acc = s.towers[ACC];
+    const dev = s.towers[DEV];
+    const design = s.towers[DESIGN];
+    if (!acc || !dev || !design) throw new Error();
+
+    // Set ACC to player 1 at level 3
+    acc.owner = 1;
+    acc.level = 3;
+    acc.troops = 2;
+    dev.troops = 10;
+    const ticksFromDev = Math.ceil(pathLength(world, DEV, ACC) / DEFAULT_CONFIG.squadSpeed);
+    run(world, s, ticksFromDev, [{ t: 'send', player: 0, from: [DEV], to: ACC, pct: 100 }]);
+    expect(acc.owner).toBe(0);
+    expect(acc.level).toBe(2);
+
+    // Player 1 recaptures from DESIGN (which belongs to player 1)
+    acc.troops = 2;
+    design.owner = 1;
+    design.troops = 15;
+    const ticksFromDesign = Math.ceil(pathLength(world, DESIGN, ACC) / DEFAULT_CONFIG.squadSpeed);
+    run(world, s, ticksFromDesign, [{ t: 'send', player: 1, from: [DESIGN], to: ACC, pct: 100 }]);
+    expect(acc.owner).toBe(1);
+    expect(acc.level).toBe(1);
+
+    // Player 0 captures again at level 1 -> stays level 1
+    acc.troops = 2;
+    dev.troops = 15;
+    run(world, s, ticksFromDev, [{ t: 'send', player: 0, from: [DEV], to: ACC, pct: 100 }]);
+    expect(acc.owner).toBe(0);
+    expect(acc.level).toBe(1);
   });
 
   it('exactly zero defenders keeps the old owner', () => {
