@@ -99,6 +99,30 @@ describe('bots', () => {
     expect(wins / n).toBeGreaterThanOrEqual(0.25);
     expect(wins / n).toBeLessThanOrEqual(0.45);
   }, 60_000);
+  it('100 normal-vs-normal 1v1 matches on duel-01 finish without errors and win rate is balanced', () => {
+    const duelWorld = buildWorld(MAPS['duel-01'] as MapDef);
+    let p0Wins = 0;
+    let decided = 0;
+    for (let seed = 1; seed <= 100; seed++) {
+      const s = runBotMatch(duelWorld, ['normal', 'normal', null, null], seed);
+      expect(s.result).not.toBeNull();
+      if (s.result?.winner === 0) p0Wins++;
+      if (s.result?.winner !== null && s.result?.winner !== undefined) decided++;
+    }
+    expect(decided).toBeGreaterThan(90);
+    const winRate = p0Wins / decided;
+    expect(winRate).toBeGreaterThanOrEqual(0.35);
+    expect(winRate).toBeLessThanOrEqual(0.65);
+  });
+
+  it('50 normal-vs-normal-vs-normal 3-player matches on trio-01 finish without errors', () => {
+    const trioWorld = buildWorld(MAPS['trio-01'] as MapDef);
+    for (let seed = 1; seed <= 50; seed++) {
+      const s = runBotMatch(trioWorld, ['normal', 'normal', 'normal', null], seed);
+      expect(s.result).not.toBeNull();
+      expect([0, 1, 2, null]).toContain(s.result?.winner);
+    }
+  });
 });
 
 describe('start rooms', () => {
@@ -111,6 +135,24 @@ describe('start rooms', () => {
       counts[order.indexOf(0)] = (counts[order.indexOf(0)] ?? 0) + 1;
     }
     for (const c of counts) expect(c).toBeGreaterThan(70);
+  });
+
+  it('seatOrder supports 2 and 3 seats permutations', () => {
+    const counts2 = [0, 0];
+    for (let seed = 1; seed <= 200; seed++) {
+      const order2 = seatOrder(seed, 2);
+      expect([...order2].sort()).toEqual([0, 1]);
+      counts2[order2.indexOf(0)] = (counts2[order2.indexOf(0)] ?? 0) + 1;
+    }
+    for (const c of counts2) expect(c).toBeGreaterThan(60);
+
+    const counts3 = [0, 0, 0];
+    for (let seed = 1; seed <= 300; seed++) {
+      const order3 = seatOrder(seed, 3);
+      expect([...order3].sort()).toEqual([0, 1, 2]);
+      counts3[order3.indexOf(0)] = (counts3[order3.indexOf(0)] ?? 0) + 1;
+    }
+    for (const c of counts3) expect(c).toBeGreaterThan(60);
   });
 
   it('shuffled maps keep exactly one start room per seat', () => {

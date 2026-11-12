@@ -142,6 +142,55 @@ describe('world', () => {
     expect(profile04(3)).toEqual(profile04(0));
   });
 
+  it('duel-01 (Duplex Duel) connects every pair and is 2-way symmetric', () => {
+    const duel = MAPS['duel-01'] as MapDef;
+    const worldDuel = buildWorld(duel);
+    for (const a of duel.towers)
+      for (const b of duel.towers) {
+        if (a.id === b.id) continue;
+        const p = worldDuel.paths[a.id]?.[b.id];
+        expect(p, `${a.name} -> ${b.name}`).toBeDefined();
+        expect(Number.isInteger(p?.length)).toBe(true);
+        expect(p?.length).toBeGreaterThan(0);
+        expect(pathLength(worldDuel, a.id, b.id)).toBe(pathLength(worldDuel, b.id, a.id));
+      }
+
+    const profileDuel = (seat: number) => {
+      const home = duel.towers.find((t) => t.seat === seat);
+      if (!home) throw new Error('missing seat');
+      return duel.towers
+        .filter((t) => t.id !== home.id)
+        .map((t) => `${t.kind}:${t.troops}:${pathLength(worldDuel, home.id, t.id)}`)
+        .sort();
+    };
+    expect(profileDuel(1)).toEqual(profileDuel(0));
+  });
+
+  it('trio-01 (Triforce Hub) connects every pair and is 3-way symmetric', () => {
+    const trio = MAPS['trio-01'] as MapDef;
+    const worldTrio = buildWorld(trio);
+    for (const a of trio.towers)
+      for (const b of trio.towers) {
+        if (a.id === b.id) continue;
+        const p = worldTrio.paths[a.id]?.[b.id];
+        expect(p, `${a.name} -> ${b.name}`).toBeDefined();
+        expect(Number.isInteger(p?.length)).toBe(true);
+        expect(p?.length).toBeGreaterThan(0);
+        expect(pathLength(worldTrio, a.id, b.id)).toBe(pathLength(worldTrio, b.id, a.id));
+      }
+
+    const profileTrio = (seat: number) => {
+      const home = trio.towers.find((t) => t.seat === seat);
+      if (!home) throw new Error('missing seat');
+      return trio.towers
+        .filter((t) => t.id !== home.id)
+        .map((t) => `${t.kind}:${t.troops}:${pathLength(worldTrio, home.id, t.id)}`)
+        .sort();
+    };
+    expect(profileTrio(1)).toEqual(profileTrio(0));
+    expect(profileTrio(2)).toEqual(profileTrio(0));
+  });
+
   it('dev -> accounting walks the corridor, not a straight line', () => {
     expect(pathLength(world, DEV, ACC)).toBe(7 + 124 + 7);
     expect(world.paths[DEV]?.[ACC]?.points).toEqual([
