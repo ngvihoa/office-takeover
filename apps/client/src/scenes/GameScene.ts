@@ -748,7 +748,7 @@ export class GameScene extends Phaser.Scene {
         level: t.level,
         canUpgrade,
         upgradeBlink: this.settings.reducedMotion ? false : Math.floor(this.time.now / 350) % 2 === 0,
-        underAttack: state.squads.some((s) => t.owner !== null && s.to === t.id && s.owner !== t.owner),
+        underAttack: state.squads.some((s) => s.to === t.id && (t.owner === null || s.owner !== t.owner)),
       });
     }
     if (this.dragging && target !== undefined) {
@@ -790,8 +790,7 @@ export class GameScene extends Phaser.Scene {
     for (const s of state.squads) {
       const route = world.paths[s.from]?.[s.to];
       if (!route) continue;
-      if (s.owner === this.localSeat || state.towers[s.to]?.owner === this.localSeat)
-        path(g, route.points, TEAMS[s.owner] as TeamId);
+      path(g, route.points, TEAMS[s.owner] as TeamId);
       const speed = squadSpeed(world, state, s.owner);
       let distance = Math.max(0, s.traveled - speed * (1 - this.elapsed / tickMs));
       let point = route.points[0] as [number, number];

@@ -392,6 +392,7 @@ export function path(g: Painter, pts: readonly (readonly [number, number])[], t:
   }
   const [ex, ey] = pts[pts.length - 1] as readonly [number, number];
   outline(g, ex - 3, ey - 3, 7, 7, c);
+  g.rect(ex - 1, ey - 1, 3, 3, c);
 }
 
 export function corridor(g: Painter, b = { x: 6, y: 20, w: 628, h: 320 }) {

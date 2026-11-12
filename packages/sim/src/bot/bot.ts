@@ -91,8 +91,9 @@ function needed(world: World, s: GameState, me: PlayerId, target: number, ticks:
   return defenders + ownerReinforce - inc.mine + 2;
 }
 
-function smallestPct(troops: number, need: number): SendPct | null {
-  for (const pct of SEND_PCTS) if (Math.max(1, Math.floor((troops * pct) / 100)) >= need) return pct;
+function smallestPct(troops: number, need: number, advanced = true): SendPct | null {
+  const allowed = advanced ? SEND_PCTS : ([50, 75, 100] as const);
+  for (const pct of allowed) if (Math.max(1, Math.floor((troops * pct) / 100)) >= need) return pct;
   return null;
 }
 
@@ -149,13 +150,14 @@ export function botThink(world: World, s: GameState, bot: Bot): Command[] {
       .sort((a, b) => eta(world, a.id, t.id) - eta(world, b.id, t.id) || a.id - b.id);
     let covered = false;
     for (const h of helpers) {
-      const pct = smallestPct(avail(h.id), deficit);
+      const pct = smallestPct(avail(h.id), deficit, profile.advanced);
       if (pct === null) continue;
       cmds.push({ t: 'send', player: me, from: [h.id], to: t.id, pct });
       spent.set(h.id, (spent.get(h.id) ?? 0) + Math.floor((avail(h.id) * pct) / 100));
       covered = true;
       break;
     }
+    if (covered && !profile.advanced) return cmds;
     if (!covered && profile.advanced && ready('coffee') && deficit <= world.config.coffee.troops) {
       cmds.push({ t: 'skill', player: me, skill: 'coffee', target: t.id });
     }
@@ -170,7 +172,7 @@ export function botThink(world: World, s: GameState, bot: Bot): Command[] {
       const ticks = eta(world, src.id, target.id);
       const need = needed(world, s, me, target.id, ticks);
       if (need <= 2) continue; // enough of our troops are already on the way
-      const pct = smallestPct(avail(src.id), need);
+      const pct = smallestPct(avail(src.id), need, profile.advanced);
       if (pct === null) continue;
       const dist = world.paths[src.id]?.[target.id]?.length ?? 0;
       cands.push({
@@ -218,7 +220,7 @@ export function botThink(world: World, s: GameState, bot: Bot): Command[] {
     const safe = mine.filter((t) => !threatened.has(t.id) && t.level < 3);
     for (const t of safe) {
       const cost = world.config.upgradeCost[t.level - 1] as number;
-      if (avail(t.id) >= cost + 12 && bot.rng.int(4) === 0) {
+      if (avail(t.id) >= cost + 16 && bot.rng.int(6) === 0) {
         cmds.push({ t: 'upgrade', player: me, tower: t.id });
         break;
       }
