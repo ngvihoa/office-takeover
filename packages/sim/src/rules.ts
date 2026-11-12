@@ -179,6 +179,9 @@ export function step(world: World, s: GameState, commands: readonly Command[]): 
         const prev = t.owner;
         t.owner = q.owner;
         t.troops = -t.troops;
+        if (t.level > 1) {
+          t.level = Math.max(1, t.level - 1);
+        }
         t.prodTimer = interval(world, t.id, t.level);
         events.push({ t: 'captured', tower: t.id, from: prev, to: q.owner });
       }
