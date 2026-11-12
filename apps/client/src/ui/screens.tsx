@@ -16,7 +16,7 @@ const LEVELS = [
   { value: 'normal', label: 'Thường' },
 ] as const;
 
-export const MAP_IDS = ['office-01', 'office-02', 'office-03', 'office-04'] as const;
+export const MAP_IDS = ['duel-01', 'trio-01', 'office-01', 'office-02', 'office-03', 'office-04'] as const;
 export type MapKey = (typeof MAP_IDS)[number];
 
 export interface MapDetail {
@@ -26,40 +26,63 @@ export interface MapDetail {
   tag: string;
   desc: string;
   traits: string[];
+  seats: 2 | 3 | 4;
 }
 
 export const MAP_DETAILS: Record<MapKey, MapDetail> = {
+  'duel-01': {
+    id: 'duel-01',
+    name: 'Cầu Nối',
+    badge: '2P DUEL',
+    tag: '1v1 Đối kháng',
+    desc: 'Trận chiến 1v1 tốc độ cao. Tranh chấp Pantry trung tâm và 2 tuyến hành lang Đông - Tây.',
+    traits: ['⚔️ 2 Người (1v1)', '☕ Pantry x2 tốc độ', '👑 VIP Lounge'],
+    seats: 2,
+  },
+  'trio-01': {
+    id: 'trio-01',
+    name: 'Chân Vạc',
+    badge: '3P TRIO',
+    tag: 'Tam giác cân',
+    desc: 'Thế cờ 3 bên cân bằng tuyệt đối. Tranh chấp Atrium trung tâm và 3 trạm Pantry vành đai.',
+    traits: ['🔺 3 Người', '🌿 Đại sảnh Atrium', '☕ 3 Trạm Pantry'],
+    seats: 3,
+  },
   'office-01': {
     id: 'office-01',
     name: 'Tầng 1',
-    badge: 'Cơ bản',
-    tag: 'Cân bằng cổ điển',
+    badge: '4P Cổ điển',
+    tag: 'Cân bằng 4 góc',
     desc: 'Bố cục văn phòng chuẩn với 4 phòng ban ở 4 góc đối xứng và Pantry trung tâm tiếp sức hồi quân x2.',
     traits: ['☕ 1 Pantry hồi x2', '📅 2 Họp sườn', '🏢 4 Góc đối xứng'],
+    seats: 4,
   },
   'office-02': {
     id: 'office-02',
     name: 'Ngã tư',
-    badge: 'Crossroad',
-    tag: 'Tranh chấp trung tâm',
-    desc: 'Hành lang chữ thập cực rộng. Phòng Sếp ở tâm ngã tư mang lại buff tốc độ +20%, hai bên sườn là 2 Server Room Firewall ngăn lính vượt ngang.',
+    badge: '4P Ngã tư',
+    tag: 'Tranh chấp tâm',
+    desc: 'Hành lang chữ thập cực rộng. Phòng Sếp ở tâm ngã tư mang lại buff tốc độ +20%, hai bên sườn là 2 Server Room Firewall.',
     traits: ['👑 Sếp (+20% tốc)', '🖥️ 2 Server Firewall', '☕ 2 Pantry'],
+    seats: 4,
   },
   'office-03': {
     id: 'office-03',
     name: 'Văn phòng Mở',
-    badge: 'The Ring',
+    badge: '4P Vòng tròn',
     tag: 'Cơ động & Bọc hậu',
-    desc: 'Hành lang khép kín bao quanh Giếng trời cây xanh không thể đi xuyên. Cơ động cao, đánh bọc hậu 2 gọng kìm và chốt chặn phòng họp.',
+    desc: 'Hành lang khép kín bao quanh Giếng trời cây xanh không thể đi xuyên. Cơ động cao, đánh bọc hậu 2 gọng kìm.',
     traits: ['🌿 Giếng trời Atrium', '📅 2 Chốt chặn Họp', '☕ 2 Pantry'],
+    seats: 4,
   },
   'office-04': {
     id: 'office-04',
     name: 'Hai Cánh',
-    badge: 'Twin Wings',
+    badge: '4P Cầu kính',
     tag: 'Chokepoint vượt cầu',
-    desc: 'Tòa nhà chia đôi cánh Đông - Tây kết nối bằng 2 cầu kính hẹp Bắc - Nam và Sky Lounge trên cao. Giai đoạn 1 nội chiến, giai đoạn 2 vượt cầu.',
+    desc: 'Tòa nhà chia đôi cánh Đông - Tây kết nối bằng 2 cầu kính hẹp Bắc - Nam và Sky Lounge trên cao.',
     traits: ['🌉 2 Cầu kính Skybridge', '👑 Sky Lounge', '☕ 4 Pantry'],
+    seats: 4,
   },
 };
 
@@ -186,6 +209,12 @@ export function OnlineDialog({
   );
 }
 
+const PLAYER_MODES = [
+  { value: '2', label: '⚔️ 2 Người (1v1)' },
+  { value: '3', label: '🔺 3 Người' },
+  { value: '4', label: '🛡️ 4 Người' },
+] as const;
+
 export function OfflineSetup({
   bots,
   mapId = 'office-01',
@@ -201,6 +230,45 @@ export function OfflineSetup({
   onStart: () => void;
   onBack: () => void;
 }) {
+  const currentSeats = MAP_DETAILS[mapId as MapKey]?.seats ?? (bots.length <= 1 ? 2 : bots.length === 2 ? 3 : 4);
+  const [mode, setMode] = useState<'2' | '3' | '4'>(String(currentSeats) as '2' | '3' | '4');
+  const [filter, setFilter] = useState<'recommended' | 'all'>('recommended');
+
+  const handleModeChange = (newMode: '2' | '3' | '4') => {
+    setMode(newMode);
+    if (newMode === '2') {
+      onChange([bots[0] ?? 'normal']);
+      if (MAP_DETAILS[mapId as MapKey]?.seats !== 2) {
+        onMapChange?.('duel-01');
+      }
+    } else if (newMode === '3') {
+      onChange([bots[0] ?? 'normal', bots[1] ?? 'normal']);
+      if (MAP_DETAILS[mapId as MapKey]?.seats !== 3) {
+        onMapChange?.('trio-01');
+      }
+    } else {
+      onChange([bots[0] ?? 'normal', bots[1] ?? 'normal', bots[2] ?? 'normal']);
+      if (MAP_DETAILS[mapId as MapKey]?.seats !== 4) {
+        onMapChange?.('office-01');
+      }
+    }
+  };
+
+  const handleSelectMap = (id: MapKey) => {
+    onMapChange?.(id);
+    const targetSeats = MAP_DETAILS[id].seats;
+    if (String(targetSeats) !== mode) {
+      setMode(String(targetSeats) as '2' | '3' | '4');
+      if (targetSeats === 2) {
+        onChange([bots[0] ?? 'normal']);
+      } else if (targetSeats === 3) {
+        onChange([bots[0] ?? 'normal', bots[1] ?? 'normal']);
+      } else {
+        onChange([bots[0] ?? 'normal', bots[1] ?? 'normal', bots[2] ?? 'normal']);
+      }
+    }
+  };
+
   const active = bots.filter((bot) => bot !== null).length;
   const update = (index: number, value: BotLevel | null) => {
     if (value === null && active <= 1) return;
@@ -208,15 +276,32 @@ export function OfflineSetup({
   };
   const selectedDetail = MAP_DETAILS[mapId as MapKey] ?? MAP_DETAILS['office-01'];
 
+  const filteredMapIds =
+    filter === 'recommended' ? MAP_IDS.filter((id) => MAP_DETAILS[id].seats === Number(mode)) : MAP_IDS;
+
   return (
     <section class="screen-layer" aria-label="Thiết lập trận offline">
       <Panel class="screen-panel setup-screen" title="Phòng tập" icon="bot">
         <div class="screen-stack">
           <div class="screen-row">
             <h1 class="t-title">Thiết lập trận</h1>
-            <Badge>{active} / 3 bot</Badge>
+            <Badge>
+              {Number(mode)} Người chơi ({active} bot)
+            </Badge>
           </div>
-          <p class="t-body muted">Bạn đấu với 1–3 bot. Chọn độ khó từng đối thủ.</p>
+
+          <div class="setup-mode-row">
+            <span class="t-body" style={{ fontWeight: 600 }}>
+              Quy mô trận đấu:
+            </span>
+            <Segmented
+              label="Chọn số lượng người chơi"
+              value={mode}
+              options={PLAYER_MODES}
+              onChange={(val) => handleModeChange(val as '2' | '3' | '4')}
+            />
+          </div>
+
           <div class="screen-stack bot-list">
             {bots.map((level, index) => (
               <div class="screen-row bot-row" key={BOT_NAMES[index]}>
@@ -252,19 +337,32 @@ export function OfflineSetup({
               </div>
             ))}
           </div>
-          {active <= 1 && <p class="t-body muted">Cần ít nhất 1 bot để bắt đầu.</p>}
+
           <div class="map-selection-section">
             <div class="map-selection-header">
               <span class="t-body" style={{ fontWeight: 600 }}>
                 Chọn bản đồ:
               </span>
-              <span class="muted" style={{ fontSize: '11px' }}>
-                {MAP_IDS.length} Bản đồ
-              </span>
+              <div class="map-filter-group">
+                <button
+                  type="button"
+                  class={`map-filter-btn ${filter === 'recommended' ? 'active' : ''}`}
+                  onClick={() => setFilter('recommended')}
+                >
+                  Phù hợp ({MAP_IDS.filter((id) => MAP_DETAILS[id].seats === Number(mode)).length})
+                </button>
+                <button
+                  type="button"
+                  class={`map-filter-btn ${filter === 'all' ? 'active' : ''}`}
+                  onClick={() => setFilter('all')}
+                >
+                  Tất cả ({MAP_IDS.length})
+                </button>
+              </div>
             </div>
 
             <div class="map-grid">
-              {MAP_IDS.map((id) => {
+              {filteredMapIds.map((id) => {
                 const info = MAP_DETAILS[id];
                 const mapDef = MAPS[id] as MapDef | undefined;
                 const isSelected = mapId === id;
@@ -274,10 +372,13 @@ export function OfflineSetup({
                     type="button"
                     aria-pressed={isSelected}
                     class="map-card-button"
-                    onClick={() => onMapChange?.(id)}
+                    onClick={() => handleSelectMap(id)}
                     title={`${info.name} (${info.badge})`}
                   >
-                    <div class="map-card-thumb">{mapDef && <MapThumbnail map={mapDef} />}</div>
+                    <div class="map-card-thumb">
+                      <span class={`map-badge-tag map-badge-${info.seats}`}>{info.seats}P</span>
+                      {mapDef && <MapThumbnail map={mapDef} />}
+                    </div>
                     <span class="map-card-name">{info.name}</span>
                     <span class="map-card-tag">{info.badge}</span>
                   </button>

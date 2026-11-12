@@ -6,6 +6,7 @@ import {
   type MapDef,
   type MapTowerDef,
   type MatchResult,
+  mapSeats,
   type PlayerId,
   seatOrder,
   withSeatOrder,
@@ -26,9 +27,13 @@ export function matchLayout(
   mapId = 'office-01',
 ) {
   const mapKey = isTutorial ? (tutorialStage === 2 ? 'tutorial-02' : 'tutorial-01') : MAPS[mapId] ? mapId : 'office-01';
-  const order: PlayerId[] = controlled || isTutorial ? [0, 1, 2, 3] : seatOrder(seed);
+  const targetMap = MAPS[mapKey] as MapDef;
+  const seats = mapSeats(targetMap);
+  const seatCount = seats.length > 0 ? seats.length : 4;
+  const order: PlayerId[] =
+    controlled || isTutorial ? ([0, 1, 2, 3] as PlayerId[]).slice(0, seatCount) : seatOrder(seed, seatCount);
   const world = buildWorld(
-    withSeatOrder(MAPS[mapKey] as MapDef, order),
+    withSeatOrder(targetMap, order),
     isTutorial ? { ...DEFAULT_CONFIG, skillWarmup: 0 } : DEFAULT_CONFIG,
   );
   const startRoom = (world.map.towers.find((tower) => tower.seat === playerSeat) ?? world.map.towers[0]) as MapTowerDef;

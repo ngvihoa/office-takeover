@@ -71,6 +71,48 @@ export function MapThumbnail({ map, class: className }: { map: MapDef; class?: s
         </g>
       )}
 
+      {id === 'duel-01' && (
+        <g>
+          <line
+            x1={320}
+            y1={25}
+            x2={320}
+            y2={335}
+            stroke="#38bdf8"
+            stroke-width="1.5"
+            stroke-dasharray="4 4"
+            opacity="0.4"
+          />
+          <text
+            x={320}
+            y={120}
+            fill="#38bdf8"
+            font-size="12"
+            font-family="monospace"
+            text-anchor="middle"
+            font-weight="bold"
+          >
+            ⚔️ 1v1 DUEL
+          </text>
+        </g>
+      )}
+
+      {id === 'trio-01' && (
+        <g>
+          <text
+            x={320}
+            y={235}
+            fill="#48bb78"
+            font-size="12"
+            font-family="monospace"
+            text-anchor="middle"
+            font-weight="bold"
+          >
+            🌿 ATRIUM
+          </text>
+        </g>
+      )}
+
       {/* Corridor wide paths */}
       {corridor.edges.map(([fromId, toId]) => {
         const p1 = nodes[fromId];
